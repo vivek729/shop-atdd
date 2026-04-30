@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  COMMIT_SHA: ${{ inputs.commit-sha }}
+  COMMIT_SHA: ${{ inputs.commit-sha || github.sha }}
 
 jobs:
   verify:
@@ -169,7 +169,7 @@ jobs:
         uses: optivem/actions/resolve-docker-image-digests@v1
         with:
           base-image-urls: ${{ matrix.sut-base-image-urls }}
-          tag: sha-${{ inputs.commit-sha }}
+          tag: sha-${{ env.COMMIT_SHA }}
 
       - name: Compute Endpoint Lists from system.json
         id: endpoints
