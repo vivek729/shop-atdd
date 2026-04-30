@@ -4,6 +4,8 @@
 
 Replace each family of 6 near-duplicate stage workflows (3 languages × 2 architectures) with **one reusable workflow + 6 thin caller files**. Apply this to every stage family that is currently duplicated 6×: acceptance-stage, acceptance-stage-cloud, acceptance-stage-legacy, qa-stage, qa-stage-cloud, prod-stage, prod-stage-cloud, qa-signoff (8 families × 6 ≈ 48 files → 8 reusables + 48 thin callers, plus ~2 composite actions for runtime setup).
 
+The rollout is **parallel-then-cutover**: phases 1–3 ADD `new-{arch}-{lang}-{stage}.yml` thin callers + `_<stage>.yml` reusables alongside the existing 48 workflows without touching them. After author approval, Phase 4 deletes the existing 48 workflows and renames the `new-*` files to drop the prefix. This keeps shop CI on the known-good schedule throughout validation.
+
 The pattern is the one shop already uses for `_prerelease-pipeline.yml`: a single `_<stage>.yml` reusable takes `architecture`, `language`, `prefix` (and a few other) inputs, with per-language steps gated by `if: inputs.language == ...`.
 
 ## Rationale
@@ -54,6 +56,8 @@ Shop already uses this pattern: `_prerelease-pipeline.yml` (workflow_call, takes
 
 **Cost**: a regression in `_acceptance-stage.yml` would break all 6 callers simultaneously instead of one. Today's drift is a benefit in disguise — bugs stay localized to one language. Mitigation: the reusable's logic is mostly identity-preserving boilerplate already; the per-language differences live in `setup-language-toolchain`, which can be unit-tested via the composite-action test harness in `optivem/actions`.
 
+**Cost during rollout**: the parallel approach temporarily doubles the stage-workflow file count in shop (48 → 96) until Phase 4 cutover. Scheduled CI cost is unchanged because the `new-*` callers run only on `workflow_dispatch` during the transition; the existing workflows keep their hourly schedule until they are deleted at cutover.
+
 **Cost for student repos**: depends on the gh-optivem strategy chosen below. The naive "scaffold both files" approach gives students 2 files per stage (caller + reusable) instead of 1. The "scaffold-time inline" approach keeps students at 1 file per stage but adds tooling complexity to gh-optivem.
 
 ## Scope (files that change in shop)
@@ -67,27 +71,28 @@ Shop already uses this pattern: `_prerelease-pipeline.yml` (workflow_call, takes
 - `optivem/actions/setup-language-toolchain/` — composite action that switches on `language: java|dotnet|typescript` and installs the appropriate toolchain + Playwright system deps + caches. Replaces the per-language ~25–35-line setup block.
 - `optivem/actions/install-gh-optivem/` — composite action for `gh extension install optivem/gh-optivem` (currently duplicated in every workflow).
 
-### Files that get rewritten as thin callers (~20 lines each)
+### New thin callers (added alongside existing files; ~20 lines each)
 
-48 files, all matching `{arch}-{lang}-{stage}.yml`:
+48 new files, all matching `new-{arch}-{lang}-{stage}.yml`:
 
 ```
-monolith-{dotnet,java,typescript}-{acceptance-stage,acceptance-stage-cloud,acceptance-stage-legacy,qa-stage,qa-stage-cloud,prod-stage,prod-stage-cloud,qa-signoff}.yml
-multitier-{dotnet,java,typescript}-{… same 8 stages …}.yml
+new-monolith-{dotnet,java,typescript}-{acceptance-stage,acceptance-stage-cloud,acceptance-stage-legacy,qa-stage,qa-stage-cloud,prod-stage,prod-stage-cloud,qa-signoff}.yml
+new-multitier-{dotnet,java,typescript}-{… same 8 stages …}.yml
 ```
+
+The `new-` prefix is intentional and lives only during the rollout. At cutover (Phase 4) the existing unprefixed files are deleted and these are renamed to drop the prefix.
 
 Each thin caller looks like:
 
 ```yaml
-name: monolith-java-acceptance-stage
+name: new-monolith-java-acceptance-stage
 on:
-  schedule: [{cron: '0 * * * *'}]
   workflow_dispatch:
     inputs:
       commit-sha: { required: false, type: string }
       debug-skip-tests: { required: false, type: boolean, default: false }
 permissions: {}
-concurrency: { group: monolith-java-acceptance-stage }
+concurrency: { group: new-monolith-java-acceptance-stage }
 jobs:
   stage:
     uses: ./.github/workflows/_acceptance-stage.yml
@@ -104,9 +109,12 @@ jobs:
       debug-skip-tests: ${{ inputs.debug-skip-tests }}
 ```
 
+The `schedule:` trigger is intentionally absent during the rollout: scheduled runs stay on the existing unprefixed workflow until cutover, after which the renamed file inherits the schedule. Note the distinct `name:` and `concurrency.group` (`new-monolith-java-acceptance-stage`) — they must NOT collide with the existing `monolith-java-acceptance-stage` workflow that runs concurrently throughout the rollout.
+
 ### Files that are unchanged
 
-- `_prerelease-pipeline.yml`, `_meta-prerelease-pipeline.yml` — already reusable; will be updated to call the new `_qa-stage.yml` etc. instead of `monolith-java-qa-stage.yml`.
+- **All 48 existing `{arch}-{lang}-{stage}.yml` workflows** — untouched during phases 1–3. They keep running on their hourly schedule. Deleted in Phase 4 (cutover) and replaced by the renamed `new-*` callers.
+- `_prerelease-pipeline.yml`, `_meta-prerelease-pipeline.yml` — already reusable. The update to call the new `_qa-stage.yml` etc. instead of the per-(arch,lang) callers happens at Phase 4 (cutover), not before.
 - `prerelease-pipeline-{monolith,multitier}-{lang}.yml` — already thin callers around `_prerelease-pipeline.yml`.
 - `meta-bump-all.yml`, `meta-prerelease-stage.yml`, `meta-release-stage.yml`, `meta-prerelease-dry-run.yml` — meta-level, unaffected.
 - `bump-patch-version-*.yml` — out of scope for this plan.
@@ -120,6 +128,8 @@ The scaffolder (`gh-optivem/internal/steps/apply_template.go` and `internal/temp
 1. Picks one shop file matching `{arch}-{testLang}-{stage}.yml` from `.github/workflows/`.
 2. Renames it to `{stage}.yml` in the student repo.
 3. Runs ~20 text replacements (paths, image names, env names, tag prefixes, prefix-drops).
+
+**Timing**: gh-optivem's scaffolder changes land at Phase 4 (cutover), not during phases 2/3. Until cutover, the scaffolder keeps reading the existing unprefixed `{arch}-{lang}-{stage}.yml` files unchanged — student repos are unaffected by the parallel rollout. Optionally a feature branch in gh-optivem can scaffold from the `new-*` files for end-to-end validation before the cutover PR; production scaffolding switches in Phase 4.
 
 After consolidation, the per-(arch, lang) caller is a 20-line file that `uses: ./.github/workflows/_acceptance-stage.yml`. The scaffolder must still produce a working `acceptance-stage.yml` in the student repo. Three options:
 
@@ -185,32 +195,49 @@ Each phase ends in a green CI run on shop and a successful `gh-optivem/scripts/m
 2. Run `gh-optivem/scripts/manual-test-runner-shop.sh` to scaffold all 6 (arch, lang) combos and capture baseline (e.g. actionlint, sample test pass).
 3. Document the suite-name drift bug (`contract-isolated-stub` vs `contract-stub-isolated`) as a separate ticket — fix it BEFORE consolidation so the consolidated reusable inherits the canonical name without question.
 
-### Phase 1 — Extract `setup-language-toolchain` composite action (in `optivem/actions`)
+### Phase 1 — Create `setup-language-toolchain` composite action (in `optivem/actions`)
 
-Lowest risk, highest immediate payoff. Does not change any workflow filenames or shapes; just replaces the ~25-line per-language setup block with a single `uses: optivem/actions/setup-language-toolchain@v1` call in each of the 48 stage workflows.
+Build the composite action that the new `_*.yml` reusables will consume. **Does not edit the existing 48 stage workflows** — they keep their inline setup blocks until they are deleted at cutover.
 
 - Implement composite action with branches for `java`, `dotnet`, `typescript`.
 - Inputs: `language`, `working-directory` (where to cache key off), `playwright` (boolean, default true).
-- Replaces: `Setup .NET` / `Setup Java` / `Setup Node` / `Setup Gradle` / `Pre-warm Gradle Wrapper` / `Cache NuGet` / `Cache Playwright` / `Compile System Tests` / `Install Playwright System Dependencies` blocks.
-- Roll out per-stage-family: edit all 6 monolith-acceptance-stage files first, run shop CI, confirm green; then 6 multitier-acceptance-stage; etc.
+- Encapsulates: `Setup .NET` / `Setup Java` / `Setup Node` / `Setup Gradle` / `Pre-warm Gradle Wrapper` / `Cache NuGet` / `Cache Playwright` / `Compile System Tests` / `Install Playwright System Dependencies` blocks.
+- Same phase: create `install-gh-optivem` composite action.
+- Validate the composite actions via the test harness in `optivem/actions` before any consumer exists.
 
-End of Phase 1: 48 stage files lose ~25 lines each, 6× duplicated; same shape, no scaffolder change.
+End of Phase 1: two new composite actions exist in `optivem/actions`. Shop is unchanged.
 
-### Phase 2 — Consolidate one stage family (acceptance-stage)
+### Phase 2 — Pilot one stage family (acceptance-stage), parallel rollout
 
-Pilot the reusable pattern on the most-exercised family before generalizing.
+Add the new reusable + 6 new thin callers alongside the existing 6 acceptance-stage workflows. **Existing `{arch}-{lang}-acceptance-stage.yml` files are untouched.**
 
-1. Author `_acceptance-stage.yml` mirroring `monolith-java-acceptance-stage.yml`, with inputs.
-2. Rewrite all 6 `{arch}-{lang}-acceptance-stage.yml` files as thin callers.
-3. Run shop CI on all 6.
-4. Update `gh-optivem` per "gh-optivem changes required (Option A)". Run `manual-test-runner-shop.sh` for all 6 (arch, lang) combos.
-5. Validate: scaffolded student repo's `acceptance-stage.yml` + `_acceptance-stage.yml` pass actionlint and a sample test.
+1. Author `_acceptance-stage.yml` mirroring `monolith-java-acceptance-stage.yml`, with inputs, consuming `setup-language-toolchain`.
+2. Add 6 `new-{arch}-{lang}-acceptance-stage.yml` thin callers (`workflow_dispatch` only — no `schedule:` yet).
+3. Trigger each `new-*` caller manually via `workflow_dispatch` and confirm a green run. The 6 existing unprefixed workflows continue running on their hourly schedule in parallel; compare outcomes.
+4. Optional: in a gh-optivem feature branch, run `manual-test-runner-shop.sh` against the `new-*` files to validate the scaffolder side end-to-end. Do NOT merge gh-optivem changes yet.
 
-### Phase 3 — Roll out to remaining stage families
+End of Phase 2: 7 new files in shop (1 reusable + 6 callers); existing acceptance-stage workflows unchanged and still authoritative.
 
-Apply the same pattern to: `acceptance-stage-cloud`, `acceptance-stage-legacy`, `qa-stage`, `qa-stage-cloud`, `prod-stage`, `prod-stage-cloud`, `qa-signoff`. One stage family per PR; each PR runs the full Phase-2 validation (shop CI + scaffolder smoke test).
+### Phase 3 — Roll out remaining stage families (parallel)
 
-### Phase 4 — Documentation
+Apply the same parallel-add pattern to: `acceptance-stage-cloud`, `acceptance-stage-legacy`, `qa-stage`, `qa-stage-cloud`, `prod-stage`, `prod-stage-cloud`, `qa-signoff`. One stage family per PR; each PR adds 1 reusable + 6 `new-*` callers and validates them via `workflow_dispatch`. Existing files remain untouched.
+
+End of Phase 3: 8 reusables + 48 `new-*` callers exist alongside the 48 existing unprefixed workflows. Shop now has ~96 stage workflow files temporarily.
+
+### Phase 4 — Cutover (gated on author approval)
+
+After all 8 stage families have been validated end-to-end via `workflow_dispatch` runs and (optionally) end-to-end gh-optivem scaffolder runs, request author approval to cut over.
+
+Per stage family (one PR each, or one mega-PR — author choice):
+
+1. Delete the 6 existing `{arch}-{lang}-{stage}.yml` files.
+2. Rename the 6 `new-{arch}-{lang}-{stage}.yml` files to `{arch}-{lang}-{stage}.yml`. In each renamed file, drop the `new-` prefix from `name:` and `concurrency.group`, and add the `schedule:` trigger that the deleted workflow had.
+3. In the same PR (or as the next PR before any new schedule fires), update `_prerelease-pipeline.yml` and `_meta-prerelease-pipeline.yml` to call the new `_qa-stage.yml` etc. via `uses:` (replacing today's calls into the per-(arch,lang) workflows).
+4. Land the `gh-optivem` Option-A changes (extend `monolithPipelineWorkflows` / `multitierPipelineWorkflows` to include the `_<stage>.yml` reusables). Run `manual-test-runner-shop.sh` for all 6 (arch, lang) combos to confirm scaffolded student repos still produce green CI.
+
+End of Phase 4: 8 reusables + 48 thin callers, no `new-` prefix anywhere, and the existing 48 workflows are gone.
+
+### Phase 5 — Documentation
 
 - Update `docs/operations/*` (or wherever the workflow architecture is described) to describe the reusable pattern.
 - Update `gh-optivem/MAPPING.md` / `NAMING.md` to reflect the source-file split (caller + reusable).
