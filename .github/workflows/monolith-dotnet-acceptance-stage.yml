@@ -275,8 +275,12 @@ jobs:
         # Linux apt-get packages for Chromium. Browser binaries themselves
         # come from each suite's testInstallCommand (`pwsh playwright.ps1
         # install`) in tests-latest.json.
-        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
-        working-directory: system-test/dotnet
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
+          current_path: system-test/dotnet
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Install gh-optivem CLI extension
         if: ${{ !inputs.debug-skip-tests }}

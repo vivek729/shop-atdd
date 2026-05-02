@@ -348,8 +348,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: npx playwright install-deps chromium
+          current_path: system-test/typescript
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Run Smoke Tests (Real)
         working-directory: system-test/typescript
@@ -397,8 +401,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: npx playwright install-deps chromium
+          current_path: system-test/typescript
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Run Smoke Tests (Stub)
         working-directory: system-test/typescript
@@ -478,8 +486,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: npx playwright install-deps chromium
+          current_path: system-test/typescript
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Run Acceptance Tests - UI Channel
         working-directory: system-test/typescript
@@ -561,8 +573,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: npx playwright install-deps chromium
+          current_path: system-test/typescript
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         working-directory: system-test/typescript
@@ -736,8 +752,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        working-directory: system-test/typescript
-        run: npx playwright install-deps chromium
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: npx playwright install-deps chromium
+          current_path: system-test/typescript
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Run E2E Tests - UI Channel
         working-directory: system-test/typescript

@@ -399,8 +399,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        run: npx playwright install-deps chromium
-        working-directory: system-test/java
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: npx playwright install-deps chromium
+          current_path: system-test/java
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Run Acceptance Tests - UI Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
@@ -479,8 +483,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        run: npx playwright install-deps chromium
-        working-directory: system-test/java
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: npx playwright install-deps chromium
+          current_path: system-test/java
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Run Acceptance Tests (Isolated) - UI Channel
         run: ./gradlew test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}
@@ -652,8 +660,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        run: npx playwright install-deps chromium
-        working-directory: system-test/java
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: npx playwright install-deps chromium
+          current_path: system-test/java
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Run E2E Tests - UI Channel
         run: ./gradlew test -Dversion=latest -Dtype=e2e -Dchannel=UI -DchannelMode=static -Denvironment=acceptance -DbaseUrl=${{ needs.deploy-app.outputs.app-url }} -DexternalBaseUrl=${{ needs.deploy-external-real.outputs.external-url }}

@@ -6,24 +6,15 @@ A catalog of project templates organized by two independent dimensions: **system
 
 ## Verification
 
-[![meta-prerelease-stage](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml)
-[![meta-release-stage](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml)
+[![meta-prerelease-stage](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml/badge.svg?event=schedule)](https://github.com/optivem/shop/actions/workflows/meta-prerelease-stage.yml)
+[![meta-release-stage](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/meta-release-stage.yml)
 
 **meta-prerelease-stage** — runs the prerelease pipeline (local → commit → acceptance → QA) across all languages and architectures; tags the SHA as `meta-v<VERSION>-rc.<N>` on success. Does not release to production.
 **meta-release-stage** — takes a meta-rc tag, orchestrates production releases across all 6 flavor prod-stages, tags `meta-v<VERSION>`, and bumps the root meta VERSION via `bump-patch-version-meta`. Each flavor's prod-stage bumps its own per-system VERSION (`system/<arch>/<lang>/VERSION`) post-release. This is the single canonical release path.
 
-Per-language pipeline drivers (ad-hoc single-language runs):
-
-[![prerelease-pipeline-monolith-java](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-java.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-java.yml)
-[![prerelease-pipeline-monolith-dotnet](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-dotnet.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-dotnet.yml)
-[![prerelease-pipeline-monolith-typescript](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-typescript.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-monolith-typescript.yml)
-[![prerelease-pipeline-multitier-java](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-java.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-java.yml)
-[![prerelease-pipeline-multitier-dotnet](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-dotnet.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-dotnet.yml)
-[![prerelease-pipeline-multitier-typescript](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-typescript.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/prerelease-pipeline-multitier-typescript.yml)
-
 ## Cleanup
 
-[![cleanup](https://github.com/optivem/shop/actions/workflows/cleanup.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/cleanup.yml)
+[![cleanup](https://github.com/optivem/shop/actions/workflows/cleanup.yml/badge.svg?event=schedule)](https://github.com/optivem/shop/actions/workflows/cleanup.yml)
 
 Daily cleanup (23:00 UTC) of superseded deployments, prerelease git tags, GitHub releases, and Docker image tags.
 
@@ -112,7 +103,7 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Monolith Java
 
-[![monolith-commit-stage](https://github.com/optivem/shop/actions/workflows/monolith-java-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-java-commit-stage.yml)
+[![monolith-commit-stage](https://github.com/optivem/shop/actions/workflows/monolith-java-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/monolith-java-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/monolith-java-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-java-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/monolith-java-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-java-acceptance-stage-legacy.yml)
 [![qa-stage](https://github.com/optivem/shop/actions/workflows/monolith-java-qa-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-java-qa-stage.yml)
@@ -121,7 +112,7 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Monolith .NET
 
-[![monolith-commit-stage](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-commit-stage.yml)
+[![monolith-commit-stage](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-acceptance-stage-legacy.yml)
 [![qa-stage](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-qa-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-dotnet-qa-stage.yml)
@@ -130,7 +121,7 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Monolith TypeScript
 
-[![monolith-commit-stage](https://github.com/optivem/shop/actions/workflows/monolith-typescript-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-typescript-commit-stage.yml)
+[![monolith-commit-stage](https://github.com/optivem/shop/actions/workflows/monolith-typescript-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/monolith-typescript-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/monolith-typescript-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-typescript-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/monolith-typescript-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-typescript-acceptance-stage-legacy.yml)
 [![qa-stage](https://github.com/optivem/shop/actions/workflows/monolith-typescript-qa-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/monolith-typescript-qa-stage.yml)
@@ -139,8 +130,8 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Multitier Java
 
-[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-java-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-backend-java-commit-stage.yml)
-[![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
+[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-java-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/multitier-backend-java-commit-stage.yml)
+[![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/multitier-java-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-java-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/multitier-java-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-java-acceptance-stage-legacy.yml)
 [![qa-stage](https://github.com/optivem/shop/actions/workflows/multitier-java-qa-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-java-qa-stage.yml)
@@ -149,8 +140,8 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Multitier .NET
 
-[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-dotnet-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-backend-dotnet-commit-stage.yml)
-[![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
+[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-dotnet-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/multitier-backend-dotnet-commit-stage.yml)
+[![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-acceptance-stage-legacy.yml)
 [![qa-stage](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-qa-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-dotnet-qa-stage.yml)
@@ -159,8 +150,8 @@ The `.github/workflows/` directory contains runnable pipelines for all 6 matched
 
 ### Multitier TypeScript
 
-[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-typescript-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-backend-typescript-commit-stage.yml)
-[![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
+[![backend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-backend-typescript-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/multitier-backend-typescript-commit-stage.yml)
+[![frontend-commit-stage](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml/badge.svg?event=push)](https://github.com/optivem/shop/actions/workflows/multitier-frontend-react-commit-stage.yml)
 [![acceptance-stage](https://github.com/optivem/shop/actions/workflows/multitier-typescript-acceptance-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-typescript-acceptance-stage.yml)
 [![acceptance-stage-legacy](https://github.com/optivem/shop/actions/workflows/multitier-typescript-acceptance-stage-legacy.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-typescript-acceptance-stage-legacy.yml)
 [![qa-stage](https://github.com/optivem/shop/actions/workflows/multitier-typescript-qa-stage.yml/badge.svg)](https://github.com/optivem/shop/actions/workflows/multitier-typescript-qa-stage.yml)

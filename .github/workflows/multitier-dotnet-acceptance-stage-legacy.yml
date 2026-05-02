@@ -235,8 +235,12 @@ jobs:
 
       - name: Install Playwright System Dependencies
         timeout-minutes: 10
-        run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
-        working-directory: system-test/dotnet
+        uses: Wandalen/wretry.action@v3
+        with:
+          command: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install-deps chromium
+          current_path: system-test/dotnet
+          attempt_limit: 3
+          attempt_delay: 30000
 
       - name: Install gh-optivem CLI extension
         env:
