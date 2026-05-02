@@ -67,9 +67,9 @@ echo
 echo "  cd \"$ABS_WORKTREE_DIR\""
 echo "  claude"
 echo
-echo "Then inside that fresh Claude Code session, run the ATDD slash command, e.g.:"
+echo "Then inside that fresh Claude Code session, run the ATDD CLI, e.g.:"
 echo
-echo "  /atdd:atdd-implement-ticket #<issue-number>"
+echo "  gh optivem atdd implement-ticket --issue <issue-number>"
 echo
 echo "(A new session is required so Claude Code's working directory is the worktree;"
 echo " otherwise sub-agents would commit into your real repo, not the rehearsal.)"

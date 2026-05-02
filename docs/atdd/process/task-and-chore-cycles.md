@@ -19,13 +19,13 @@ It mirrors the role of the AT per-phase docs (`at-red-test.md`, `at-red-dsl.md`,
 
 ## Shared structural-cycle TEST
 
-Every structural-cycle TEST runs after REVIEW (which itself runs after WRITE). Goal: verify the change compiles and the sample suite still passes locally before COMMIT. The TEST procedure honours the **Scope** declared in pre-flight (see `.claude/commands/atdd/atdd-implement-ticket.md` "Scope Confirmation"): compile and sample-suite work is restricted to the in-scope architecture(s) and Test Lang(s).
+Every structural-cycle TEST runs after REVIEW (which itself runs after WRITE). Goal: verify the change compiles and the sample suite still passes locally before COMMIT. The TEST procedure honours the **Scope** declared in `optivem.yaml` (see [`cycles.md`](cycles.md) "Scope"): compile and sample-suite work is restricted to the in-scope architecture and Test Lang.
 
-1. **Ask the user upfront which checks to run.** Use this exact prompt, substituting in-scope languages:
+1. **Ask the user upfront which checks to run.** Use this exact prompt, substituting the in-scope test language:
 
    ```
-   About to run TEST for <in-scope test languages>. Choose one:
-     - full      → compile in-scope projects, then run sample suite (`gh optivem test system --sample`). Sample run takes a few minutes per language.
+   About to run TEST for <in-scope test language>. Choose one:
+     - full      → compile in-scope projects, then run sample suite (`gh optivem test system --sample`). Sample run takes a few minutes.
      - compile   → compile in-scope projects only, no sample suite.
      - skip      → skip TEST entirely, go straight to COMMIT (you accept the risk that compile or sample may fail in CI).
    Choice?
@@ -37,7 +37,7 @@ Every structural-cycle TEST runs after REVIEW (which itself runs after WRITE). G
 
 3. **If `compile` or `full`:** confirm in-scope components compile (per `CLAUDE.md`: `./compile-all.sh` from the repo root, or a single-project command like `./gradlew build` / `npx tsc --noEmit` / `dotnet build` for narrow changes). On compile failure, STOP and report — do not attempt the sample suite.
 
-4. **If `full` and compile passed:** run the sample suite for each in-scope Test Lang (`gh optivem test system --sample`) and verify it passes.
+4. **If `full` and compile passed:** run the sample suite for the in-scope Test Lang (`gh optivem test system --sample`) and verify it passes.
 
 5. Print a **drift warning** naming any out-of-scope implementations that were deliberately left untouched, e.g.:
 

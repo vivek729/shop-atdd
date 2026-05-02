@@ -275,11 +275,11 @@ The chore ticket carries a **checklist of refactor / upgrade steps** in its body
 
 ## Scope
 
-Every pipeline run is bounded by a **Scope** declared in pre-flight (see `.claude/commands/atdd/atdd-implement-ticket.md` "Scope Confirmation"). Scope has three axes — **Architecture** (`monolith|multitier|both`), **System Lang** (`java|dotnet|typescript|all`), and **Test Lang** (`java|dotnet|typescript|all`) — and is propagated into every dispatched sub-agent prompt.
+Every pipeline run is bounded by a **Scope** declared in `optivem.yaml` at the repo root (loaded by gh-optivem's `internal/projectconfig` package). Scope has three axes — **Architecture** (`monolith` | `multitier`), **System Lang** (`java` | `dotnet` | `typescript`), and **Test Lang** (same enum) — and is propagated into every dispatched sub-agent prompt as `${architecture}`, `${system_lang}`, `${test_lang}`.
 
-Defaults are rehearsal-aware: rehearsal mode defaults to a single implementation (`Architecture=multitier`, `System Lang=java`, `Test Lang=typescript`) for fast iteration; outside rehearsal the defaults fan out to all parallel implementations (`Architecture=both`, `System Lang=all`, `Test Lang=all`). The user confirms or overrides scope at the start of every run; flags `--architecture`, `--system-lang`, `--test-lang` skip the per-axis prompt.
+Each invocation targets one combination of values (the schema does not accept `both` or `all`). To run against a different combination, point the CLI at an alternate config with `--config <path>` (e.g. `gh optivem atdd implement-ticket --issue 42 --config optivem-multitier.yaml`).
 
-Sub-agents — notably `atdd-task` and `atdd-chore` — restrict ALL file edits, residual-reference greps, compile checks, and sample-suite runs to in-scope paths. The shared structural-cycle TEST procedure (see `task-and-chore-cycles.md`) runs the sample suite only for in-scope Test Lang(s) and prints a drift warning naming any out-of-scope implementations that were deliberately left untouched.
+Sub-agents — notably `atdd-task` and `atdd-chore` — restrict ALL file edits, residual-reference greps, compile checks, and sample-suite runs to in-scope paths. The shared structural-cycle TEST procedure (see `task-and-chore-cycles.md`) runs the sample suite only for the in-scope Test Lang and prints a drift warning naming any out-of-scope implementations that were deliberately left untouched.
 
 ## STOP Behaviour
 
