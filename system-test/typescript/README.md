@@ -13,43 +13,43 @@ All commands are run from the repo root.
 Bring up the system stack (real + stub) for the chosen architecture:
 
 ```bash
-gh optivem run system --system docker/typescript/monolith/system.json
+gh optivem run system --system-config docker/typescript/monolith/system.json
 ```
 
 Run all latest test suites:
 
 ```bash
-gh optivem test system --system docker/typescript/monolith/system.json --tests system-test/typescript/tests-latest.json
+gh optivem test system --system-config docker/typescript/monolith/system.json --test-config system-test/typescript/tests-latest.json
 ```
 
 Run legacy test suites:
 
 ```bash
-gh optivem test system --system docker/typescript/monolith/system.json --tests system-test/typescript/tests-legacy.json
+gh optivem test system --system-config docker/typescript/monolith/system.json --test-config system-test/typescript/tests-legacy.json
 ```
 
 Run only sample tests (one per suite, fast smoke):
 
 ```bash
-gh optivem test system --system docker/typescript/monolith/system.json --tests system-test/typescript/tests-latest.json --sample
+gh optivem test system --system-config docker/typescript/monolith/system.json --test-config system-test/typescript/tests-latest.json --sample
 ```
 
 Run a specific suite by ID:
 
 ```bash
-gh optivem test system --system docker/typescript/monolith/system.json --tests system-test/typescript/tests-latest.json --suite acceptance-api
+gh optivem test system --system-config docker/typescript/monolith/system.json --test-config system-test/typescript/tests-latest.json --suite acceptance-api
 ```
 
 Rebuild container images before bringing the system up:
 
 ```bash
-gh optivem build system --system docker/typescript/monolith/system.json
+gh optivem build system --system-config docker/typescript/monolith/system.json
 ```
 
 Stop the system when done:
 
 ```bash
-gh optivem stop system --system docker/typescript/monolith/system.json
+gh optivem stop system --system-config docker/typescript/monolith/system.json
 ```
 
 Substitute `docker/typescript/multitier/system.json` for the multitier architecture.
