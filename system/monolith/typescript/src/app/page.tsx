@@ -10,12 +10,12 @@ export default function Home() {
         <div className="col-md-4 mb-3">
           <div className="card h-100">
             <div className="card-body">
-              <h5 className="card-title">New Order</h5>
+              <h5 className="card-title">Place Order</h5>
               <p className="card-text">
                 Place a new order with our easy-to-use interface
               </p>
               <Link className="btn btn-primary" href="/new-order">
-                New Order
+                Place Order
               </Link>
             </div>
           </div>

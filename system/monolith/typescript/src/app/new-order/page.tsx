@@ -151,7 +151,7 @@ export default function NewOrderPage() {
                     value={sku}
                     onChange={(e) => setSku(e.target.value)}
                     placeholder="Enter product SKU"
-                    aria-label="SKU"
+                    aria-label="Product SKU"
                   />
                 </div>
                 <div className="mb-3">
