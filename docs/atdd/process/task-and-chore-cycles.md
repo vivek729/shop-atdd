@@ -19,7 +19,7 @@ It mirrors the role of the AT per-phase docs (`at-red-test.md`, `at-red-dsl.md`,
 
 ## Shared structural-cycle TEST
 
-Every structural-cycle TEST runs after REVIEW (which itself runs after WRITE). Goal: verify the change compiles and the sample suite still passes locally before COMMIT. The TEST procedure honours the **Scope** declared in `optivem.yaml` (see [`cycles.md`](cycles.md) "Scope"): compile and sample-suite work is restricted to the in-scope architecture and Test Lang.
+Every structural-cycle TEST runs after REVIEW (which itself runs after WRITE). Goal: verify the change compiles and the sample suite still passes locally before COMMIT. The TEST procedure honours the **Scope** declared in `gh-optivem.yaml` (see [`cycles.md`](cycles.md) "Scope"): compile and sample-suite work is restricted to the in-scope architecture and Test Lang.
 
 1. **Ask the user upfront which checks to run.** Use this exact prompt, substituting the in-scope test language:
 
