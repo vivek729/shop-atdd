@@ -14,7 +14,7 @@ public class NewOrderPage : BasePage
 
 {
 
-    private const string SkuInputSelector = "[aria-label=\"Product SKU\"]";
+    private const string SkuInputSelector = "[aria-label=\"SKU\"]";
 
     private const string QuantityInputSelector = "[aria-label=\"Quantity\"]";
 
