@@ -61,8 +61,8 @@ run_phase() {
   local status="PASSED"
   (
     cd "$REPO_ROOT" \
-      && gh optivem run system --system "$system_json" \
-      && gh optivem test system --system "$system_json" --tests "$tests_json"
+      && gh optivem run system --system-config "$system_json" \
+      && gh optivem test system --system-config "$system_json" --test-config "$tests_json"
   ) || status="FAILED"
   local end
   end=$(date +%s)

@@ -73,7 +73,7 @@ The cross-lang workflow should refactor to **pull pre-built `sha-<sha>` images**
 - ❌ Doubles wall time per matrix entry (~11 min → ~22 min). Acceptable: still well below the per-flavor pipeline's wall time, so no impact on `tag-meta-rc` latency.
 - ❌ A flaky legacy suite shows up as a red matrix entry, even if latest passed. Mitigation: `if: always()` on the legacy step so both signals always report independently in the job log.
 
-**Implementation:** added `Run ${{ matrix.test-lang }} legacy system tests vs ${{ matrix.system-lang }} SUT` step after the latest step in [cross-lang-system-verification.yml](../.github/workflows/cross-lang-system-verification.yml). Same `gh optivem test system --no-build --no-start` invocation, just `--tests system-test/${{ matrix.test-lang }}/tests-legacy.json`.
+**Implementation:** added `Run ${{ matrix.test-lang }} legacy system tests vs ${{ matrix.system-lang }} SUT` step after the latest step in [cross-lang-system-verification.yml](../.github/workflows/cross-lang-system-verification.yml). Same `gh optivem test system --no-build --no-start` invocation, just `--test-config system-test/${{ matrix.test-lang }}/tests-legacy.json`.
 
 **Open questions answered:**
 - *Is legacy cross-lang parity a meaningful signal?* — In practice, yes for the same reasons as latest. Whether failures dominate as (a) genuine drift or (b) version-pin artifacts will become clear from a few real CI runs.
