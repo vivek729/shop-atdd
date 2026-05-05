@@ -1,6 +1,6 @@
 # Move `external-real-sim` and `external-stub` out of `system/` into top-level `external-systems/`
 
-🤖 **Picked up by agent** — `Valentina_Desk` at `2026-05-05T09:30:51Z`
+🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-05-05T09:40:58Z`
 
 **Status:** In progress — open questions resolved, executing Step 1. **Cross-repo change** — touches both `shop` and `gh-optivem`. Validated locally before either PR merges.
 **Created:** 2026-05-05.

@@ -62,7 +62,7 @@ services:
     ports:
       - "9312:8080"
     volumes:
-      - ../../../system/external-stub:/home/wiremock
+      - ../../../external-systems/external-stub:/home/wiremock
     command: --verbose --global-response-templating
     networks:
       - app-network

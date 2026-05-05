@@ -59,7 +59,7 @@ services:
 
   external-real:
     build:
-      context: ../../../system/external-real-sim
+      context: ../../../external-systems/external-real-sim
       dockerfile: Dockerfile
     ports:
       - "9211:9000"
