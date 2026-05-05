@@ -1,8 +1,6 @@
 # Move `external-real-sim` and `external-stub` out of `system/` into top-level `external-systems/`
 
-🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-05-05T09:40:58Z`
-
-**Status:** In progress — open questions resolved, executing Step 1. **Cross-repo change** — touches both `shop` and `gh-optivem`. Validated locally before either PR merges.
+**Status:** Step 1 complete (local edits + smoke-test passed). Step 2 (commit + push) in progress. Steps 3 (release) + 4 (CI watch) remain post-merge. **Cross-repo change** — touches both `shop` and `gh-optivem`.
 **Created:** 2026-05-05.
 **Last revised:** 2026-05-05 (after sibling-repo audit; local-validation sequence adopted; open questions resolved).
 
