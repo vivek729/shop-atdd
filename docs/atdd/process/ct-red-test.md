@@ -14,7 +14,7 @@ Express the contract between the system and the real external system as executab
 - Suite selection (real vs stub): see [ct-cycle-conventions.md](ct-cycle-conventions.md).
 - Commit message format: see [ct-cycle-conventions.md](ct-cycle-conventions.md).
 - Onboarding pre-condition (Driver + Test Instance must exist): see [ct-cycle-conventions.md](ct-cycle-conventions.md).
-- Commit gate ("Can I commit?"): see [shared-commit-confirmation.md](shared-commit-confirmation.md).
+- Commit handoff (the wrapping CLI commits, not the agent): see [cycles.md § Commit Handoff](cycles.md#commit-handoff).
 - Phase progression and STOP semantics: see [shared-phase-progression.md](shared-phase-progression.md).
 - `@Disabled` / skip syntax and "TODO: DSL" exception strings per language: see [language-equivalents.md](../code/language-equivalents.md).
 

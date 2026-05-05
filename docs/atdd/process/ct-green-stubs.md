@@ -15,7 +15,7 @@ Bring the dockerized External System stub into contract-compatibility with the r
 - Stub data must reflect the real Test Instance's contract — same shapes, same status codes, same error semantics. Drift between stub and real instance breaks the CT cycle.
 - Suite selection (real vs stub): see [ct-cycle-conventions.md](ct-cycle-conventions.md). This phase exercises the stub side only.
 - Commit message format: see [ct-cycle-conventions.md](ct-cycle-conventions.md).
-- Commit gate ("Can I commit?"): see [shared-commit-confirmation.md](shared-commit-confirmation.md).
+- Commit handoff (the wrapping CLI commits, not the agent): see [cycles.md § Commit Handoff](cycles.md#commit-handoff).
 - Phase progression and STOP semantics: see [shared-phase-progression.md](shared-phase-progression.md).
 - `@Disabled` removal syntax per language: see [language-equivalents.md](../code/language-equivalents.md).
 

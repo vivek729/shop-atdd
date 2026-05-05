@@ -16,7 +16,7 @@ Replace the System-Driver "TODO: Driver" prototypes from AT - RED - DSL with rea
 - Suite selection (`<acceptance-api>` / `<acceptance-ui>`) and commit-message format: see [at-cycle-conventions.md](at-cycle-conventions.md).
 - `@Disabled` / skip syntax per language: see [language-equivalents.md](../code/language-equivalents.md).
 - Definition of System Driver vs External System Driver: see [glossary.md](glossary.md).
-- Commit confirmation gate: see [shared-commit-confirmation.md](shared-commit-confirmation.md).
+- Commit handoff (the wrapping CLI commits, not the agent): see [cycles.md § Commit Handoff](cycles.md#commit-handoff).
 - STOP semantics at REVIEW: see [shared-phase-progression.md](shared-phase-progression.md).
 
 ## Example

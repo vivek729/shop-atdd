@@ -11,7 +11,7 @@ It mirrors the role of the AT per-phase docs (`at-red-test.md`, `at-red-dsl.md`,
 ## Common conventions
 
 - **Commit message format.** See [at-cycle-conventions.md](at-cycle-conventions.md). Every commit follows `<Ticket> | <Phase>`, optionally prefixed with `#<issue-number> | `. The phase suffix is the phase *prefix only* (e.g. `SYSTEM API REDESIGN`) — never append `- WRITE`, `- REVIEW`, `- TEST`, or `- COMMIT`.
-- **Commit confirmation.** See [shared-commit-confirmation.md](shared-commit-confirmation.md). Every COMMIT step asks "Can I commit?" with the proposed message and staged file list, and waits for explicit user approval before running `git commit`.
+- **Commit handoff.** See [cycles.md § Commit Handoff](cycles.md#commit-handoff). Agents do not run `git commit`; they exit with the working-tree delta and the wrapping CLI runs the human gate ("Can I commit?") and the commit.
 - **Phase progression.** See [shared-phase-progression.md](shared-phase-progression.md). Phases ending in STOP block on explicit user approval.
 - **TEST gate (full | compile | skip).** The entire TEST phase is gated upfront with a single user prompt — nothing inside TEST runs until the user chooses, and the gate covers compile checks (`./compile-all.sh`, `./gradlew build`, `npx tsc --noEmit`, `dotnet build`) and the sample suite (`gh optivem test system --sample`) alike. Never self-initiate any of those commands, even compile-only ones.
 
@@ -62,10 +62,9 @@ The EXTERNAL API REDESIGN cycle has no standalone TEST — sample-run gating hap
 
 Every structural-cycle COMMIT (`SYSTEM API REDESIGN`, `SYSTEM UI REDESIGN`, `CHORE`) follows the same four steps, with only the commit-message phase suffix varying.
 
-1. Apply the gate in [shared-commit-confirmation.md](shared-commit-confirmation.md) — ask "Can I commit?" with the proposed message and staged file list, and wait for explicit approval.
-2. COMMIT with message `<Ticket> | <PHASE>` where `<PHASE>` is `SYSTEM API REDESIGN`, `SYSTEM UI REDESIGN`, or `CHORE` per the cycle.
-3. If a GitHub issue was provided, tick any checklist items completed by this commit (local action; not CI-gated).
-4. Move the issue to **TICKET STATUS - IN ACCEPTANCE** — see [shared-ticket-status-in-acceptance.md](shared-ticket-status-in-acceptance.md).
+1. Leave the working-tree delta in place and exit cleanly. The wrapping CLI runs the "Can I commit?" gate and produces the commit with message `<Ticket> | <PHASE>` where `<PHASE>` is `SYSTEM API REDESIGN`, `SYSTEM UI REDESIGN`, or `CHORE` per the cycle. See [cycles.md § Commit Handoff](cycles.md#commit-handoff).
+2. If a GitHub issue was provided, tick any checklist items completed by this commit (local action; not CI-gated).
+3. Move the issue to **TICKET STATUS - IN ACCEPTANCE** — see [shared-ticket-status-in-acceptance.md](shared-ticket-status-in-acceptance.md).
 
 The EXTERNAL API REDESIGN cycle has no standalone COMMIT — see "EXTERNAL API REDESIGN" below.
 

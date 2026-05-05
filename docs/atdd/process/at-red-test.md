@@ -15,7 +15,7 @@ Turn the ticket's change-driven AC into compiling, runtime-failing acceptance te
 - Suite selection (`<acceptance-api>` / `<acceptance-ui>`) and commit-message format: see [at-cycle-conventions.md](at-cycle-conventions.md).
 - `@Disabled` / skip syntax per language: see [language-equivalents.md](../code/language-equivalents.md).
 - "TODO: DSL" prototype syntax per language: see [language-equivalents.md](../code/language-equivalents.md).
-- Commit confirmation gate: see [shared-commit-confirmation.md](shared-commit-confirmation.md).
+- Commit handoff (the wrapping CLI commits, not the agent): see [cycles.md § Commit Handoff](cycles.md#commit-handoff).
 - STOP semantics at REVIEW: see [shared-phase-progression.md](shared-phase-progression.md).
 - Test layout context: see [test.md](../architecture/test.md) and [dsl-core.md](../architecture/dsl-core.md).
 

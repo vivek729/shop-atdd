@@ -14,7 +14,6 @@
 - `docs/atdd/process/ct-red-dsl.md`
 - `docs/atdd/process/ct-red-external-driver.md`
 - `docs/atdd/process/ct-red-test.md`
-- `docs/atdd/process/shared-commit-confirmation.md`
 - `docs/atdd/process/shared-phase-progression.md`
 
 Cycle-level orchestration is owned by `gh-optivem`; see the rendered [process-flow diagram](https://github.com/optivem/gh-optivem/blob/main/docs/process-flow-diagram.md).

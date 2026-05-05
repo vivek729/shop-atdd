@@ -17,7 +17,7 @@ Take all change-driven acceptance tests from RED to GREEN by implementing the sy
 - Legacy-coverage tests live alongside change-driven tests in the same test class (per the ordering rule in [at-red-test.md](at-red-test.md)). Once the cycle is green there is no special handling — they are just tests that pass.
 - Suite selection (`<acceptance-api>` / `<acceptance-ui>`) and commit-message format: see [at-cycle-conventions.md](at-cycle-conventions.md).
 - `@Disabled` / skip syntax per language: see [language-equivalents.md](../code/language-equivalents.md).
-- Commit confirmation gate: see [shared-commit-confirmation.md](shared-commit-confirmation.md).
+- Commit handoff (the wrapping CLI commits, not the agent): see [cycles.md § Commit Handoff](cycles.md#commit-handoff).
 - STOP semantics at REVIEW: see [shared-phase-progression.md](shared-phase-progression.md).
 - Moving the ticket to IN ACCEPTANCE: see [shared-ticket-status-in-acceptance.md](shared-ticket-status-in-acceptance.md).
 

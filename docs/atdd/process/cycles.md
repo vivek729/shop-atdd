@@ -287,9 +287,11 @@ Every cycle separates the work step (**WRITE**) from the human-approval step (**
 
 Structural cycles add a second STOP at the end of **TEST** (after the chosen checks complete, before COMMIT) so the user can review the test results before commit confirmation. **The entire TEST phase is gated upfront** — the agent asks the user to choose `full` (compile + sample), `compile` (compile only), or `skip` before running anything. Compile is not silent; even single-project compile commands like `./gradlew build` or `npx tsc --noEmit` require approval. See `task-and-chore-cycles.md` for the procedure. AT and CT cycles do not have a standalone TEST phase — test execution is folded into WRITE (the agent runs the tests as part of doing the work) and the relevant verification is repeated inside COMMIT.
 
-## Commit Confirmation
+## Commit Handoff
 
-Every COMMIT step in every cycle is gated by the rule defined in [`shared-commit-confirmation.md`](shared-commit-confirmation.md): the agent must ask "Can I commit?" and receive an explicit yes before running `git commit` (or `gh issue close`, or any other GitHub state mutation). The rule lives in its own file because it is a shared, low-level gate that leaf committing agents import directly — independent of the routing flow defined here.
+Agents never run `git commit`, `git add`, or `gh issue close`. When the work is done, the agent exits cleanly with the working-tree delta untouched. The wrapping CLI that invoked the dispatch then runs the post-dispatch human gates (the "Can I commit?" prompt and any phase-boundary STOPs) and owns the actual commit. This separation keeps the commit-approval moment outside the agent's transcript so the human reviews the staged delta with normal review tools rather than scrolling back through the agent's reasoning.
+
+Per-phase docs name the commit-message format (`<Ticket> | <Phase>`) — the wrapping CLI applies it. The agent's only commit-related responsibility is to leave the working tree in a state that produces the right commit when the wrapper stages and commits it.
 
 ## Resume Detection
 
