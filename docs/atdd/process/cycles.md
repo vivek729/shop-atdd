@@ -6,57 +6,55 @@ This document defines the decision flow for the ATDD pipeline. Each phase is def
 
 ## Intake (per ticket)
 
-Before any cycle runs, the picked ticket is classified by the `gh-optivem` Go runtime (the deterministic fast path in `internal/atdd/runtime/classify`) into one of six ticket types: **story**, **bug**, **system-api-task**, **system-ui-task**, **external-api-task**, or **chore**. Classification by ticket type happens first; cycle routing is decided afterwards by two orthogonal gates (see below). See `glossary.md` for the full definitions of *behavioral change*, *structural change*, and *Legacy Coverage*.
+Before any cycle runs, the picked ticket is classified by the `gh-optivem` Go runtime (the deterministic fast path in `internal/atdd/runtime/classify`) into one of three native GitHub issue types — **Story**, **Bug**, or **Task** — and Task tickets carry one of three `subtype:*` labels: `subtype:system-interface-redesign`, `subtype:external-system-interface-redesign`, or `subtype:system-implementation-change`. Classification happens first; cycle routing is decided afterwards by two orthogonal gates (see below). See `glossary.md` for the full definitions of *behavioral change*, *structural change*, and *Legacy Coverage*.
 
-Six **ticket types** are routed through **four intake agents**:
+The three ticket types are routed by intake:
 
-- `atdd-story` (ticket type `story`) → reads the story's acceptance criteria; produces 1+ change-driven AC scenarios (one per acceptance criterion). Behavioral.
-- `atdd-bug` (ticket type `bug`) → reads the bug's reproduction paths; produces 1+ change-driven AC scenarios (one per distinct reproduction path; default: one). Behavioral.
-- `atdd-task` — single agent that handles ticket types `system-api-task`, `system-ui-task`, and `external-api-task`. The Go runtime passes the subtype (`system-api-redesign`, `system-ui-redesign`, or `external-system-api-change`) into `atdd-task` so the agent knows which boundary it is touching. Driver *interfaces* may grow; existing AC must keep passing through them. Single-driver scope by construction. Produces no change-driven AC scenarios. Structural.
-- `atdd-chore` (ticket type `chore`) → reads the structural change description; the change is internal-only (refactor a class, rename, dependency upgrade). Drivers untouched. Produces no change-driven AC scenarios. Structural.
+- **Story** → reads the story's acceptance criteria; produces 1+ change-driven AC scenarios (one per acceptance criterion). Behavioral.
+- **Bug** → reads the bug's reproduction paths; produces 1+ change-driven AC scenarios (one per distinct reproduction path; default: one). Behavioral.
+- **Task** → reads the structural change description and the `subtype:*` label. The runtime passes the subtype value (`system-interface-redesign`, `external-system-interface-redesign`, or `system-implementation-change`) into the structural-cycle dispatch so downstream nodes know which boundary (or no boundary, for `system-implementation-change`) is touched. For interface-change subtypes, driver *implementations* may grow; existing AC must keep passing through unchanged driver interfaces. Produces no change-driven AC scenarios. Structural.
 
-**Naming note — ticket type vs subtype.** `cycles.md` and `glossary.md` use the ticket-type vocabulary (`system-api-task`, `system-ui-task`, `external-api-task`, `chore`); the embedded `atdd-task` agent prompt (in `gh-optivem`) uses the subtype vocabulary (`system-api-redesign`, `system-ui-redesign`, `external-system-api-change`). The two are 1:1 — `system-api-task` ↔ `system-api-redesign`, `system-ui-task` ↔ `system-ui-redesign`, `external-api-task` ↔ `external-system-api-change`. The `redesign` / `change` form is the agent-input form passed by the runtime; the `-task` form is the cycle-routing form used in this doc. The COMMIT-message form is a third variant — uppercase, e.g. `SYSTEM API REDESIGN` (see `task-and-chore-cycles.md`).
+**Naming note — subtype labels vs commit-message phase.** The `subtype:*` label is the runtime-input form (e.g. `subtype:system-interface-redesign`). The COMMIT-message form is uppercase (e.g. `SYSTEM INTERFACE REDESIGN`); see `task-and-chore-cycles.md`. Internally, `subtype:system-implementation-change` maps to the commit suffix `CHORE` for backwards compatibility with existing commit conventions.
 
-In addition, **all four intake agents** produce 0+ legacy-coverage AC scenarios from the optional Legacy Coverage section in the ticket schema (see [Legacy Coverage in glossary.md](glossary.md#legacy-coverage)).
+In addition, **intake on every ticket type** may produce 0+ legacy-coverage AC scenarios from the optional Legacy Coverage section in the ticket schema (see [Legacy Coverage in glossary.md](glossary.md#legacy-coverage)).
 
-All four intake agents end with **STOP** for human approval before any cycle begins.
+Intake ends with **STOP** for human approval before any cycle begins.
 
 After STOP, two **orthogonal gates** are evaluated per ticket:
 
-1. **Ticket has a Legacy Coverage section?** — Universal; applies to all six ticket types.
+1. **Ticket has a Legacy Coverage section?** — Universal; applies to every ticket type.
    - Yes → enter the **Legacy Coverage Cycle** (test-last; retroactive AC for already-built behavior; tests should pass on first run; **not ATDD**).
    - No → skip the Legacy Coverage Cycle.
-2. **Change-driven AC produced?** — Determined by ticket type: yes for story/bug, no for system-api-task / system-ui-task / external-api-task / chore. This *is* the behavioral-vs-structural distinction.
+2. **Change-driven AC produced?** — Determined by ticket type: yes for Story / Bug, no for Task. This *is* the behavioral-vs-structural distinction.
    - Yes → enter the **AT Cycle** (test-first ATDD; Red → Green per scenario).
    - No → skip the AT Cycle.
 
 **Order when both gates fire: Legacy Coverage Cycle first, then AT Cycle.** Rationale: fill the coverage gap before piling new behavior on top.
 
-The full per-ticket flow is captured by the table below. The combinatorics are: **{6 ticket types} × {Legacy Coverage section: yes/no}** = **12 flows**, all of which collapse to the rule "Legacy Coverage Cycle first (if present), then the type-specific cycle, then **TICKET STATUS - IN ACCEPTANCE**."
+The full per-ticket flow is captured by the table below. The combinatorics are: **{Story / Bug / Task × (3 subtypes for Task)} × {Legacy Coverage section: yes/no}** — all of which collapse to the rule "Legacy Coverage Cycle first (if present), then the type/subtype-specific cycle, then **TICKET STATUS - IN ACCEPTANCE**."
 
-The three Task Cycles and the Chore Cycle are all governed by the rule that **existing AC must stay green** locally before the final ticket commit. After that commit the ticket enters **TICKET STATUS - IN ACCEPTANCE** and the agent stops — see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md). Agents are CI-unaware.[^green]
+The structural cycles are all governed by the rule that **existing AC must stay green** locally before the final ticket commit. After that commit the ticket enters **TICKET STATUS - IN ACCEPTANCE** and the agent stops — see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md). Agents are CI-unaware.[^green]
 
 [^green]: "Existing AC must stay green" — verified locally via sample-suite runs before the final commit, per `CLAUDE.md`. CI's Acceptance Stage runs the full suite afterwards but is human-watched, not agent-watched. Referenced from each structural-cycle row in the table below as `[^green]`.
 
 **Output asymmetry — change-driven AC vs legacy-coverage AC.** The two artifact streams are produced under different rules:
 
-- **Change-driven AC** is **ticket-type-specific** — only `atdd-story` and `atdd-bug` produce it (one scenario per acceptance criterion or per distinct reproduction path). It is the input to the AT Cycle (see below — note that the unit of work is the **ticket**, with all scenarios batched, so there is no per-scenario inner loop; see the AT Cycle section).
+- **Change-driven AC** is **ticket-type-specific** — only Story and Bug produce it (one scenario per acceptance criterion or per distinct reproduction path). It is the input to the AT Cycle (see below — note that the unit of work is the **ticket**, with all scenarios batched, so there is no per-scenario inner loop; see the AT Cycle section).
 - **Legacy-coverage AC** is **universal-optional** — any ticket type may produce it, gated by whether the ticket schema carries a Legacy Coverage section. It is the input to the Legacy Coverage Cycle, which is **test-last** (retroactive tests for already-built behavior; tests should pass on first run; not ATDD).
 
-| Ticket type | Agent | Class | Change-driven AC | Legacy-coverage AC | Routes to |
-|-------------|-------|-------|------------------|--------------------|-----------|
-| `story` | `atdd-story` | Behavioral | One scenario per acceptance criterion | 0+ scenarios if the ticket has a Legacy Coverage section | AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
-| `bug` | `atdd-bug` | Behavioral | One scenario per distinct reproduction path (default: one) | 0+ scenarios if the ticket has a Legacy Coverage section | AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
-| `system-api-task` | `atdd-task` (subtype `system-api-redesign`) | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | System API Task Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
-| `system-ui-task` | `atdd-task` (subtype `system-ui-redesign`) | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | System UI Task Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
-| `external-api-task` | `atdd-task` (subtype `external-system-api-change`) | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | External API Task Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
-| `chore` | `atdd-chore` | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | Chore Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
+| Ticket type | Subtype label (Task only) | Class | Change-driven AC | Legacy-coverage AC | Routes to |
+|-------------|---------------------------|-------|------------------|--------------------|-----------|
+| Story | — | Behavioral | One scenario per acceptance criterion | 0+ scenarios if the ticket has a Legacy Coverage section | AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
+| Bug | — | Behavioral | One scenario per distinct reproduction path (default: one) | 0+ scenarios if the ticket has a Legacy Coverage section | AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
+| Task | `subtype:system-interface-redesign` | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | Driver Adapter Cycle → `structural_cycle` (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
+| Task | `subtype:external-system-interface-redesign` | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | Driver Adapter Cycle → Contract Test Sub-Process (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
+| Task | `subtype:system-implementation-change` | Structural | None | 0+ scenarios if the ticket has a Legacy Coverage section | System Under Test Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
 
 From AT - RED - TEST onward the AT Cycle pipeline is identical regardless of which behavioral intake variant produced the scenarios. The Legacy Coverage Cycle's internal phases are TBD; see `glossary.md`.
 
 ## AT Cycle (per ticket)
 
-_Triggered when the ticket produces change-driven AC (i.e. **change-driven AC = yes** — story or bug). Task tickets enter the matching task cycle instead — **System API Task Cycle**, **System UI Task Cycle**, or **External API Task Cycle** depending on the task subtype; chore tickets enter the **Chore Cycle** instead. See the Intake gates above and the dedicated cycle sections below._
+_Triggered when the ticket produces change-driven AC (i.e. **change-driven AC = yes** — Story or Bug). Task tickets enter the matching structural cycle instead — the **Driver Adapter Cycle** (for `subtype:system-interface-redesign` or `subtype:external-system-interface-redesign`) or the **System Under Test Cycle** (for `subtype:system-implementation-change`). See the Intake gates above and the dedicated cycle sections below._
 
 The unit of work in the AT Cycle is the **ticket** — all change-driven AC scenarios for the ticket are batched through each phase together. AT - RED - TEST writes all scenarios at once; AT - RED - DSL, AT - RED - SYSTEM DRIVER, and AT - GREEN - SYSTEM each operate over the full set. There is no per-scenario inner loop.
 
@@ -157,16 +155,15 @@ The Onboarding sub-process internally handles the "Driver already exists" early 
 
 ## Structural Cycle Flow (shared)
 
-The three structural cycles (`system-api-task`, `system-ui-task`, `chore`) share one flow, parameterised by the **cycle-specific implementation step** in step 1:
+The structural paths share one flow, parameterised by the **cycle-specific implementation step** in step 1:
 
 ```
-Triggered: ticket type ∈ {system-api-task, system-ui-task, chore}
+Triggered: Task ticket with subtype ∈ {system-interface-redesign, system-implementation-change}
     │
     ▼
 WRITE — implement change for this cycle:
-    - system-api-task → Update System API Driver (interface + impl)
-    - system-ui-task  → Update System UI Driver  (interface + impl)
-    - chore           → Implement chore (refactor / upgrade / rename / etc.)
+    - subtype:system-interface-redesign       → Update the System Driver(s) the ticket targets (interface + impl)
+    - subtype:system-implementation-change    → Implement the internal change (refactor / upgrade / rename / etc.)
     │
     ▼
 REVIEW — STOP, present implementation for human approval
@@ -175,54 +172,45 @@ REVIEW — STOP, present implementation for human approval
 TEST — compile + sample suite (entire phase gated upfront — ask user to choose full / compile / skip; run nothing until the choice arrives)
     │
     ▼
-COMMIT — <Ticket> | <PHASE> where PHASE ∈ {SYSTEM API REDESIGN, SYSTEM UI REDESIGN, CHORE}
+COMMIT — <Ticket> | <PHASE> where PHASE ∈ {SYSTEM INTERFACE REDESIGN, CHORE}
     │
     ▼
 TICKET STATUS - IN ACCEPTANCE (see shared-ticket-status-in-acceptance.md)
 ```
 
-All three are governed by the rule that **existing AC must stay green** locally before the final ticket commit.[^green] There is no per-scenario RED/GREEN (no change-driven AC is produced); the sample suite runs locally during the TEST phase (after REVIEW, before COMMIT) to verify the change, gated by explicit user approval. The post-commit CI Acceptance Stage is human-watched, not agent-watched — see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md).
+Both are governed by the rule that **existing AC must stay green** locally before the final ticket commit.[^green] There is no per-scenario RED/GREEN (no change-driven AC is produced); the sample suite runs locally during the TEST phase (after REVIEW, before COMMIT) to verify the change, gated by explicit user approval. The post-commit CI Acceptance Stage is human-watched, not agent-watched — see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md).
 
-The External API Task Cycle is structurally similar but routes through the Contract Test Sub-Process instead of a direct WRITE → REVIEW → TEST → COMMIT sequence; see "External API Task Cycle" below.
-
----
-
-## System API Task Cycle
-
-_Triggered when ticket type = system-api-task (System API Driver redesign at the system boundary, no change-driven AC, no other boundaries touched)._
-
-A System API task changes the System API at the boundary — request/response DTOs, endpoints, status codes, and the like. The System API Driver is updated to match. Driver *interfaces* may grow or change; existing acceptance tests must keep passing through them. Single-driver scope by construction (single-boundary ticket); multi-boundary work is split into multiple coordinated tickets at creation. The cycle ends with a **single COMMIT** covering the driver update.
-
-WRITE, TEST, and COMMIT mechanics (`SYSTEM API REDESIGN - WRITE`, the shared structural-cycle TEST, and the shared structural-cycle COMMIT with phase suffix `SYSTEM API REDESIGN`) live in [`task-and-chore-cycles.md`](task-and-chore-cycles.md). Flow: see **Structural Cycle Flow (shared)** above.
-
-The system-api-task ticket carries a **checklist of structural change items** in its body; the agent ticks them off as the work is done, and on the final ticket commit moves the issue to **IN ACCEPTANCE** (see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md)).
+The `subtype:external-system-interface-redesign` path is structurally similar but routes through the Contract Test Sub-Process instead of a direct WRITE → REVIEW → TEST → COMMIT sequence; see "Driver Adapter Cycle — external-system path" below.
 
 ---
 
-## System UI Task Cycle
+## Driver Adapter Cycle
 
-_Triggered when ticket type = system-ui-task (System UI Driver redesign at the system boundary, no change-driven AC, no other boundaries touched)._
+_Triggered when a Task ticket carries `subtype:system-interface-redesign` or `subtype:external-system-interface-redesign`. Both subtypes touch a Driver Adapter; the runtime routes them differently inside this cycle._
 
-A System UI task changes the System UI at the boundary — page structure, form fields, navigation, and the like. The System UI Driver is updated to match. Driver *interfaces* may grow or change; existing acceptance tests must keep passing through them. Single-driver scope by construction (single-boundary ticket); multi-boundary work is split into multiple coordinated tickets at creation. The cycle ends with a **single COMMIT** covering the driver update.
+The Driver Adapter Cycle (`da_cycle` in the runtime) splits on the `subtype:*` label:
 
-WRITE, TEST, and COMMIT mechanics (`SYSTEM UI REDESIGN - WRITE`, the shared structural-cycle TEST, and the shared structural-cycle COMMIT with phase suffix `SYSTEM UI REDESIGN`) live in [`task-and-chore-cycles.md`](task-and-chore-cycles.md). Flow: see **Structural Cycle Flow (shared)** above.
+- **`subtype:system-interface-redesign`** — a system-side Driver Adapter we own (API, UI, mobile, CLI, admin, …). Routes through the **shared structural cycle** (WRITE → REVIEW → TEST → COMMIT). The WRITE agent reads the Checklist and the system tree to figure out which driver(s) to modify; the framework no longer pre-classifies the channel.
+- **`subtype:external-system-interface-redesign`** — an External System Driver Adapter (we are reacting to a third-party API change). Routes through the **Contract Test Sub-Process** (which itself wraps the **External System Onboarding Sub-Process** if no Driver yet exists). After CT completes its four-commit sequence, the ticket enters **TICKET STATUS - IN ACCEPTANCE** — see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md).
 
-The system-ui-task ticket carries a **checklist of structural change items** in its body; the agent ticks them off as the work is done, and on the final ticket commit moves the issue to **IN ACCEPTANCE** (see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md)).
+### Driver Adapter Cycle — system-side path
 
----
+A system-side interface change reshapes the System surface — API endpoints/DTOs/status codes, UI page structure/forms/copy/selectors, mobile screens, CLI commands, admin pages, or whatever channel the ticket targets. The relevant System Driver(s) are updated to match. Driver *interfaces* may grow or change; existing acceptance tests must keep passing through them. The cycle ends with a **single COMMIT** covering the driver update.
 
-## External API Task Cycle
+WRITE / REVIEW mechanics live in [`system-interface-redesign.md`](system-interface-redesign.md). TEST and COMMIT use the shared structural-cycle procedures in [`task-and-chore-cycles.md`](task-and-chore-cycles.md) (commit suffix `SYSTEM INTERFACE REDESIGN`). Flow: see **Structural Cycle Flow (shared)** above.
 
-_Triggered when ticket type = external-api-task (an external system changed its API; we are reacting to a third-party change, no change-driven AC of our own)._
+The Task ticket carries a **checklist of structural change items** in its body; the agent ticks them off as the work is done, and on the final ticket commit moves the issue to **IN ACCEPTANCE** (see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md)).
 
-An external system updated its API — new version, breaking change, deprecated endpoint, or similar. We update the External System Driver to match the new external surface. The work routes through the **Contract Test Sub-Process** (which itself routes through the **External System Onboarding Sub-Process** if no Driver yet exists). Single-driver scope by construction (single-boundary ticket); multi-boundary work is split into multiple coordinated tickets at creation. After CT completes its four-commit sequence, the ticket enters **TICKET STATUS - IN ACCEPTANCE** — see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md).
+### Driver Adapter Cycle — external-system path
 
-This cycle has no standalone WRITE / COMMIT phases of its own — all WRITE and COMMIT mechanics live in the per-phase CT docs (`ct-red-test.md`, `ct-red-dsl.md`, `ct-red-external-driver.md`, `ct-green-stubs.md`) plus `ct-cycle-conventions.md`. See [`task-and-chore-cycles.md`](task-and-chore-cycles.md) for the cross-reference.
+An external system updated its API — new version, breaking change, deprecated endpoint, or similar. We update the External System Driver to match the new external surface. The work routes through the **Contract Test Sub-Process** (which itself routes through the **External System Onboarding Sub-Process** if no Driver yet exists).
 
-The external-api-task ticket carries a **checklist of structural change items** in its body; the agent ticks them off as the work is done, and on the final ticket commit moves the issue to **IN ACCEPTANCE** (see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md)).
+This path has no standalone WRITE / COMMIT phases of its own — all WRITE and COMMIT mechanics live in the per-phase CT docs (`ct-red-test.md`, `ct-red-dsl.md`, `ct-red-external-driver.md`, `ct-green-stubs.md`) plus `ct-cycle-conventions.md`. See [`task-and-chore-cycles.md`](task-and-chore-cycles.md) for the cross-reference.
+
+The Task ticket carries a **checklist of structural change items** in its body; the agent ticks them off as the work is done, and on the final ticket commit moves the issue to **IN ACCEPTANCE** (see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md)).
 
 ```
-Triggered: ticket type = external-api-task
+Triggered: Task ticket with subtype:external-system-interface-redesign
     │
     ▼
 Contract Test Sub-Process (see above)
@@ -231,19 +219,19 @@ Contract Test Sub-Process (see above)
 TICKET STATUS - IN ACCEPTANCE (see shared-ticket-status-in-acceptance.md)
 ```
 
-There is no standalone STOP - HUMAN REVIEW or COMMIT in this cycle — those happen inside the Contract Test Sub-Process (which has its own per-phase STOPs and four-commit sequence). The cycle is governed by the rule that **existing AC must stay green** locally; the sample suite runs locally as part of CT's COMMIT steps. The post-commit CI Acceptance Stage is human-watched, not agent-watched — see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md).
+There is no standalone STOP - HUMAN REVIEW or COMMIT in this path — those happen inside the Contract Test Sub-Process (which has its own per-phase STOPs and four-commit sequence). The path is governed by the rule that **existing AC must stay green** locally; the sample suite runs locally as part of CT's COMMIT steps. The post-commit CI Acceptance Stage is human-watched, not agent-watched — see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md).
 
 ---
 
-## Chore Cycle
+## System Under Test Cycle
 
-_Triggered when ticket type = chore (internal-only structural change, drivers untouched, no change-driven AC)._
+_Triggered when a Task ticket carries `subtype:system-implementation-change` (internal-only structural change, drivers untouched, no change-driven AC)._
 
-A chore changes nothing at the boundary — it's an internal refactor, rename, dependency upgrade, or similar. Drivers (interfaces and implementations) are untouched. The cycle is therefore a single-step implementation followed by review, commit, and the move to **TICKET STATUS - IN ACCEPTANCE**.
+A `system-implementation-change` ticket changes nothing at the boundary — it's an internal refactor, rename, dependency upgrade, or similar. Drivers (interfaces and implementations) are untouched. The cycle (`sut_cycle` in the runtime) is therefore a single-step implementation followed by review, test, commit, and the move to **TICKET STATUS - IN ACCEPTANCE**.
 
 WRITE, TEST, and COMMIT mechanics (`CHORE - WRITE`, the shared structural-cycle TEST, and the shared structural-cycle COMMIT with phase suffix `CHORE`) live in [`task-and-chore-cycles.md`](task-and-chore-cycles.md). Flow: see **Structural Cycle Flow (shared)** above.
 
-The chore ticket carries a **checklist of refactor / upgrade steps** in its body; the agent ticks them off as the work is done, and on the final ticket commit moves the issue to **IN ACCEPTANCE** (see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md)).
+The Task ticket carries a **checklist of refactor / upgrade steps** in its body; the agent ticks them off as the work is done, and on the final ticket commit moves the issue to **IN ACCEPTANCE** (see [`shared-ticket-status-in-acceptance.md`](shared-ticket-status-in-acceptance.md)).
 
 ---
 
@@ -251,12 +239,11 @@ The chore ticket carries a **checklist of refactor / upgrade steps** in its body
 
 | Phase | Agent | Notes |
 |-------|-------|-------|
-| Intake (story) | atdd-story | Behavioral. Change-driven AC: one scenario per acceptance criterion. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
-| Intake (bug) | atdd-bug | Behavioral. Change-driven AC: one scenario per distinct reproduction path (default: one). Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
-| Intake (system-api-task) | `atdd-task` (subtype `system-api-redesign`) | Structural. System API redesign at the system boundary; single-driver scope; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to System API Task Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
-| Intake (system-ui-task) | `atdd-task` (subtype `system-ui-redesign`) | Structural. System UI redesign at the system boundary; single-driver scope; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to System UI Task Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
-| Intake (external-api-task) | `atdd-task` (subtype `external-system-api-change`) | Structural. External System API change at the system boundary; single-driver scope; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to External API Task Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
-| Intake (chore) | `atdd-chore` | Structural. Internal-only change; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to Chore Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
+| Intake (Story) | parser (no agent) | Behavioral. Change-driven AC: one scenario per acceptance criterion. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
+| Intake (Bug) | parser (no agent) | Behavioral. Change-driven AC: one scenario per distinct reproduction path (default: one). Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to AT Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section. |
+| Intake (Task, `subtype:system-interface-redesign`) | parser (no agent) | Structural. System-side interface change; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to Driver Adapter Cycle → `structural_cycle` (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
+| Intake (Task, `subtype:external-system-interface-redesign`) | parser (no agent) | Structural. External-system interface change; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to Driver Adapter Cycle → Contract Test Sub-Process (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
+| Intake (Task, `subtype:system-implementation-change`) | parser (no agent) | Structural. Internal-only change; no change-driven AC. Optional legacy-coverage AC if the ticket has a Legacy Coverage section. STOP for approval. Routes to System Under Test Cycle (always); Legacy Coverage Cycle first if the ticket has a Legacy Coverage section.[^green] |
 | AT - RED - TEST | `atdd-test` | All scenarios for the ticket batched. WRITE = write tests. REVIEW = STOP for human approval. COMMIT = compile, conditional DSL-prototype STOP, run, disable, commit. |
 | AT - RED - DSL | `atdd-dsl` | WRITE = implement DSL + Driver-interface-changed flags. REVIEW = STOP for human approval. COMMIT = conditional Driver-prototype impl, commit. |
 | AT - RED - SYSTEM DRIVER | `atdd-driver` | System Drivers only (`shop/`). WRITE = implement System Drivers, run tests. REVIEW = STOP. COMMIT = commit. |
@@ -268,10 +255,9 @@ The chore ticket carries a **checklist of refactor / upgrade steps** in its body
 | CT - RED - DSL | `atdd-dsl` | WRITE = implement DSL + flag. REVIEW = STOP. COMMIT = commit + push. |
 | CT - RED - EXTERNAL DRIVER | `atdd-driver` | External Drivers only (`external/`). WRITE = implement External Drivers, run tests. REVIEW = STOP. COMMIT = commit + push. |
 | CT - GREEN - STUBS | _no dedicated agent — see "Stubs ownership" needs-decision in the audit plan_ | WRITE = implement Stubs, run tests. REVIEW = STOP. COMMIT = commit. |
-| SYSTEM API REDESIGN - WRITE / REVIEW / TEST / COMMIT | `atdd-task` (subtype `system-api-redesign`) | WRITE = update System API + driver impl. REVIEW = STOP for human approval. TEST = shared structural-cycle TEST (compile, ask-then-sample, STOP). COMMIT = shared structural-cycle COMMIT (commit + tick checklist + status move). |
-| SYSTEM UI REDESIGN - WRITE / REVIEW / TEST / COMMIT | `atdd-task` (subtype `system-ui-redesign`) | WRITE = update System UI + driver impl. REVIEW = STOP. TEST = shared structural-cycle TEST. COMMIT = shared structural-cycle COMMIT. |
-| EXTERNAL API REDESIGN | `atdd-task` (subtype `external-system-api-change`) | No standalone WRITE / REVIEW / TEST / COMMIT — routes entirely through the Contract Test Sub-Process. |
-| CHORE - WRITE / REVIEW / TEST / COMMIT | `atdd-chore` | WRITE = implement chore. REVIEW = STOP. TEST = shared structural-cycle TEST. COMMIT = shared structural-cycle COMMIT. |
+| SYSTEM INTERFACE REDESIGN - WRITE / REVIEW / TEST / COMMIT | `atdd-task` (subtype `system-interface-redesign`) | WRITE = update the targeted System Driver(s) + adapter impl(s) (channel determined by Checklist). REVIEW = STOP for human approval. TEST = shared structural-cycle TEST (compile, ask-then-sample, STOP). COMMIT = shared structural-cycle COMMIT (commit + tick checklist + status move). See [`system-interface-redesign.md`](system-interface-redesign.md). |
+| (external-system path) | `atdd-task` (subtype `external-system-interface-redesign`) | No standalone WRITE / REVIEW / TEST / COMMIT — routes entirely through the Contract Test Sub-Process. |
+| CHORE - WRITE / REVIEW / TEST / COMMIT | `atdd-chore` (subtype `system-implementation-change`) | WRITE = implement the internal change. REVIEW = STOP. TEST = shared structural-cycle TEST. COMMIT = shared structural-cycle COMMIT (suffix `CHORE`). |
 
 ## Scope
 

@@ -20,9 +20,9 @@ Nothing in this procedure is CI-gated. Both the checklist ticking and the status
 
 Immediately after the **final ticket commit** has been pushed:
 
-- **AT Cycle (story / bug)** — after `AT - GREEN - SYSTEM - COMMIT` (the `atdd-release` commit that re-enables tests and pushes the final GREEN).
-- **System API Task / System UI Task / Chore** — after the single `<Ticket> | <PHASE>` commit produced by the shared structural-cycle COMMIT procedure in `task-and-chore-cycles.md`.
-- **External API Task** — after the final commit of the Contract Test Sub-Process (`CT - GREEN - STUBS`).
+- **AT Cycle (Story / Bug)** — after `AT - GREEN - SYSTEM - COMMIT` (the `atdd-release` commit that re-enables tests and pushes the final GREEN).
+- **Task — `subtype:system-interface-redesign` or `subtype:system-implementation-change`** — after the single `<Ticket> | <PHASE>` commit produced by the shared structural-cycle COMMIT procedure in `task-and-chore-cycles.md`.
+- **Task — `subtype:external-system-interface-redesign`** — after the final commit of the Contract Test Sub-Process (`CT - GREEN - STUBS`).
 - **Legacy Coverage Cycle** — after its terminal commit (TBD; see `glossary.md`).
 - **External System Onboarding Sub-Process** — after its `External System Onboarding | <External System Name>` commit.
 
@@ -32,7 +32,7 @@ Per-phase intermediate commits (e.g. `AT - RED - TEST`, `CT - RED - DSL`) do **n
 
 This procedure runs **without re-asking the user**. The COMMIT immediately before it was already gated by the wrapping CLI's "Can I commit?" prompt (see [cycles.md § Commit Handoff](cycles.md#commit-handoff)); the steps below are routine post-commit bookkeeping. The agent just performs them and informs the user afterwards.
 
-1. Tick the ticket's checklist items completed by this work (acceptance-criterion checkboxes for behavioral cycles; structural-change checklist items for task / chore cycles). Not CI-gated.
+1. Tick the ticket's checklist items completed by this work (acceptance-criterion checkboxes for behavioral cycles; structural-change checklist items for the structural cycles). Not CI-gated.
 2. Move the GitHub issue to status **IN ACCEPTANCE** in the project board.
 3. Stop. The ticket is out of agent scope.
 
