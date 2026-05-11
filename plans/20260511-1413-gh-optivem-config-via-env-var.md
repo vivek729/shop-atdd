@@ -1,64 +1,45 @@
 # Plan — Migrate workflows to `GH_OPTIVEM_CONFIG`, drop `--system-config` / `--test-config` flags
 
 **Date:** 2026-05-11
-**Scope:** shop repo only — no changes needed in `gh-optivem` CLI.
+**Scope:** spans `gh-optivem` (CLI schema patch — DONE) and shop (workflows + docs).
 
 ## Background
 
 Today every `gh optivem run|build|test|stop|clean system` invocation in the workflows passes both `--system-config docker/<lang>/<arch>/systems.yaml` and `--test-config system-test/<lang>/tests.yaml`. That's ~227 flag pairs across 14 workflow files. The latest/legacy split is encoded by which `tests.*.yaml` the flag points at — there is no single variant identifier.
 
-Meanwhile the repo root has 6 variant yamls (`gh-optivem-<arch>-<lang>.yaml`) consumed only by `gh optivem compile` (via `compile-all.sh`). They describe each variant's system + system-test paths but do **not** carry the docker or tests config paths.
+Meanwhile the repo root has 6 variant yamls (`gh-optivem-<arch>-<lang>.yaml`) consumed only by `gh optivem compile` (via `compile-all.sh`). They describe each variant's system + system-test paths but did not carry the docker or tests config paths.
 
-## Key finding from `gh-optivem` CLI inspection
+## CLI patch (DONE — 2026-05-11)
 
-The CLI already supports the full chain end-to-end (`internal/projectconfig/config.go`, `runner_commands.go`):
+Before today: the CLI's `projectconfig.Config` schema had `SystemConfig` and `TestConfig` at **top level** as `system_config:` / `test_config:`. Logically they belong nested under `system:` / `system_test:` (they're properties of those blocks, not cross-cutting).
 
-- **`GH_OPTIVEM_CONFIG` env var** — already defined (`projectconfig.EnvVar`), resolved by `ResolvePath` with precedence: `--config` flag > `$GH_OPTIVEM_CONFIG` > default `./gh-optivem.yaml`.
-- **Top-level `system_config:` field** — already in the schema (line 85), optional, falls back to `./systems.yaml` or explicit `--system-config`.
-- **Top-level `test_config:` field** — same (line 91).
-- **Runner commands** (`build|run|stop|clean|test system`) already resolve `--system-config`/`--test-config` via flag > yaml field > default.
+Patched the CLI to nest them: `system.config:` and `system_test.config:`. Old top-level keys now produce a clear migration error at Load time so silent fallback to `./systems.yaml` defaults is impossible.
 
-**No CLI work needed.** The whole migration is in this repo.
+Files changed in `gh-optivem`:
+- `internal/projectconfig/config.go` — moved `Config` field from `Config` struct → `System` struct; added `Config` field to `TierSpec` (only meaningful on `system_test`); added Validate rules to reject `system.backend.config` / `system.frontend.config` and to reject the legacy top-level keys with a migration hint.
+- `internal/projectconfig/config_test.go` — updated round-trip test; added `TestValidate_RejectsLegacyTopLevelConfigKeys` and `TestValidate_RejectsConfigOnBackendOrFrontend`.
+- `internal/steps/optivem_yaml.go` — scaffolder now writes `pc.System.Config` / `pc.SystemTest.Config` (was `pc.SystemConfig` / `pc.TestConfig`).
+- `runner_commands.go` — `resolveSystemPath` / `resolveTestsPath` and `loadSystem` / `loadTests` hints updated to the nested spelling.
+- `runner_commands_test.go` — `writeYAMLConfig` helper now emits nested yaml; hint-check strings updated.
 
-## Correction to the work already done
+`go build ./...` and `go test ./...` both green.
 
-The 12 variant yamls created earlier today put the config fields at the **wrong level**:
+## Shop yamls (DONE earlier today, no rework needed)
 
-```yaml
-system:
-    config: docker/.../systems.yaml      # WRONG — nested
-system_test:
-    config: system-test/.../tests.yaml   # WRONG — nested
+The 12 variant yamls created earlier (`gh-optivem-<arch>-<lang>[-legacy].yaml`) already use the nested form (`system.config:` / `system_test.config:`). They validate cleanly against the patched CLI:
+
+```
+gh optivem config validate -c gh-optivem-monolith-dotnet.yaml
+→ gh-optivem-monolith-dotnet.yaml is valid
 ```
 
-The CLI expects them **top-level**:
+Confirmed across all 12 files. No edits to shop yamls required.
 
-```yaml
-system_config: docker/.../systems.yaml
-test_config: system-test/.../tests.yaml
-```
+## Plan items remaining
 
-All 12 files need to be fixed before the workflow migration starts. Without this, the env var would point at a yaml the CLI loads cleanly but ignores the config fields in (because they're at the wrong path), and runner commands would silently fall back to `./systems.yaml` defaults that don't exist.
+### Phase 1 — smoke test (in this repo)
 
-## Plan items
-
-### Phase 1 — fix variant yamls (in this repo)
-
-**1.1** Move `system.config` → top-level `system_config` and `system_test.config` → top-level `test_config` in all 12 files:
-- `gh-optivem-monolith-dotnet.yaml`
-- `gh-optivem-monolith-dotnet-legacy.yaml`
-- `gh-optivem-monolith-java.yaml`
-- `gh-optivem-monolith-java-legacy.yaml`
-- `gh-optivem-monolith-typescript.yaml`
-- `gh-optivem-monolith-typescript-legacy.yaml`
-- `gh-optivem-multitier-dotnet.yaml`
-- `gh-optivem-multitier-dotnet-legacy.yaml`
-- `gh-optivem-multitier-java.yaml`
-- `gh-optivem-multitier-java-legacy.yaml`
-- `gh-optivem-multitier-typescript.yaml`
-- `gh-optivem-multitier-typescript-legacy.yaml`
-
-**1.2** Smoke-test one variant locally to confirm the CLI picks up the fields:
+Confirm one variant pair end-to-end before fanning out workflow edits:
 
 ```pwsh
 $env:GH_OPTIVEM_CONFIG = "gh-optivem-monolith-dotnet.yaml"
@@ -67,7 +48,9 @@ gh optivem test system --sample
 gh optivem stop system
 ```
 
-If these succeed without `--system-config` / `--test-config`, the schema is wired correctly.
+Same for the `-legacy` sibling. If both pick up the right tests config and pass, the schema + env-var wiring is verified end-to-end.
+
+**Note:** the `gh` CLI used in workflows must be rebuilt with the patched gh-optivem. If the workflows pull a tagged release, bump the gh-optivem version after committing the CLI patch.
 
 ### Phase 2 — migrate workflows
 
