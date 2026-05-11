@@ -39,7 +39,7 @@ STOP. Present the system + driver changes (system code, driver-adapter, any appr
 
 ## SYSTEM INTERFACE REDESIGN - TEST
 
-The TEST phase is the shared structural-cycle TEST — see [task-and-chore-cycles.md § Shared structural-cycle TEST](task-and-chore-cycles.md#shared-structural-cycle-test). The entire phase is gated upfront: ask the user to choose `full` (compile + sample), `compile` (compile only), or `skip`, and run nothing until that answer arrives.
+The TEST phase is the shared structural-cycle TEST — see [task-and-chore-cycles.md § Shared structural-cycle TEST](task-and-chore-cycles.md#shared-structural-cycle-test). COMPILE always runs after REVIEW; the operator then picks sample-suite scope at the CHOOSE_TESTS menu (`[a]`ll / `[s]`ome / `[p]`ecific / `[n]`o tests / `[x]` reject). Compile or test RED routes through a human STOP and dispatches `atdd-fix-verify` with `failure_type=compile|test` for a single retry.
 
 ## SYSTEM INTERFACE REDESIGN - COMMIT
 

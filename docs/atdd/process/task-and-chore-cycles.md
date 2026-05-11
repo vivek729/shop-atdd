@@ -13,33 +13,35 @@ It mirrors the role of the AT per-phase docs (`at-red-test.md`, `at-red-dsl.md`,
 - **Commit message format.** See [at-cycle-conventions.md](at-cycle-conventions.md). Every commit follows `<Ticket> | <Phase>`, optionally prefixed with `#<issue-number> | `. The phase suffix is the phase *prefix only* (e.g. `SYSTEM INTERFACE REDESIGN`) — never append `- WRITE`, `- REVIEW`, `- TEST`, or `- COMMIT`.
 - **Commit handoff.** See [cycles.md § Commit Handoff](cycles.md#commit-handoff). Agents do not run `git commit`; they exit with the working-tree delta and the wrapping CLI runs the human gate ("Can I commit?") and the commit.
 - **Phase progression.** See [shared-phase-progression.md](shared-phase-progression.md). Phases ending in STOP block on explicit user approval.
-- **TEST gate (full | compile | skip).** The entire TEST phase is gated upfront with a single user prompt — nothing inside TEST runs until the user chooses, and the gate covers compile checks (`./compile-all.sh`, `./gradlew build`, `npx tsc --noEmit`, `dotnet build`) and the sample suite (`gh optivem test system --sample`) alike. Never self-initiate any of those commands, even compile-only ones.
+- **TEST scope.** COMPILE always runs first (`./compile-all.sh`, `./gradlew build`, `npx tsc --noEmit`, or `dotnet build` for the in-scope projects). Sample-suite scope is then picked at the CHOOSE_TESTS menu (`[a]`ll / `[s]`ome suites / `[p]`ecific tests / `[n]`o tests / `[x]` reject) — never self-initiate `gh optivem test system --sample` before the operator answers. Compile or test RED routes through a human STOP (Enter dispatches the fix-agent, `abort` halts the cycle); the fix-agent never commits.
 
 ---
 
 ## Shared structural-cycle TEST
 
-Every structural-cycle TEST runs after REVIEW (which itself runs after WRITE). Goal: verify the change compiles and the sample suite still passes locally before COMMIT. The TEST procedure honours the **Scope** declared in `gh-optivem.yaml` (see [`cycles.md`](cycles.md) "Scope"): compile and sample-suite work is restricted to the in-scope architecture and Test Lang.
+Every structural-cycle TEST runs after REVIEW (which itself runs after WRITE). Goal: verify the change compiles and (optionally) the sample suite still passes locally before COMMIT. The TEST procedure honours the **Scope** declared in `gh-optivem.yaml` (see [`cycles.md`](cycles.md) "Scope"): compile and sample-suite work is restricted to the in-scope architecture and Test Lang.
 
-1. **Ask the user upfront which checks to run.** Use this exact prompt, substituting the in-scope test language:
+The structural-cycle TEST has two stages — COMPILE (always runs) and a sample-suite stage whose scope is picked at a menu — and a shared failure path that routes through a human STOP and then the `atdd-fix-verify` agent.
+
+1. **COMPILE — always runs.** Compile the in-scope components (per `CLAUDE.md`: `./compile-all.sh` from the repo root, or a single-project command like `./gradlew build` / `npx tsc --noEmit` / `dotnet build` for narrow changes). On compile RED, jump to step 5.
+
+2. **CHOOSE_TESTS — operator picks scope.** When compile passes, the orchestrator presents the test-selection menu. Use this exact prompt, substituting the in-scope test language:
 
    ```
-   About to run TEST for <in-scope test language>. Choose one:
-     - full      → compile in-scope projects, then run sample suite (`gh optivem test system --sample`). Sample run takes a few minutes.
-     - compile   → compile in-scope projects only, no sample suite.
-     - skip      → skip TEST entirely, go straight to COMMIT (you accept the risk that compile or sample may fail in CI).
+   About to run sample suite for <in-scope test language>. Choose one:
+     - [a] all              → every category × every language in scope
+     - [s] some suites      → comma-separated suite names
+     - [p] specific tests   → comma-separated test names
+     - [n] no tests         → skip the suite, go straight to COMMIT
+     - [x] reject           → abort the cycle (no commit)
    Choice?
    ```
 
-   Wait for an explicit `full`, `compile`, or `skip`. Never run any compile or sample command before this answer arrives. Never run multiple test/run/stop system commands in parallel without separately asking.
+   Wait for an explicit answer. The selection is stored as a list of `gh optivem test system` invocations (`selected_test_commands`) and is re-used on retry — operators who want a different scope must abort and re-enter the cycle.
 
-2. **If `skip`:** record that TEST was skipped (note in the post-TEST summary) and print the drift warning if applicable.
+3. **RUN_TESTS.** Execute the selected commands (or no-op for `[n]`). The runner classifies the outcome as `ok`, `red`, or `infra` (infra halts the run upstream; `ok` advances to COMMIT; `red` jumps to step 5).
 
-3. **If `compile` or `full`:** confirm in-scope components compile (per `CLAUDE.md`: `./compile-all.sh` from the repo root, or a single-project command like `./gradlew build` / `npx tsc --noEmit` / `dotnet build` for narrow changes). On compile failure, STOP and report — do not attempt the sample suite.
-
-4. **If `full` and compile passed:** run the sample suite for the in-scope Test Lang (`gh optivem test system --sample`) and verify it passes.
-
-5. Print a **drift warning** naming any out-of-scope implementations that were deliberately left untouched, e.g.:
+4. **Drift warning.** Print a notice naming any out-of-scope implementations that were deliberately left untouched, e.g.:
 
    ```
    Out-of-scope implementations not updated by this run:
@@ -52,7 +54,7 @@ Every structural-cycle TEST runs after REVIEW (which itself runs after WRITE). G
 
    If Scope was the broadest option (`Architecture=both`, `System Lang=all`, `Test Lang=all`), skip this step.
 
-6. STOP. Present the chosen mode (`full` / `compile` / `skip`), the test results (if any), and the drift warning (if any) to the user. On failure, fix and re-enter TEST from step 1.
+5. **Failure → STOP → fix or abort.** On compile or test RED, the orchestrator halts at a human-review STOP (`Press Enter to continue, or type abort to halt`). `abort` exits the cycle cleanly with the working tree preserved. `Enter` dispatches `atdd-fix-verify` with `failure_type=compile` or `failure_type=test` — one agent, branching on the param — which applies the smallest fix and exits without committing. The orchestrator then retries COMPILE (compile failure) or RUN_TESTS (test failure) once. A second RED halts for human takeover.
 
 The `subtype:external-system-interface-redesign` path has no standalone TEST — sample-run gating happens inside the CT sub-process.
 

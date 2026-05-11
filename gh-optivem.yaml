@@ -1,0 +1,24 @@
+project:
+    url: 
+repo_strategy: mono-repo
+system:
+    architecture: multitier
+    backend:
+        path: system/multitier/backend-java
+        repo: optivem/shop
+        lang: java
+    frontend:
+        path: system/multitier/frontend-react
+        repo: optivem/shop
+        lang: typescript
+system_test:
+    path: system-test
+    repo: optivem/shop
+    lang: java
+external_systems:
+    stubs:
+        path: external-systems/external-stub
+        repo: optivem/shop
+    simulators:
+        path: external-real-sim
+        repo: optivem/shop
