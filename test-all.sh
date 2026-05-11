@@ -49,7 +49,7 @@ run_phase() {
   local lang="$1"
   local phase="$2"
   local tests_file="$3"
-  local system_json="$REPO_ROOT/docker/$lang/$ARCH/systems.json"
+  local system_json="$REPO_ROOT/docker/$lang/$ARCH/systems.yaml"
   local tests_json="$REPO_ROOT/system-test/$lang/$tests_file"
 
   echo
@@ -70,8 +70,8 @@ run_phase() {
 }
 
 for lang in "${LANGS[@]}"; do
-  run_phase "$lang" "Latest" "tests-latest.json"
-  run_phase "$lang" "Legacy" "tests-legacy.json"
+  run_phase "$lang" "Latest" "tests-latest.yaml"
+  run_phase "$lang" "Legacy" "tests-legacy.yaml"
 done
 
 OVERALL_END=$(date +%s)
