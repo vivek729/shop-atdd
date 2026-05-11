@@ -20,25 +20,25 @@ gh optivem run system --system-config docker/dotnet/monolith/systems.yaml
 Run all latest test suites:
 
 ```bash
-gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests-latest.yaml
+gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests.yaml
 ```
 
 Run legacy test suites:
 
 ```bash
-gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests-legacy.yaml
+gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests.legacy.yaml
 ```
 
 Run only sample tests (one per suite, fast smoke):
 
 ```bash
-gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests-latest.yaml --sample
+gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests.yaml --sample
 ```
 
 Run a specific suite by ID:
 
 ```bash
-gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests-latest.yaml --suite acceptance-api
+gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests.yaml --suite acceptance-api
 ```
 
 Rebuild container images before bringing the system up:

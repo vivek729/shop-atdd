@@ -32,7 +32,7 @@ After compilation passes, run system tests with `--sample` for each affected lan
 
 ```bash
 gh optivem run system --system-config docker/<language>/monolith/systems.yaml
-gh optivem test system --system-config docker/<language>/monolith/systems.yaml --test-config system-test/<language>/tests-latest.yaml --sample
+gh optivem test system --system-config docker/<language>/monolith/systems.yaml --test-config system-test/<language>/tests.yaml --sample
 gh optivem stop system --system-config docker/<language>/monolith/systems.yaml
 ```
 

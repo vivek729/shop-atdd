@@ -70,8 +70,8 @@ run_phase() {
 }
 
 for lang in "${LANGS[@]}"; do
-  run_phase "$lang" "Latest" "tests-latest.yaml"
-  run_phase "$lang" "Legacy" "tests-legacy.yaml"
+  run_phase "$lang" "Latest" "tests.yaml"
+  run_phase "$lang" "Legacy" "tests.legacy.yaml"
 done
 
 OVERALL_END=$(date +%s)

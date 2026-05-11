@@ -1,9 +1,9 @@
-# tests-legacy — per-cycle suites preserved for regression checks against
+# tests.legacy — per-cycle suites preserved for regression checks against
 # the legacy module layouts. Each `mod02` … `mod11` suite captures that
 # learning-cycle's test contract; the warm rerun loop runs these so older
 # labs stay validated even as the latest cycle's code evolves.
 #
-# (Per-suite field semantics are identical to tests-latest — see that
+# (Per-suite field semantics are identical to tests — see that
 # file's header for the field walkthrough including the `sampleTest`
 # callout.)
 #

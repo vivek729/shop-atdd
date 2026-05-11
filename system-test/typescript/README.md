@@ -19,25 +19,25 @@ gh optivem run system --system-config docker/typescript/monolith/systems.yaml
 Run all latest test suites:
 
 ```bash
-gh optivem test system --system-config docker/typescript/monolith/systems.yaml --test-config system-test/typescript/tests-latest.yaml
+gh optivem test system --system-config docker/typescript/monolith/systems.yaml --test-config system-test/typescript/tests.yaml
 ```
 
 Run legacy test suites:
 
 ```bash
-gh optivem test system --system-config docker/typescript/monolith/systems.yaml --test-config system-test/typescript/tests-legacy.yaml
+gh optivem test system --system-config docker/typescript/monolith/systems.yaml --test-config system-test/typescript/tests.legacy.yaml
 ```
 
 Run only sample tests (one per suite, fast smoke):
 
 ```bash
-gh optivem test system --system-config docker/typescript/monolith/systems.yaml --test-config system-test/typescript/tests-latest.yaml --sample
+gh optivem test system --system-config docker/typescript/monolith/systems.yaml --test-config system-test/typescript/tests.yaml --sample
 ```
 
 Run a specific suite by ID:
 
 ```bash
-gh optivem test system --system-config docker/typescript/monolith/systems.yaml --test-config system-test/typescript/tests-latest.yaml --suite acceptance-api
+gh optivem test system --system-config docker/typescript/monolith/systems.yaml --test-config system-test/typescript/tests.yaml --suite acceptance-api
 ```
 
 Rebuild container images before bringing the system up:

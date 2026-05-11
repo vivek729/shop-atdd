@@ -35,13 +35,13 @@ From the repo root, substituting `<language>` ∈ {java, dotnet, typescript}:
 gh optivem run system --system-config docker/<language>/monolith/systems.yaml
 
 # Run the latest suites
-gh optivem test system --system-config docker/<language>/monolith/systems.yaml --test-config system-test/<language>/tests-latest.yaml
+gh optivem test system --system-config docker/<language>/monolith/systems.yaml --test-config system-test/<language>/tests.yaml
 
 # Or the legacy suites
-gh optivem test system --system-config docker/<language>/monolith/systems.yaml --test-config system-test/<language>/tests-legacy.yaml
+gh optivem test system --system-config docker/<language>/monolith/systems.yaml --test-config system-test/<language>/tests.legacy.yaml
 
 # Or a fast smoke (one sample per suite)
-gh optivem test system --system-config docker/<language>/monolith/systems.yaml --test-config system-test/<language>/tests-latest.yaml --sample
+gh optivem test system --system-config docker/<language>/monolith/systems.yaml --test-config system-test/<language>/tests.yaml --sample
 
 # Stop when done
 gh optivem stop system --system-config docker/<language>/monolith/systems.yaml

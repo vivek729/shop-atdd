@@ -1,4 +1,4 @@
-# tests-latest — the suites the pipeline runs against the latest cycle's
+# tests — the suites the pipeline runs against the latest cycle's
 # code. One entry per suite; the user / CI picks via `--suite <id>`.
 #
 # Per-suite fields:

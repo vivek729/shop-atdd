@@ -252,8 +252,8 @@ jobs:
 
       - name: Run ${{ matrix.test-lang }} latest system tests vs ${{ matrix.system-lang }} SUT
         # --no-build / --no-start: SUT lifecycle is owned by deploy-docker-compose
-        # above. The runner just executes setupCommands + suites from tests-latest.yaml.
-        run: gh optivem test system --no-build --no-start --system-config docker/${{ matrix.system-lang }}/${{ matrix.arch }}/systems.yaml --test-config system-test/${{ matrix.test-lang }}/tests-latest.yaml
+        # above. The runner just executes setupCommands + suites from tests.yaml.
+        run: gh optivem test system --no-build --no-start --system-config docker/${{ matrix.system-lang }}/${{ matrix.arch }}/systems.yaml --test-config system-test/${{ matrix.test-lang }}/tests.yaml
 
       - name: Run ${{ matrix.test-lang }} legacy system tests vs ${{ matrix.system-lang }} SUT
         # Legacy suites are pinned to historical module versions. We run them against
@@ -262,4 +262,4 @@ jobs:
         # short-circuit legacy: both signals are reported independently in the job log,
         # and the matrix entry surfaces red if either is red.
         if: always()
-        run: gh optivem test system --no-build --no-start --system-config docker/${{ matrix.system-lang }}/${{ matrix.arch }}/systems.yaml --test-config system-test/${{ matrix.test-lang }}/tests-legacy.yaml
+        run: gh optivem test system --no-build --no-start --system-config docker/${{ matrix.system-lang }}/${{ matrix.arch }}/systems.yaml --test-config system-test/${{ matrix.test-lang }}/tests.legacy.yaml
