@@ -1,0 +1,19 @@
+project:
+    url: https://github.com/orgs/optivem/projects/20
+repo_strategy: mono-repo
+system:
+    architecture: monolith
+    path: system/monolith/typescript
+    repo: optivem/shop
+    lang: typescript
+system_test:
+    path: system-test/typescript
+    repo: optivem/shop
+    lang: typescript
+external_systems:
+    stubs:
+        path: external-systems/external-stub
+        repo: optivem/shop
+    simulators:
+        path: external-real-sim
+        repo: optivem/shop

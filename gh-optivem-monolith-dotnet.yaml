@@ -1,0 +1,19 @@
+project:
+    url: https://github.com/orgs/optivem/projects/20
+repo_strategy: mono-repo
+system:
+    architecture: monolith
+    path: system/monolith/dotnet
+    repo: optivem/shop
+    lang: dotnet
+system_test:
+    path: system-test/dotnet
+    repo: optivem/shop
+    lang: dotnet
+external_systems:
+    stubs:
+        path: external-systems/external-stub
+        repo: optivem/shop
+    simulators:
+        path: external-real-sim
+        repo: optivem/shop
