@@ -9,51 +9,63 @@
 
 ## Running Tests
 
-All commands are run from the repo root.
+All commands are run from the repo root. Point `GH_OPTIVEM_CONFIG` at the variant yaml at the repo root once per shell, then run the verbs without per-flag overrides:
+
+```pwsh
+$env:GH_OPTIVEM_CONFIG = "gh-optivem-monolith-dotnet.yaml"
+```
 
 Bring up the system stack (real + stub) for the chosen architecture:
 
 ```bash
-gh optivem run system --system-config docker/dotnet/monolith/systems.yaml
+gh optivem run system
+```
+
+Prepare the test harness (dotnet clean + build of test sources):
+
+```bash
+gh optivem test setup
 ```
 
 Run all latest test suites:
 
 ```bash
-gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests.yaml
+gh optivem test system
 ```
 
-Run legacy test suites:
+Run legacy test suites — switch the env var first, then re-run setup (legacy has its own setupCommands block):
 
-```bash
-gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests.legacy.yaml
+```pwsh
+$env:GH_OPTIVEM_CONFIG = "gh-optivem-monolith-dotnet-legacy.yaml"
+gh optivem test setup
+gh optivem test system
 ```
 
 Run only sample tests (one per suite, fast smoke):
 
 ```bash
-gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests.yaml --sample
+gh optivem test system --sample
 ```
 
 Run a specific suite by ID:
 
 ```bash
-gh optivem test system --system-config docker/dotnet/monolith/systems.yaml --test-config system-test/dotnet/tests.yaml --suite acceptance-api
+gh optivem test system --suite acceptance-api
 ```
 
 Rebuild container images before bringing the system up:
 
 ```bash
-gh optivem build system --system-config docker/dotnet/monolith/systems.yaml
+gh optivem build system
 ```
 
 Stop the system when done:
 
 ```bash
-gh optivem stop system --system-config docker/dotnet/monolith/systems.yaml
+gh optivem stop system
 ```
 
-Substitute `docker/dotnet/multitier/systems.yaml` for the multitier architecture.
+Substitute `gh-optivem-multitier-dotnet.yaml` for the multitier architecture.
 
 ## Available Suite IDs
 

@@ -48,17 +48,21 @@ A representative slice — backend handler and frontend page changed together fo
 1. Enable the tests marked disabled with reason `"AT - RED - SYSTEM DRIVER"`. (This is the only "remove disabled annotation" step in this phase.)
 2. Implement the backend:
    a. Implement the backend changes.
-   b. Run acceptance tests for the API channel:
+   b. Rebuild the SUT image, restart the running container, then run acceptance tests for the API channel:
       ```bash
-      gh optivem test system --rebuild --suite <acceptance-api> --test <TestMethodName>
+      gh optivem build system --rebuild
+      gh optivem run system --restart
+      gh optivem test system --suite <acceptance-api> --test <TestMethodName>
       ```
    c. If tests fail, fix the backend until the tests pass.
    d. If you cannot get the tests to pass, ask the user. Do NOT change tests, DSL, or Drivers to work around it.
 3. Implement the frontend:
    a. Implement the frontend changes.
-   b. Run acceptance tests for the UI channel:
+   b. Rebuild the SUT image, restart the running container, then run acceptance tests for the UI channel:
       ```bash
-      gh optivem test system --rebuild --suite <acceptance-ui> --test <TestMethodName>
+      gh optivem build system --rebuild
+      gh optivem run system --restart
+      gh optivem test system --suite <acceptance-ui> --test <TestMethodName>
       ```
    c. If tests fail, fix the frontend until the tests pass.
    d. If you cannot get the tests to pass, ask the user. Do NOT change tests, DSL, or Drivers to work around it.
