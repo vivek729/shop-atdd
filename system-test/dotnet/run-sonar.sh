@@ -12,6 +12,10 @@
 
 set -euo pipefail
 
+# Disable MSYS2 path conversion on Git Bash for Windows; otherwise `/k:`,
+# `/o:`, `/d:` flags below get mangled to `k:`, `o:`, `d:`. No-op elsewhere.
+export MSYS2_ARG_CONV_EXCL='*'
+
 TOKEN="${1:-${SONAR_TOKEN:-}}"
 if [ -z "$TOKEN" ]; then
   echo "ERROR: Sonar token required. Set SONAR_TOKEN env var or pass as first arg." >&2
