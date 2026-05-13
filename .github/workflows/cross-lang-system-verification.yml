@@ -202,6 +202,7 @@ jobs:
           working-directory: docker/${{ matrix.system-lang }}/${{ matrix.arch }}
 
       - name: Wait for SUT (Real External Systems)
+        id: wait-sut-real
         uses: optivem/actions/wait-for-endpoints@v1
         with:
           endpoints: ${{ steps.endpoints.outputs.real }}
@@ -219,6 +220,7 @@ jobs:
           working-directory: docker/${{ matrix.system-lang }}/${{ matrix.arch }}
 
       - name: Wait for SUT (Stub External Systems)
+        id: wait-sut-stub
         uses: optivem/actions/wait-for-endpoints@v1
         with:
           endpoints: ${{ steps.endpoints.outputs.stub }}
@@ -297,11 +299,11 @@ jobs:
         run: gh optivem test run
 
       - name: Setup ${{ matrix.test-lang }} legacy test harness
-        # `gh optivem test setup` runs setupCommands from tests.legacy.yaml
-        # before the legacy suites. `if: always()` so a latest-suite failure
-        # does NOT short-circuit legacy setup — see the legacy-test step below
-        # for the rationale.
-        if: always()
+        # Run legacy setup when the SUT is healthy, even if latest tests failed —
+        # see the legacy-test step below for the rationale. Skip when the SUT
+        # never came up (image pull, deploy, or wait failed) — there's nothing
+        # to test against.
+        if: always() && steps.wait-sut-real.outcome == 'success' && steps.wait-sut-stub.outcome == 'success'
         env:
           GH_OPTIVEM_CONFIG: .gh-optivem-cross-lang/legacy.yaml
         run: gh optivem test setup
@@ -309,10 +311,10 @@ jobs:
       - name: Run ${{ matrix.test-lang }} legacy system tests vs ${{ matrix.system-lang }} SUT
         # Legacy suites are pinned to historical module versions. We run them against
         # the same SUT that just hosted latest — reuses the deployment, doubles the
-        # signal per matrix entry. `if: always()` so a latest-suite failure does NOT
-        # short-circuit legacy: both signals are reported independently in the job log,
-        # and the matrix entry surfaces red if either is red.
-        if: always()
+        # signal per matrix entry. Decoupled from latest-suite outcome so both
+        # signals are reported independently and the matrix entry surfaces red if
+        # either is red. Gated on the SUT waits succeeding — no SUT, no point.
+        if: always() && steps.wait-sut-real.outcome == 'success' && steps.wait-sut-stub.outcome == 'success'
         env:
           GH_OPTIVEM_CONFIG: .gh-optivem-cross-lang/legacy.yaml
         run: gh optivem test run
