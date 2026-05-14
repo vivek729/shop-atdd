@@ -5,23 +5,29 @@ name: drift
 # gh-optivem repo).
 #
 # Sequence per architecture:
-#   1. Bring up the Java stack (stub mode). Its db-migrate sidecar applies
-#      the canonical Flyway migration set to a fresh postgres-data volume.
-#   2. Run the Java smoke-stub suite against the Java SUT.
-#   3. `docker compose down` Java's stack — containers go away, the named
-#      postgres-data volume persists because we omit `-v`.
-#   4. Bring up the TypeScript stack. It shares the compose project name
-#      `my-shop-stub` so the existing postgres-data volume is reused.
-#      Flyway re-runs, finds flyway_schema_history already populated, and
-#      applies no new migrations. TS SUT boots against the same schema.
-#   5. Run the TypeScript smoke-stub suite against the TS SUT.
+#   1. Bring up Java's `real` and `stub` compose files. `db-migrate` applies
+#      the canonical Flyway migration set to each project's postgres-data
+#      volume (`my-shop-real_postgres-data`, `my-shop-stub_postgres-data`).
+#   2. Run the Java smoke-stub suite. (`gh optivem test run` preflights
+#      every system label in systems.yaml — both `real` and `stub` URLs
+#      must respond — so both compose stacks have to be up.)
+#   3. `docker compose down` Java's stacks. Containers go away; the named
+#      postgres-data volumes persist because we omit `-v`.
+#   4. Bring up TypeScript's `real` and `stub` compose files. They share
+#      compose project names (`my-shop-real`, `my-shop-stub`) with Java,
+#      so the existing postgres-data volumes are reused. Flyway re-runs,
+#      finds flyway_schema_history already populated, applies no new
+#      migrations. TS SUTs boot against the same schema.
+#   5. Run the TypeScript smoke-stub suite.
 #
 # Both suites green ⇒ the canonical migration set produces a schema that
-# both stacks can read. .NET third leg is deferred.
+# both stacks read. The volume share via the `my-shop-stub` project name
+# is the explicit drift signal — schema interop in both real and stub mode
+# is a bonus. .NET third leg deferred.
 
 on:
   schedule:
-    - cron: '15 * * * *'  # Run every hour, offset to spread load.
+    - cron: '15 * * * *'
   workflow_dispatch:
     inputs:
       commit-sha:
@@ -42,7 +48,7 @@ jobs:
   monolith-drift:
     name: monolith — Java → TS schema interop
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: read
@@ -107,17 +113,23 @@ jobs:
 
       # ---- Leg 1: Java SUT applies migrations, runs Java suite ----
 
+      - name: Bring up Java monolith real
+        run: docker compose -f docker-compose.pipeline.real.yml up -d --wait
+        working-directory: docker/java/monolith
+
       - name: Bring up Java monolith stub
         run: docker compose -f docker-compose.pipeline.stub.yml up -d --wait
         working-directory: docker/java/monolith
 
-      - name: Wait for Java SUT endpoints
+      - name: Wait for Java SUT endpoints (real + stub)
         uses: optivem/actions/wait-for-endpoints@v1
         with:
           endpoints: |
             [
-              { "name": "MyShop UI", "url": "http://localhost:3112/" },
-              { "name": "MyShop API", "url": "http://localhost:8112/health" }
+              { "name": "Java real UI",  "url": "http://localhost:3111/" },
+              { "name": "Java real API", "url": "http://localhost:8111/health" },
+              { "name": "Java stub UI",  "url": "http://localhost:3112/" },
+              { "name": "Java stub API", "url": "http://localhost:8112/health" }
             ]
           compose-file: docker-compose.pipeline.stub.yml
           working-directory: docker/java/monolith
@@ -132,25 +144,33 @@ jobs:
           GH_OPTIVEM_CONFIG: gh-optivem-monolith-java.yaml
         run: gh optivem test run --suite smoke-stub
 
-      # ---- Swap apps. Volumes persist because we omit `-v` on `down`. ----
+      # ---- Swap apps. Volumes persist because `down` omits `-v`. ----
 
-      - name: Stop Java stack (preserve postgres-data volume)
-        run: docker compose -f docker-compose.pipeline.stub.yml down
+      - name: Stop Java stacks (preserve postgres-data volumes)
+        run: |
+          docker compose -f docker-compose.pipeline.stub.yml down
+          docker compose -f docker-compose.pipeline.real.yml down
         working-directory: docker/java/monolith
 
-      # ---- Leg 2: TypeScript SUT inherits the same migrated schema ----
+      # ---- Leg 2: TypeScript SUTs inherit the same migrated schemas ----
 
-      - name: Bring up TypeScript monolith stub (reuses postgres-data volume)
+      - name: Bring up TypeScript monolith real (reuses my-shop-real postgres-data)
+        run: docker compose -f docker-compose.pipeline.real.yml up -d --wait
+        working-directory: docker/typescript/monolith
+
+      - name: Bring up TypeScript monolith stub (reuses my-shop-stub postgres-data)
         run: docker compose -f docker-compose.pipeline.stub.yml up -d --wait
         working-directory: docker/typescript/monolith
 
-      - name: Wait for TypeScript SUT endpoints
+      - name: Wait for TypeScript SUT endpoints (real + stub)
         uses: optivem/actions/wait-for-endpoints@v1
         with:
           endpoints: |
             [
-              { "name": "MyShop UI", "url": "http://localhost:3312/" },
-              { "name": "MyShop API", "url": "http://localhost:8312/health" }
+              { "name": "TS real UI",  "url": "http://localhost:3311/" },
+              { "name": "TS real API", "url": "http://localhost:8311/health" },
+              { "name": "TS stub UI",  "url": "http://localhost:3312/" },
+              { "name": "TS stub API", "url": "http://localhost:8312/health" }
             ]
           compose-file: docker-compose.pipeline.stub.yml
           working-directory: docker/typescript/monolith
@@ -165,15 +185,17 @@ jobs:
           GH_OPTIVEM_CONFIG: gh-optivem-monolith-typescript.yaml
         run: gh optivem test run --suite smoke-stub
 
-      - name: Tear down TypeScript stack
+      - name: Tear down TypeScript stacks
         if: always()
-        run: docker compose -f docker-compose.pipeline.stub.yml down -v
+        run: |
+          docker compose -f docker-compose.pipeline.stub.yml down -v
+          docker compose -f docker-compose.pipeline.real.yml down -v
         working-directory: docker/typescript/monolith
 
   multitier-drift:
     name: multitier — Java → TS schema interop
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: read
@@ -236,17 +258,23 @@ jobs:
             username: ${{ github.repository_owner }}
             password: ${{ secrets.GHCR_TOKEN }}
 
+      - name: Bring up Java multitier real
+        run: docker compose -f docker-compose.pipeline.real.yml up -d --wait
+        working-directory: docker/java/multitier
+
       - name: Bring up Java multitier stub
         run: docker compose -f docker-compose.pipeline.stub.yml up -d --wait
         working-directory: docker/java/multitier
 
-      - name: Wait for Java SUT endpoints
+      - name: Wait for Java SUT endpoints (real + stub)
         uses: optivem/actions/wait-for-endpoints@v1
         with:
           endpoints: |
             [
-              { "name": "MyShop UI", "url": "http://localhost:3112/" },
-              { "name": "MyShop API", "url": "http://localhost:8112/health" }
+              { "name": "Java real UI",  "url": "http://localhost:3111/" },
+              { "name": "Java real API", "url": "http://localhost:8111/health" },
+              { "name": "Java stub UI",  "url": "http://localhost:3112/" },
+              { "name": "Java stub API", "url": "http://localhost:8112/health" }
             ]
           compose-file: docker-compose.pipeline.stub.yml
           working-directory: docker/java/multitier
@@ -261,21 +289,29 @@ jobs:
           GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
         run: gh optivem test run --suite smoke-stub
 
-      - name: Stop Java stack (preserve postgres-data volume)
-        run: docker compose -f docker-compose.pipeline.stub.yml down
+      - name: Stop Java stacks (preserve postgres-data volumes)
+        run: |
+          docker compose -f docker-compose.pipeline.stub.yml down
+          docker compose -f docker-compose.pipeline.real.yml down
         working-directory: docker/java/multitier
 
-      - name: Bring up TypeScript multitier stub (reuses postgres-data volume)
+      - name: Bring up TypeScript multitier real (reuses my-shop-real postgres-data)
+        run: docker compose -f docker-compose.pipeline.real.yml up -d --wait
+        working-directory: docker/typescript/multitier
+
+      - name: Bring up TypeScript multitier stub (reuses my-shop-stub postgres-data)
         run: docker compose -f docker-compose.pipeline.stub.yml up -d --wait
         working-directory: docker/typescript/multitier
 
-      - name: Wait for TypeScript SUT endpoints
+      - name: Wait for TypeScript SUT endpoints (real + stub)
         uses: optivem/actions/wait-for-endpoints@v1
         with:
           endpoints: |
             [
-              { "name": "MyShop UI", "url": "http://localhost:3312/" },
-              { "name": "MyShop API", "url": "http://localhost:8312/health" }
+              { "name": "TS real UI",  "url": "http://localhost:3311/" },
+              { "name": "TS real API", "url": "http://localhost:8311/health" },
+              { "name": "TS stub UI",  "url": "http://localhost:3312/" },
+              { "name": "TS stub API", "url": "http://localhost:8312/health" }
             ]
           compose-file: docker-compose.pipeline.stub.yml
           working-directory: docker/typescript/multitier
@@ -290,7 +326,9 @@ jobs:
           GH_OPTIVEM_CONFIG: gh-optivem-multitier-typescript.yaml
         run: gh optivem test run --suite smoke-stub
 
-      - name: Tear down TypeScript stack
+      - name: Tear down TypeScript stacks
         if: always()
-        run: docker compose -f docker-compose.pipeline.stub.yml down -v
+        run: |
+          docker compose -f docker-compose.pipeline.stub.yml down -v
+          docker compose -f docker-compose.pipeline.real.yml down -v
         working-directory: docker/typescript/multitier
