@@ -39,7 +39,7 @@ import { Coupon } from './core/entities/coupon.entity';
           username,
           password,
           entities: [Order, Coupon],
-          synchronize: true,
+          synchronize: false,
           logging: configService.get<string>('NODE_ENV') !== 'production',
         };
       },

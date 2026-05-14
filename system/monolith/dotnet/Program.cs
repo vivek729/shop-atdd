@@ -53,14 +53,6 @@ builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-// Auto-migrate database
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.EnsureDeletedAsync();
-    await db.Database.EnsureCreatedAsync();
-}
-
 // Configure the HTTP request pipeline.
 app.Use(async (context, next) =>
 {

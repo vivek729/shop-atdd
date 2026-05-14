@@ -30,10 +30,23 @@ services:
       - TAX_API_URL=http://external-system-stubs:8080/tax
       - EXTERNAL_SYSTEM_MODE=stub
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
       external-system-stubs:
         condition: service_started
+    networks:
+      - app-network
+
+  db-migrate:
+    image: flyway/flyway:10.21.0-alpine
+    command: -url=jdbc:postgresql://postgres:5432/app -user=app -password=app -locations=filesystem:/migrations migrate
+    environment:
+      FLYWAY_CLEAN_DISABLED: "true"
+    volumes:
+      - ../../../system/db/migrations:/migrations:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
 
