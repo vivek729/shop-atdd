@@ -8,41 +8,6 @@ const pool = new Pool({
   password: process.env.POSTGRES_DB_PASSWORD || 'app',
 });
 
-let schemaPromise: Promise<void> | null = null;
-
-function ensureSchema(): Promise<void> {
-  schemaPromise ??= pool.query(`
-    CREATE TABLE IF NOT EXISTS coupons (
-      id BIGSERIAL PRIMARY KEY,
-      code VARCHAR(255) NOT NULL UNIQUE,
-      discount_rate NUMERIC(5,4) NOT NULL,
-      valid_from TIMESTAMPTZ,
-      valid_to TIMESTAMPTZ,
-      usage_limit INTEGER,
-      used_count INTEGER NOT NULL DEFAULT 0
-    );
-    CREATE TABLE IF NOT EXISTS orders (
-      id BIGSERIAL PRIMARY KEY,
-      order_number VARCHAR(255) NOT NULL UNIQUE,
-      order_timestamp TIMESTAMPTZ NOT NULL,
-      country VARCHAR(255) NOT NULL DEFAULT 'US',
-      sku VARCHAR(255) NOT NULL,
-      quantity INTEGER NOT NULL,
-      unit_price NUMERIC(10,2) NOT NULL,
-      base_price NUMERIC(10,2) NOT NULL DEFAULT 0,
-      discount_rate NUMERIC(5,4) NOT NULL DEFAULT 0,
-      discount_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
-      subtotal_price NUMERIC(10,2) NOT NULL DEFAULT 0,
-      tax_rate NUMERIC(5,4) NOT NULL DEFAULT 0,
-      tax_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
-      total_price NUMERIC(10,2) NOT NULL,
-      applied_coupon_code VARCHAR(255),
-      status VARCHAR(50) NOT NULL
-    )
-  `).then(() => {});
-  return schemaPromise;
-}
-
 export interface OrderRow {
   id: number;
   order_number: string;
@@ -89,7 +54,6 @@ export async function insertOrder(order: {
   appliedCouponCode: string | null;
   status: string;
 }): Promise<void> {
-  await ensureSchema();
   await pool.query(
     `INSERT INTO orders (order_number, order_timestamp, country, sku, quantity, unit_price, base_price, discount_rate, discount_amount, subtotal_price, tax_rate, tax_amount, total_price, applied_coupon_code, status)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
@@ -103,7 +67,6 @@ export async function insertOrder(order: {
 }
 
 export async function findByOrderNumber(orderNumber: string): Promise<OrderRow | null> {
-  await ensureSchema();
   const result = await pool.query<OrderRow>(
     'SELECT * FROM orders WHERE order_number = $1',
     [orderNumber]
@@ -112,7 +75,6 @@ export async function findByOrderNumber(orderNumber: string): Promise<OrderRow |
 }
 
 export async function findAllOrders(orderNumberFilter?: string): Promise<OrderRow[]> {
-  await ensureSchema();
   if (orderNumberFilter) {
     const result = await pool.query<OrderRow>(
       'SELECT * FROM orders WHERE LOWER(order_number) LIKE LOWER($1) ORDER BY order_timestamp DESC',
@@ -127,7 +89,6 @@ export async function findAllOrders(orderNumberFilter?: string): Promise<OrderRo
 }
 
 export async function updateOrderStatus(orderNumber: string, status: string): Promise<void> {
-  await ensureSchema();
   await pool.query(
     'UPDATE orders SET status = $1 WHERE order_number = $2',
     [status, orderNumber]
@@ -141,7 +102,6 @@ export async function insertCoupon(coupon: {
   validTo?: Date | null;
   usageLimit?: number | null;
 }): Promise<void> {
-  await ensureSchema();
   await pool.query(
     `INSERT INTO coupons (code, discount_rate, valid_from, valid_to, usage_limit, used_count)
      VALUES ($1, $2, $3, $4, $5, 0)`,
@@ -150,7 +110,6 @@ export async function insertCoupon(coupon: {
 }
 
 export async function findCouponByCode(code: string): Promise<CouponRow | null> {
-  await ensureSchema();
   const result = await pool.query<CouponRow>(
     'SELECT * FROM coupons WHERE code = $1',
     [code]
@@ -159,7 +118,6 @@ export async function findCouponByCode(code: string): Promise<CouponRow | null> 
 }
 
 export async function incrementCouponUsage(code: string): Promise<void> {
-  await ensureSchema();
   await pool.query(
     'UPDATE coupons SET used_count = used_count + 1 WHERE code = $1',
     [code]
@@ -167,7 +125,6 @@ export async function incrementCouponUsage(code: string): Promise<void> {
 }
 
 export async function findAllCoupons(): Promise<CouponRow[]> {
-  await ensureSchema();
   const result = await pool.query<CouponRow>('SELECT * FROM coupons ORDER BY id');
   return result.rows;
 }
