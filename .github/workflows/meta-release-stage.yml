@@ -186,22 +186,22 @@ jobs:
 
           # Enforce the canonical-6 contract: exactly the 6 known flavors must
           # be present in the manifest (no missing, no extras).
-          canonical="monolith-java monolith-dotnet monolith-typescript multitier-java multitier-dotnet multitier-typescript"
+          canonical=(monolith-java monolith-dotnet monolith-typescript multitier-java multitier-dotnet multitier-typescript)
           mapfile -t manifest_flavors < <(jq -r '.flavors | keys[]' <<<"$manifest")
           for f in "${manifest_flavors[@]}"; do
-            if ! printf '%s\n' $canonical | grep -qx "$f"; then
-              echo "::error::Manifest in ${RC_TAG} contains unexpected flavor '${f}'. Canonical set: ${canonical}"
+            if ! printf '%s\n' "${canonical[@]}" | grep -qx "$f"; then
+              echo "::error::Manifest in ${RC_TAG} contains unexpected flavor '${f}'. Canonical set: ${canonical[*]}"
               exit 1
             fi
           done
-          for c in $canonical; do
+          for c in "${canonical[@]}"; do
             if ! printf '%s\n' "${manifest_flavors[@]}" | grep -qx "$c"; then
               echo "::error::Manifest in ${RC_TAG} is missing canonical flavor '${c}'. All 6 flavors are required."
               exit 1
             fi
           done
 
-          for flavor in $canonical; do
+          for flavor in "${canonical[@]}"; do
             rc=$(jq -r --arg f "$flavor" '.flavors[$f]' <<<"$manifest")
             if [[ -z "$rc" || "$rc" == "null" ]]; then
               echo "::error::Manifest in ${RC_TAG} has no value for flavor ${flavor}."
