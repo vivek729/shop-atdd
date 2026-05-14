@@ -374,10 +374,13 @@ jobs:
           cache-dependency-path: system-test/typescript/package-lock.json
 
       - name: Run Sonar Analysis
-        working-directory: system-test/typescript
+        uses: Wandalen/wretry.action@v3
+        with:
+          attempt_limit: 3
+          attempt_delay: 30000
+          command: cd system-test/typescript && ./run-sonar.sh
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./run-sonar.sh
 
   summary:
     needs: [preflight, check, run, publish-tag, sonar]
