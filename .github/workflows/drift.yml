@@ -114,11 +114,11 @@ jobs:
       # ---- Leg 1: Java SUT applies migrations, runs Java suite ----
 
       - name: Bring up Java monolith real
-        run: docker compose -f docker-compose.pipeline.real.yml up -d --wait
+        run: docker compose -f docker-compose.pipeline.real.yml up -d
         working-directory: docker/java/monolith
 
       - name: Bring up Java monolith stub
-        run: docker compose -f docker-compose.pipeline.stub.yml up -d --wait
+        run: docker compose -f docker-compose.pipeline.stub.yml up -d
         working-directory: docker/java/monolith
 
       - name: Wait for Java SUT endpoints (real + stub)
@@ -155,11 +155,11 @@ jobs:
       # ---- Leg 2: TypeScript SUTs inherit the same migrated schemas ----
 
       - name: Bring up TypeScript monolith real (reuses my-shop-real postgres-data)
-        run: docker compose -f docker-compose.pipeline.real.yml up -d --wait
+        run: docker compose -f docker-compose.pipeline.real.yml up -d
         working-directory: docker/typescript/monolith
 
       - name: Bring up TypeScript monolith stub (reuses my-shop-stub postgres-data)
-        run: docker compose -f docker-compose.pipeline.stub.yml up -d --wait
+        run: docker compose -f docker-compose.pipeline.stub.yml up -d
         working-directory: docker/typescript/monolith
 
       - name: Wait for TypeScript SUT endpoints (real + stub)
@@ -259,11 +259,11 @@ jobs:
             password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Bring up Java multitier real
-        run: docker compose -f docker-compose.pipeline.real.yml up -d --wait
+        run: docker compose -f docker-compose.pipeline.real.yml up -d
         working-directory: docker/java/multitier
 
       - name: Bring up Java multitier stub
-        run: docker compose -f docker-compose.pipeline.stub.yml up -d --wait
+        run: docker compose -f docker-compose.pipeline.stub.yml up -d
         working-directory: docker/java/multitier
 
       - name: Wait for Java SUT endpoints (real + stub)
@@ -296,11 +296,11 @@ jobs:
         working-directory: docker/java/multitier
 
       - name: Bring up TypeScript multitier real (reuses my-shop-real postgres-data)
-        run: docker compose -f docker-compose.pipeline.real.yml up -d --wait
+        run: docker compose -f docker-compose.pipeline.real.yml up -d
         working-directory: docker/typescript/multitier
 
       - name: Bring up TypeScript multitier stub (reuses my-shop-stub postgres-data)
-        run: docker compose -f docker-compose.pipeline.stub.yml up -d --wait
+        run: docker compose -f docker-compose.pipeline.stub.yml up -d
         working-directory: docker/typescript/multitier
 
       - name: Wait for TypeScript SUT endpoints (real + stub)
