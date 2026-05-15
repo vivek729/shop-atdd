@@ -239,9 +239,13 @@ jobs:
         run: pwsh SystemTests/bin/Debug/net8.0/playwright.ps1 install chromium
 
       - name: Install gh-optivem CLI extension
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh extension install optivem/gh-optivem
+        run: |
+          set -euo pipefail
+          source "$GITHUB_WORKSPACE/.github/workflows/scripts/gh-retry.sh"
+          gh_retry extension install optivem/gh-optivem
 
       - name: Setup Test Harness
         run: gh optivem test setup

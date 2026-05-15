@@ -37,8 +37,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          source "$GITHUB_WORKSPACE/.github/workflows/scripts/gh-retry.sh"
           siblings="__SIBLING_REPOS__"
           for repo in $siblings; do
             echo "Dispatching bump-patch-version.yml on $repo"
-            gh workflow run bump-patch-version.yml --repo "$repo"
+            gh_retry workflow run bump-patch-version.yml --repo "$repo"
           done

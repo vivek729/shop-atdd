@@ -139,9 +139,13 @@ jobs:
           node-version: 22
 
       - name: Install gh-optivem CLI extension
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh extension install optivem/gh-optivem
+        run: |
+          set -euo pipefail
+          source "$GITHUB_WORKSPACE/.github/workflows/scripts/gh-retry.sh"
+          gh_retry extension install optivem/gh-optivem
 
       - name: Log in to Docker Hub
         uses: Wandalen/wretry.action@v3
