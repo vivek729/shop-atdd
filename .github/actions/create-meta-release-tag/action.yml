@@ -9,7 +9,7 @@ description: |
 
   Local git operations (config, tag) are not retried — they cannot fail
   transiently. Network operations (push, release create, release view) go
-  through optivem/actions/retry@main.
+  through optivem/actions/retry@v1.
 
 inputs:
   release-tag:
@@ -37,11 +37,11 @@ runs:
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git tag "$RELEASE_TAG" "$SHA"
     - name: Push tag
-      uses: optivem/actions/retry@main
+      uses: optivem/actions/retry@v1
       with:
         command: git push origin "${{ inputs.release-tag }}"
     - name: Create GitHub release (with 422 already-exists fallthrough)
-      uses: optivem/actions/retry@main
+      uses: optivem/actions/retry@v1
       env:
         GH_TOKEN: ${{ inputs.github-token }}
         RELEASE_TAG: ${{ inputs.release-tag }}

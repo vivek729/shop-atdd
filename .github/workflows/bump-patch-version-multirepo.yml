@@ -37,7 +37,7 @@ jobs:
         # of already-dispatched siblings is acceptable because the receiving
         # bump-patch-version workflows debounce duplicate concurrent runs via
         # their own concurrency group.
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         env:
           GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
         with:

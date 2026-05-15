@@ -135,7 +135,7 @@ jobs:
       actions: write
     steps:
       - name: Dispatch meta-prerelease-stage
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

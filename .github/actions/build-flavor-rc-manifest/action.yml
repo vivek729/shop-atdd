@@ -13,7 +13,7 @@ description: |
   Hard fails if any canonical flavor has no qa-approved RC at its current
   flavor.VERSION — the meta-rc must not be tagged with an incomplete bundle.
 
-  Retry semantics: the whole script is wrapped in optivem/actions/retry@main.
+  Retry semantics: the whole script is wrapped in optivem/actions/retry@v1.
   A transient gh-api failure inside the per-flavor loop retries the entire
   script from the top — local ops (tr, git tag/rev-parse) are read-only and
   idempotent.
@@ -37,7 +37,7 @@ runs:
   using: 'composite'
   steps:
     - name: Build
-      uses: optivem/actions/retry@main
+      uses: optivem/actions/retry@v1
       env:
         GH_TOKEN: ${{ inputs.github-token }}
         REPO: ${{ github.repository }}

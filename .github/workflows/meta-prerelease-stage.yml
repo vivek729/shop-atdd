@@ -234,7 +234,7 @@ jobs:
           # back via `git cat-file -p <tag>` to know which RCs to promote.
           git tag -a "$TAG" -F manifest.json "${VERIFIED_SHA}"
       - name: Push meta-rc tag
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         with:
           command: git push origin "meta-v${{ steps.meta-version.outputs.value }}-rc.${{ github.run_number }}"
       - name: Tag meta-rc summary

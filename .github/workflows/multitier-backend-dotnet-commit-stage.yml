@@ -119,7 +119,7 @@ jobs:
 
       - name: Install dotnet-sonarscanner
         if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         with:
           command: dotnet tool install --global dotnet-sonarscanner
 
@@ -136,7 +136,7 @@ jobs:
 
       - name: End Sonar Analysis
         if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         with:
           working-directory: system/multitier/backend-dotnet
           command: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
@@ -177,13 +177,13 @@ jobs:
 
       - name: Pre-pull base image mcr.microsoft.com/dotnet/sdk:8.0
         if: steps.verify-main.outputs.on-branch == 'true'
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         with:
           command: docker pull mcr.microsoft.com/dotnet/sdk:8.0
 
       - name: Pre-pull base image mcr.microsoft.com/dotnet/aspnet:8.0
         if: steps.verify-main.outputs.on-branch == 'true'
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         with:
           command: docker pull mcr.microsoft.com/dotnet/aspnet:8.0
 

@@ -133,7 +133,7 @@ jobs:
 
       - name: Run Code Analysis
         if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         with:
           working-directory: system/monolith/java
           command: ./gradlew sonar --info
@@ -174,13 +174,13 @@ jobs:
 
       - name: Pre-pull base image eclipse-temurin:21-jdk-alpine
         if: steps.verify-main.outputs.on-branch == 'true'
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         with:
           command: docker pull eclipse-temurin:21-jdk-alpine
 
       - name: Pre-pull base image eclipse-temurin:21-jre-alpine
         if: steps.verify-main.outputs.on-branch == 'true'
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         with:
           command: docker pull eclipse-temurin:21-jre-alpine
 

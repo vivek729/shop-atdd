@@ -1,7 +1,7 @@
 name: 'Verify meta release tag does not exist'
 description: |
   Existence probe with explicit 404 classification, retry semantics applied
-  via optivem/actions/retry@main. Fails with exit 1 if the tag already
+  via optivem/actions/retry@v1. Fails with exit 1 if the tag already
   exists (200 from the git/ref/tags API). Fails with the underlying error if
   the API returned anything other than 200 or 404 — must not be conflated
   with "available" because that would let a later step silently overwrite an
@@ -19,7 +19,7 @@ runs:
   using: 'composite'
   steps:
     - name: Probe
-      uses: optivem/actions/retry@main
+      uses: optivem/actions/retry@v1
       env:
         GH_TOKEN: ${{ inputs.github-token }}
         RELEASE_TAG: ${{ inputs.release-tag }}

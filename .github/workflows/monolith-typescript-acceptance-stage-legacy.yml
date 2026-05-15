@@ -214,7 +214,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: Install gh-optivem CLI extension
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

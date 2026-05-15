@@ -300,7 +300,7 @@ jobs:
       contents: read
     steps:
       - name: Dispatch gh-acceptance-stage in optivem/gh-optivem
-        uses: optivem/actions/retry@main
+        uses: optivem/actions/retry@v1
         env:
           GH_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
