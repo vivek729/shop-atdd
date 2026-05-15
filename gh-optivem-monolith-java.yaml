@@ -1,4 +1,5 @@
 project:
+    provider: github
     url: https://github.com/orgs/optivem/projects/20
 repo_strategy: mono-repo
 sonar:
