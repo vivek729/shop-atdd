@@ -2,7 +2,7 @@ import { ProductConfig } from '../scenario-context.js';
 import { ThenContractStage } from '../then/then-contract.js';
 import { WhenStage } from '../when/when-stage.js';
 import type { GivenStage } from './given-stage.js';
-import type { GivenProduct as IGivenProduct } from '../../../port/given/steps/given-product.js';
+import type { GivenProduct as IGivenProduct } from '../../../port/myShop/given/steps/given-product.js';
 
 export class GivenProduct implements IGivenProduct {
   constructor(

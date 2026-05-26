@@ -1,5 +1,5 @@
-using Dsl.Port.Assume;
-using Dsl.Port.Assume.Steps;
+using Dsl.Port.MyShop.Assume;
+using Dsl.Port.MyShop.Assume.Steps;
 using Optivem.Testing;
 
 namespace Dsl.Core.Scenario.Assume;

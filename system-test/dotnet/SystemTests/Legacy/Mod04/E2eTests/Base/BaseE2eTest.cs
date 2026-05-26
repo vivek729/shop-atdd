@@ -1,4 +1,4 @@
-using Dsl.Port;
+using Dsl.Port.MyShop;
 using Dsl.Core.Shared;
 using ConfigEnvironment = SystemTests.TestInfrastructure.Configuration.Environment;
 using SystemTests.TestInfrastructure.Configuration;

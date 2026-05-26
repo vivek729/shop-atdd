@@ -2,7 +2,7 @@ import { OrderConfig } from '../scenario-context.js';
 import { ThenContractStage } from '../then/then-contract.js';
 import { WhenStage } from '../when/when-stage.js';
 import type { GivenStage } from './given-stage.js';
-import type { GivenOrder as IGivenOrder } from '../../../port/given/steps/given-order.js';
+import type { GivenOrder as IGivenOrder } from '../../../port/myShop/given/steps/given-order.js';
 
 export class GivenOrder implements IGivenOrder {
   constructor(

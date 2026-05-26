@@ -13,8 +13,8 @@ import com.mycompany.myshop.testkit.driver.port.external.clock.ClockDriver;
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.driver.port.external.tax.TaxDriver;
 import com.mycompany.myshop.testkit.driver.port.myshop.MyShopDriver;
-import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
-import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.myshop.ChannelMode;
+import com.mycompany.myshop.testkit.dsl.port.myshop.ExternalSystemMode;
 import com.optivem.testing.contexts.ChannelContext;
 
 import java.io.Closeable;

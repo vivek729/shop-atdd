@@ -1,6 +1,6 @@
 using Dsl.Core.Scenario.When.Steps;
-using Dsl.Port.When;
-using Dsl.Port.When.Steps;
+using Dsl.Port.MyShop.When;
+using Dsl.Port.MyShop.When.Steps;
 using Optivem.Testing;
 using Driver.Adapter;
 using static Dsl.Core.Scenario.ScenarioDefaults;

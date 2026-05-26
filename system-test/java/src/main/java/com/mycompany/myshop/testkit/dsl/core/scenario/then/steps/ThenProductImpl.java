@@ -4,7 +4,7 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.GetProductVerification;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
-import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenProduct;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.steps.ThenProduct;
 
 public class ThenProductImpl extends BaseThenStep<Void, VoidVerification> implements ThenProduct {
     private final GetProductVerification verification;

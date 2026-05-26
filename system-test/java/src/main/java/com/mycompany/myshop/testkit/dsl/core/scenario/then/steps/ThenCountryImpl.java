@@ -4,7 +4,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.tax.usecases.GetTaxVerification;
-import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCountry;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.steps.ThenCountry;
 
 public class ThenCountryImpl extends BaseThenStep<Void, VoidVerification> implements ThenCountry {
     private final GetTaxVerification verification;
