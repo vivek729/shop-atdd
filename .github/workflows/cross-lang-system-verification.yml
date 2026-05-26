@@ -250,32 +250,39 @@ jobs:
           echo "::endgroup::"
 
       # Cross-lang combos test (test-lang) suites against (system-lang)'s SUT,
-      # so neither shop's pre-existing gh-optivem-<arch>-<lang>.yaml file
-      # matches — both point system.config and system_test.config at the
-      # same language. Generate per-matrix-entry gh-optivem.yaml files at
-      # runtime: one for latest tests, one for legacy. The runner reads
-      # them via GH_OPTIVEM_CONFIG. Minimal schema — only the fields
-      # actually consulted by `test setup` / `test system` are populated.
-      #
-      # Templates live at .github/workflows/templates/cross-lang-<arch>.yaml.tmpl
-      # (one per architecture, since monolith vs multitier have disjoint
-      # system.* shapes per gh-optivem's projectconfig schema). Placeholders
-      # are filled by envsubst (preinstalled on ubuntu-latest).
+      # so neither pre-existing gh-optivem-<arch>-<test-lang>.yaml is directly
+      # usable — they point system.* at the test-lang. Take the per-test-lang
+      # config as the base (system-test.* + system-test.paths.* are correct
+      # for the test-lang already) and repoint system.* at the SUT language.
+      # yq is preinstalled on ubuntu-latest.
       - name: Generate cross-lang gh-optivem.yaml files
         env:
           SYSTEM_LANG: ${{ matrix.system-lang }}
           TEST_LANG: ${{ matrix.test-lang }}
+          ARCH: ${{ matrix.arch }}
         run: |
           mkdir -p .gh-optivem-cross-lang
-          template=".github/workflows/templates/cross-lang-${{ matrix.arch }}.yaml.tmpl"
           for variant in latest legacy; do
-            TEST_CONFIG="system-test/${TEST_LANG}/tests.yaml"
-            [ "$variant" = legacy ] && TEST_CONFIG="system-test/${TEST_LANG}/tests.legacy.yaml"
-            export TEST_CONFIG
-            # shellcheck disable=SC2016
-            envsubst '${SYSTEM_LANG} ${TEST_LANG} ${TEST_CONFIG}' \
-              < "$template" \
-              > ".gh-optivem-cross-lang/${variant}.yaml"
+            suffix=""
+            [ "$variant" = legacy ] && suffix="-legacy"
+            base="gh-optivem-${ARCH}-${TEST_LANG}${suffix}.yaml"
+            out=".gh-optivem-cross-lang/${variant}.yaml"
+            cp "$base" "$out"
+            if [ "$ARCH" = monolith ]; then
+              yq -i '
+                .system.config = "docker/" + strenv(SYSTEM_LANG) + "/monolith/systems.yaml" |
+                .system.path = "system/monolith/" + strenv(SYSTEM_LANG) |
+                .system.lang = strenv(SYSTEM_LANG) |
+                .system."sonar-project" = "optivem_shop-monolith-" + strenv(SYSTEM_LANG)
+              ' "$out"
+            else
+              yq -i '
+                .system.config = "docker/" + strenv(SYSTEM_LANG) + "/multitier/systems.yaml" |
+                .system.backend.path = "system/multitier/backend-" + strenv(SYSTEM_LANG) |
+                .system.backend.lang = strenv(SYSTEM_LANG) |
+                .system.backend."sonar-project" = "optivem_shop-multitier-backend-" + strenv(SYSTEM_LANG)
+              ' "$out"
+            fi
           done
 
       - name: Setup ${{ matrix.test-lang }} latest test harness
