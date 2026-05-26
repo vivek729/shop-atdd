@@ -1,7 +1,7 @@
 project:
     provider: github
     url: https://github.com/orgs/optivem/projects/20
-repo_strategy: mono-repo
+repo-strategy: mono-repo
 sonar:
     organization: optivem
 system:
@@ -10,13 +10,13 @@ system:
     path: system/monolith/dotnet
     repo: optivem/shop
     lang: dotnet
-    sonar_project: optivem_shop-monolith-dotnet
-system_test:
+    sonar-project: optivem_shop-monolith-dotnet
+system-test:
     path: system-test/dotnet
     config: system-test/dotnet/tests.legacy.yaml
     repo: optivem/shop
     lang: dotnet
-    sonar_project: optivem_shop-tests-dotnet
+    sonar-project: optivem_shop-tests-dotnet
     paths:
         driver-port: system-test/dotnet/Testkit.Driver.Port/shop
         driver-adapter: system-test/dotnet/Testkit.Driver.Adapter/shop
@@ -26,7 +26,7 @@ system_test:
         dsl-port: system-test/dotnet/Testkit.Dsl.Port/shop
         dsl-core: system-test/dotnet/Testkit.Dsl.Core/shop
         ct-test: system-test/dotnet/SystemTests/Latest/ExternalSystemContractTests
-external_systems:
+external-systems:
     stubs:
         path: external-systems/stubs
         repo: optivem/shop

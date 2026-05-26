@@ -1,7 +1,7 @@
 project:
     provider: github
     url: https://github.com/orgs/optivem/projects/20
-repo_strategy: mono-repo
+repo-strategy: mono-repo
 sonar:
     organization: optivem
 system:
@@ -10,13 +10,13 @@ system:
     path: system/monolith/java
     repo: optivem/shop
     lang: java
-    sonar_project: optivem_shop-monolith-java
-system_test:
+    sonar-project: optivem_shop-monolith-java
+system-test:
     path: system-test/java
     config: system-test/java/tests.legacy.yaml
     repo: optivem/shop
     lang: java
-    sonar_project: optivem_shop-tests-java
+    sonar-project: optivem_shop-tests-java
     paths:
         driver-port: system-test/java/src/main/java/testkit/driver/port/shop
         driver-adapter: system-test/java/src/main/java/testkit/driver/adapter/shop
@@ -26,7 +26,7 @@ system_test:
         dsl-port: system-test/java/src/main/java/testkit/dsl/port/shop
         dsl-core: system-test/java/src/main/java/testkit/dsl/core/shop
         ct-test: system-test/java/src/test/java/shop/latest/contract
-external_systems:
+external-systems:
     stubs:
         path: external-systems/stubs
         repo: optivem/shop
