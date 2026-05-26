@@ -3,10 +3,10 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.when.steps;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.testkit.dsl.core.usecase.myshop.usecases.BrowseCouponsVerification;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.BrowseCouponsResponse;
-import com.mycompany.myshop.testkit.dsl.port.myshop.ChannelMode;
-import com.mycompany.myshop.testkit.dsl.port.myshop.when.steps.WhenBrowseCoupons;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseCouponsVerification;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
+import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenBrowseCoupons;
 
 public class WhenBrowseCouponsImpl extends BaseWhenStep<BrowseCouponsResponse, BrowseCouponsVerification> implements WhenBrowseCoupons {
 

@@ -1,6 +1,6 @@
 package com.mycompany.myshop.systemtest.configuration;
 
-import com.mycompany.myshop.testkit.dsl.port.myshop.ChannelMode;
+import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.Map;

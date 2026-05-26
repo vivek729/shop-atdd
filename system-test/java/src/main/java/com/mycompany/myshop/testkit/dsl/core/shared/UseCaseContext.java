@@ -1,6 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.shared;
 
-import com.mycompany.myshop.testkit.dsl.port.myshop.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

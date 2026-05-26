@@ -3,10 +3,10 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.then.steps;
 import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
-import com.mycompany.myshop.testkit.dsl.port.myshop.then.steps.ThenOrder;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.OrderStatus;
-import com.mycompany.myshop.testkit.dsl.core.usecase.myshop.usecases.PlaceOrderVerification;
-import com.mycompany.myshop.testkit.dsl.core.usecase.myshop.usecases.ViewOrderVerification;
+import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenOrder;
+import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.PlaceOrderVerification;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.ViewOrderVerification;
 
 public class ThenOrderImpl<TSuccessResponse, TSuccessVerification extends ResponseVerification<TSuccessResponse>>
         extends BaseThenStep<TSuccessResponse, TSuccessVerification> implements ThenOrder {

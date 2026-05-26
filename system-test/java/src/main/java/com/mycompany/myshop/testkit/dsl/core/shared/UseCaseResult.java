@@ -1,6 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.shared;
 
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.error.SystemError;
+import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 import com.mycompany.myshop.testkit.common.Result;
 
 import java.util.function.BiFunction;

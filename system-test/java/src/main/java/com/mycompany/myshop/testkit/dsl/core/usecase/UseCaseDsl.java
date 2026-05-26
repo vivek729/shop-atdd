@@ -7,14 +7,14 @@ import org.slf4j.LoggerFactory;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.clock.ClockDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.ErpDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.tax.TaxDsl;
-import com.mycompany.myshop.testkit.dsl.core.usecase.myshop.MyShopDsl;
+import com.mycompany.myshop.testkit.dsl.core.usecase.MyShopDsl;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.driver.port.external.clock.ClockDriver;
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.driver.port.external.tax.TaxDriver;
-import com.mycompany.myshop.testkit.driver.port.myshop.MyShopDriver;
-import com.mycompany.myshop.testkit.dsl.port.myshop.ChannelMode;
-import com.mycompany.myshop.testkit.dsl.port.myshop.ExternalSystemMode;
+import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
+import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
 import com.optivem.testing.contexts.ChannelContext;
 
 import java.io.Closeable;

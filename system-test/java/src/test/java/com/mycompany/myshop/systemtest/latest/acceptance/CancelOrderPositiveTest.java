@@ -2,7 +2,7 @@ package com.mycompany.myshop.systemtest.latest.acceptance;
 
 import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.OrderStatus;
+import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
 import com.optivem.testing.Channel;
 import org.junit.jupiter.api.TestTemplate;
 

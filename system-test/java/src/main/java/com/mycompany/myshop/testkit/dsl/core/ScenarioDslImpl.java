@@ -2,7 +2,7 @@ package com.mycompany.myshop.testkit.dsl.core;
 
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.assume.AssumeImpl;
-import com.mycompany.myshop.testkit.dsl.port.myshop.ScenarioDsl;
+import com.mycompany.myshop.testkit.dsl.port.ScenarioDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.WhenImpl;
 

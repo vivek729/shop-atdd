@@ -1,8 +1,8 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario.assume;
 
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
-import com.mycompany.myshop.testkit.dsl.port.myshop.assume.AssumeStage;
-import com.mycompany.myshop.testkit.dsl.port.myshop.assume.steps.AssumeRunning;
+import com.mycompany.myshop.testkit.dsl.port.assume.AssumeStage;
+import com.mycompany.myshop.testkit.dsl.port.assume.steps.AssumeRunning;
 
 public class AssumeImpl implements AssumeStage {
     private final UseCaseDsl app;

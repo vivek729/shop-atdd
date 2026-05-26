@@ -3,8 +3,8 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.then.steps;
 import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
-import com.mycompany.myshop.testkit.dsl.port.myshop.then.steps.ThenCoupon;
-import com.mycompany.myshop.testkit.dsl.core.usecase.myshop.usecases.BrowseCouponsVerification;
+import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCoupon;
+import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.BrowseCouponsVerification;
 
 public class ThenCouponImpl<TSuccessResponse, TSuccessVerification extends ResponseVerification<TSuccessResponse>>
         extends BaseThenStep<TSuccessResponse, TSuccessVerification> implements ThenCoupon {

@@ -6,7 +6,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenCancelOrder
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenPlaceOrderImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenPublishCouponImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.steps.WhenViewOrderImpl;
-import com.mycompany.myshop.testkit.dsl.port.myshop.when.WhenStage;
+import com.mycompany.myshop.testkit.dsl.port.when.WhenStage;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.*;
 

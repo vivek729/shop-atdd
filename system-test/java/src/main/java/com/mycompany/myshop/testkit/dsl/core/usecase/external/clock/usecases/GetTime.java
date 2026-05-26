@@ -5,7 +5,7 @@ import com.mycompany.myshop.testkit.driver.port.external.clock.dtos.GetTimeRespo
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.clock.usecases.base.BaseClockUseCase;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.error.SystemError;
+import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 
 public class GetTime extends BaseClockUseCase<GetTimeResponse, GetTimeVerification> {
     public GetTime(ClockDriver driver, UseCaseContext context) {

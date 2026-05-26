@@ -8,8 +8,8 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenCountryIm
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenOrderImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenProductImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.steps.GivenPromotionImpl;
-import com.mycompany.myshop.testkit.dsl.port.myshop.given.GivenStage;
-import com.mycompany.myshop.testkit.dsl.port.myshop.then.ThenStage;
+import com.mycompany.myshop.testkit.dsl.port.given.GivenStage;
+import com.mycompany.myshop.testkit.dsl.port.then.ThenStage;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.WhenImpl;
 
 import java.util.ArrayList;

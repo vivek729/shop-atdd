@@ -5,16 +5,16 @@ import com.mycompany.myshop.testkit.driver.port.external.clock.ClockDriver;
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
 import com.mycompany.myshop.testkit.driver.port.external.tax.TaxDriver;
 import com.mycompany.myshop.testkit.channel.ChannelType;
-import com.mycompany.myshop.testkit.dsl.port.myshop.ChannelMode;
-import com.mycompany.myshop.testkit.driver.port.myshop.MyShopDriver;
+import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
+import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.clock.ClockRealDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.clock.ClockStubDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.ErpRealDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.erp.ErpStubDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.tax.TaxRealDriver;
 import com.mycompany.myshop.testkit.driver.adapter.external.tax.TaxStubDriver;
-import com.mycompany.myshop.testkit.driver.adapter.myshop.api.MyShopApiDriver;
-import com.mycompany.myshop.testkit.driver.adapter.myshop.ui.MyShopUiDriver;
+import com.mycompany.myshop.testkit.driver.adapter.api.MyShopApiDriver;
+import com.mycompany.myshop.testkit.driver.adapter.ui.MyShopUiDriver;
 import com.mycompany.myshop.systemtest.infrastructure.playwright.BrowserLifecycleExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -41,7 +41,7 @@ public abstract class BaseConfigurableTest {
     }
 
     protected UseCaseDsl createUseCaseDsl(Configuration configuration) {
-        var externalSystemMode = com.mycompany.myshop.testkit.dsl.port.myshop.ExternalSystemMode.valueOf(
+        var externalSystemMode = com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode.valueOf(
                 configuration.getExternalSystemMode().name());
 
         return new UseCaseDsl(

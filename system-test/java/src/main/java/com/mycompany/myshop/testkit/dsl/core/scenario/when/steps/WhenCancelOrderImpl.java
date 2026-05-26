@@ -6,8 +6,8 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
-import com.mycompany.myshop.testkit.dsl.port.myshop.ChannelMode;
-import com.mycompany.myshop.testkit.dsl.port.myshop.when.steps.WhenCancelOrder;
+import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
+import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenCancelOrder;
 
 public class WhenCancelOrderImpl extends BaseWhenStep<Void, VoidVerification> implements WhenCancelOrder {
     private String orderNumber;

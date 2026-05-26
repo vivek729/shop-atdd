@@ -2,7 +2,7 @@ package com.mycompany.myshop.systemtest.legacy.mod10.acceptance;
 
 import com.mycompany.myshop.systemtest.legacy.mod10.acceptance.base.BaseAcceptanceTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.OrderStatus;
+import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
 import com.optivem.testing.Channel;
 
 import org.junit.jupiter.api.TestTemplate;

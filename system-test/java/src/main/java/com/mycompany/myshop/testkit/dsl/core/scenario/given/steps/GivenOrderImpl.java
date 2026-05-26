@@ -3,8 +3,8 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.given.steps;
 import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
-import com.mycompany.myshop.testkit.dsl.port.myshop.given.steps.GivenOrder;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.OrderStatus;
+import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenOrder;
+import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.*;
 

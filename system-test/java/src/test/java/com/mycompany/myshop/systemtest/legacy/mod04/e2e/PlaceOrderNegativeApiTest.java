@@ -1,7 +1,7 @@
 package com.mycompany.myshop.systemtest.legacy.mod04.e2e;
 
 import com.mycompany.myshop.systemtest.legacy.mod04.e2e.base.BaseE2eTest;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.PlaceOrderRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

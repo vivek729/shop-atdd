@@ -1,8 +1,8 @@
 package com.mycompany.myshop.systemtest.legacy.mod05.e2e;
 
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsProductRequest;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.OrderStatus;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.PlaceOrderRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
+import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.systemtest.legacy.mod05.e2e.base.BaseE2eTest;
 import org.junit.jupiter.api.Test;
 

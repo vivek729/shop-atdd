@@ -5,7 +5,7 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.usecases.base.
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.error.SystemError;
+import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 
 public class GoToErp extends BaseErpUseCase<Void, VoidVerification> {
     public GoToErp(ErpDriver driver, UseCaseContext context) {

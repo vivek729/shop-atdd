@@ -3,7 +3,7 @@ package com.mycompany.myshop.systemtest.legacy.mod08.base;
 import com.mycompany.myshop.systemtest.configuration.BaseConfigurableTest;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.ScenarioDslImpl;
-import com.mycompany.myshop.testkit.dsl.port.myshop.ScenarioDsl;
+import com.mycompany.myshop.testkit.dsl.port.ScenarioDsl;
 import com.mycompany.myshop.testkit.common.Closer;
 import com.optivem.testing.extensions.ChannelExtension;
 import org.junit.jupiter.api.AfterEach;

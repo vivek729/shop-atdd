@@ -5,7 +5,7 @@ import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.tax.usecases.base.BaseTaxUseCase;
 import com.mycompany.myshop.testkit.driver.port.external.tax.TaxDriver;
 import com.mycompany.myshop.testkit.driver.port.external.tax.dtos.GetTaxResponse;
-import com.mycompany.myshop.testkit.driver.port.myshop.dtos.error.SystemError;
+import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
 
 public class GetTaxRate extends BaseTaxUseCase<GetTaxResponse, GetTaxVerification> {
     private String countryValueOrAlias;
