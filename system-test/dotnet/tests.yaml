@@ -22,6 +22,14 @@
 # is appended to `command`. A suite that needs a different filter shape
 # overrides it with its own `testFilter:` entry.
 #
+# `suiteGroups` (optional) maps an alias name to a list of suite ids —
+# `gh optivem test run --suite <alias>` substitutes the alias with its
+# constituent ids before the runner sees them. Per-project entries here
+# override the Go-side default registry (today only
+# `acceptance: [acceptance-api, acceptance-ui]`); omit the block to fall
+# back to the default. The BPMN runtime emits `--suite=acceptance` from
+# the verify-tests-pass / verify-tests-fail call-activities.
+#
 # `setupCommands` runs once when invoked via `gh optivem test setup` —
 # typically the build / dependency install. `test system` does not run it
 # implicitly; chain `test setup` before the first `test system` call.
@@ -35,6 +43,8 @@ setupCommands:
   - name: Build
     command: dotnet build
 testFilter: '&DisplayName~<test>'
+suiteGroups:
+  acceptance: [acceptance-api, acceptance-ui]
 suites:
   - id: smoke-stub
     name: latest - Smoke (stub)
