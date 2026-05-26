@@ -1,7 +1,7 @@
 project:
   provider: github
   url: https://github.com/orgs/optivem/projects/20
-repo_strategy: mono-repo
+repo-strategy: mono-repo
 sonar:
   organization: optivem
 system:
@@ -10,10 +10,10 @@ system:
   path: system/monolith/${SYSTEM_LANG}
   repo: optivem/shop
   lang: ${SYSTEM_LANG}
-  sonar_project: optivem_shop-monolith-${SYSTEM_LANG}
-system_test:
+  sonar-project: optivem_shop-monolith-${SYSTEM_LANG}
+system-test:
   path: system-test/${TEST_LANG}
   config: ${TEST_CONFIG}
   repo: optivem/shop
   lang: ${TEST_LANG}
-  sonar_project: optivem_shop-tests-${TEST_LANG}
+  sonar-project: optivem_shop-tests-${TEST_LANG}
