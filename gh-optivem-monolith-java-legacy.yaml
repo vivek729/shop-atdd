@@ -23,7 +23,7 @@ system-test:
         external-system-driver-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/port/external
         external-system-driver-adapter: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/external
         at-test: system-test/java/src/test/java/com/mycompany/myshop/systemtest/latest/acceptance
-        dsl-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/dsl/port
+        dsl-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/dsl/port/myshop
         dsl-core: system-test/java/src/main/java/com/mycompany/myshop/testkit/dsl/core/usecase/myshop
         ct-test: system-test/java/src/test/java/com/mycompany/myshop/systemtest/latest/contract
 external-systems:

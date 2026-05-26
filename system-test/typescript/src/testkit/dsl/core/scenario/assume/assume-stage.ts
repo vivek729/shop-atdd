@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import { AppContext } from '../app-context.js';
-import type { AssumeStage as IAssumeStage } from '../../../port/assume/assume-stage.js';
-import type { AssumeRunning as IAssumeRunning } from '../../../port/assume/steps/assume-running.js';
+import type { AssumeStage as IAssumeStage } from '../../../port/myShop/assume/assume-stage.js';
+import type { AssumeRunning as IAssumeRunning } from '../../../port/myShop/assume/steps/assume-running.js';
 
 export class AssumeStage implements IAssumeStage {
   constructor(private readonly app: AppContext) {}

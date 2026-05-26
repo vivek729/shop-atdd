@@ -2,8 +2,8 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.given.steps;
 
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
-import com.mycompany.myshop.testkit.dsl.port.then.ThenStage;
-import com.mycompany.myshop.testkit.dsl.port.given.steps.base.GivenStep;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.ThenStage;
+import com.mycompany.myshop.testkit.dsl.port.myshop.given.steps.base.GivenStep;
 import com.mycompany.myshop.testkit.dsl.core.scenario.when.WhenImpl;
 
 public abstract class BaseGivenStep implements GivenStep {

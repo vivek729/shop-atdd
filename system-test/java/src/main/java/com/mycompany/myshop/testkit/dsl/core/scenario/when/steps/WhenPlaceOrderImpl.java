@@ -7,8 +7,8 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
 import com.mycompany.myshop.testkit.driver.port.myshop.dtos.PlaceOrderResponse;
-import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
-import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenPlaceOrder;
+import com.mycompany.myshop.testkit.dsl.port.myshop.ChannelMode;
+import com.mycompany.myshop.testkit.dsl.port.myshop.when.steps.WhenPlaceOrder;
 import com.mycompany.myshop.testkit.dsl.core.usecase.myshop.usecases.PlaceOrderVerification;
 
 public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOrderVerification> implements WhenPlaceOrder {

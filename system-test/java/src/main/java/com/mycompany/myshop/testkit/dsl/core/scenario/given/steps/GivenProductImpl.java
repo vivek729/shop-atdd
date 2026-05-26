@@ -3,7 +3,7 @@ package com.mycompany.myshop.testkit.dsl.core.scenario.given.steps;
 import com.mycompany.myshop.testkit.common.Converter;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.given.GivenImpl;
-import com.mycompany.myshop.testkit.dsl.port.given.steps.GivenProduct;
+import com.mycompany.myshop.testkit.dsl.port.myshop.given.steps.GivenProduct;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_SKU;
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.DEFAULT_UNIT_PRICE;

@@ -1,5 +1,5 @@
 using Dsl.Core.Scenario.Given;
-using Dsl.Port.Given.Steps;
+using Dsl.Port.MyShop.Given.Steps;
 using Driver.Adapter;
 using static Dsl.Core.Scenario.ScenarioDefaults;
 

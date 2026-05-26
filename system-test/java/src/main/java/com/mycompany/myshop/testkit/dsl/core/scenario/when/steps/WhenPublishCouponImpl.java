@@ -5,7 +5,7 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
-import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenPublishCoupon;
+import com.mycompany.myshop.testkit.dsl.port.myshop.when.steps.WhenPublishCoupon;
 
 import static com.mycompany.myshop.testkit.dsl.core.scenario.ScenarioDefaults.*;
 

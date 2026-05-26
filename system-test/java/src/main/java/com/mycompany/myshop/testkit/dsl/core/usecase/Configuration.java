@@ -1,6 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.usecase;
 
-import com.mycompany.myshop.testkit.dsl.port.ExternalSystemMode;
+import com.mycompany.myshop.testkit.dsl.port.myshop.ExternalSystemMode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

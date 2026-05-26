@@ -5,10 +5,10 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.steps.ThenClockImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.steps.ThenCountryImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.steps.ThenProductImpl;
-import com.mycompany.myshop.testkit.dsl.port.then.ThenStage;
-import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenClock;
-import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCountry;
-import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenProduct;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.ThenStage;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.steps.ThenClock;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.steps.ThenCountry;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.steps.ThenProduct;
 
 public class ThenImpl implements ThenStage {
     protected final UseCaseDsl app;

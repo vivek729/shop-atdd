@@ -5,7 +5,7 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.steps.ThenFailureImpl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.steps.ThenSuccessImpl;
-import com.mycompany.myshop.testkit.dsl.port.then.ThenResultStage;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.ThenResultStage;
 
 public class ThenResultImpl<TSuccessResponse, TSuccessVerification extends ResponseVerification<TSuccessResponse>> extends ThenImpl implements ThenResultStage {
     private final ExecutionResult<TSuccessResponse, TSuccessVerification> executionResult;

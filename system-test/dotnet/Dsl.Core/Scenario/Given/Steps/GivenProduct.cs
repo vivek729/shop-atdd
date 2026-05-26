@@ -1,5 +1,5 @@
 using Common;
-using Dsl.Port.Given.Steps;
+using Dsl.Port.MyShop.Given.Steps;
 using Dsl.Core.Scenario.Given;
 using static Dsl.Core.Scenario.ScenarioDefaults;
 

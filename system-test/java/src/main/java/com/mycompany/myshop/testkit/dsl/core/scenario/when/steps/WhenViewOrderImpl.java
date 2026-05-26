@@ -6,8 +6,8 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResult;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultBuilder;
 import com.mycompany.myshop.testkit.driver.port.myshop.dtos.ViewOrderResponse;
-import com.mycompany.myshop.testkit.dsl.port.ChannelMode;
-import com.mycompany.myshop.testkit.dsl.port.when.steps.WhenViewOrder;
+import com.mycompany.myshop.testkit.dsl.port.myshop.ChannelMode;
+import com.mycompany.myshop.testkit.dsl.port.myshop.when.steps.WhenViewOrder;
 import com.mycompany.myshop.testkit.dsl.core.usecase.myshop.usecases.ViewOrderVerification;
 
 public class WhenViewOrderImpl extends BaseWhenStep<ViewOrderResponse, ViewOrderVerification> implements WhenViewOrder {

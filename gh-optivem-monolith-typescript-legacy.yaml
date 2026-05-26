@@ -23,7 +23,7 @@ system-test:
         external-system-driver-port: system-test/typescript/src/testkit/driver/port/external
         external-system-driver-adapter: system-test/typescript/src/testkit/driver/adapter/external
         at-test: system-test/typescript/tests/latest/acceptance
-        dsl-port: system-test/typescript/src/testkit/dsl/port
+        dsl-port: system-test/typescript/src/testkit/dsl/port/myShop
         dsl-core: system-test/typescript/src/testkit/dsl/core/usecase/myShop
         ct-test: system-test/typescript/tests/latest/contract
 external-systems:

@@ -1,4 +1,4 @@
-using Dsl.Port;
+using Dsl.Port.MyShop;
 using SystemTests.Legacy.Mod11.ExternalSystemContractTests.Base;
 
 namespace SystemTests.Legacy.Mod11.ExternalSystemContractTests.Clock;

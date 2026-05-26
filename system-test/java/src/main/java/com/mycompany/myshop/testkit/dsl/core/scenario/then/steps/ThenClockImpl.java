@@ -4,7 +4,7 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.clock.usecases.GetTimeVerification;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.testkit.dsl.core.shared.VoidVerification;
-import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenClock;
+import com.mycompany.myshop.testkit.dsl.port.myshop.then.steps.ThenClock;
 
 public class ThenClockImpl extends BaseThenStep<Void, VoidVerification> implements ThenClock {
     private final GetTimeVerification verification;

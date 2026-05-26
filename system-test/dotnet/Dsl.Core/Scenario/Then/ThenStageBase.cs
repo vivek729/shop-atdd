@@ -1,6 +1,6 @@
 using Dsl.Core.Scenario.Then.Steps;
-using Dsl.Port.Then;
-using Dsl.Port.Then.Steps;
+using Dsl.Port.MyShop.Then;
+using Dsl.Port.MyShop.Then.Steps;
 using Optivem.Testing;
 
 namespace Dsl.Core.Scenario.Then;

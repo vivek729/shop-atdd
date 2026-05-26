@@ -1,7 +1,7 @@
 using SystemTests.Latest.AcceptanceTests.Base;
 using Dsl.Core.MyShop;
 using Driver.Port.MyShop.Dtos;
-using Dsl.Port.Then.Steps;
+using Dsl.Port.MyShop.Then.Steps;
 using Optivem.Testing;
 
 namespace SystemTests.Latest.AcceptanceTests;

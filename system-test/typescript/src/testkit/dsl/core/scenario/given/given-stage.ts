@@ -10,7 +10,7 @@ import { GivenPromotion } from './given-promotion.js';
 import { GivenCoupon } from './given-coupon.js';
 import { GivenCountry } from './given-country.js';
 import { GivenOrder } from './given-order.js';
-import type { GivenStage as IGivenStage } from '../../../port/given/given-stage.js';
+import type { GivenStage as IGivenStage } from '../../../port/myShop/given/given-stage.js';
 
 export class GivenStage implements IGivenStage {
   constructor(
