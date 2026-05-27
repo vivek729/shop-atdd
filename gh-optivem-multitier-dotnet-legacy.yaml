@@ -24,13 +24,13 @@ system-test:
     lang: dotnet
     sonar-project: optivem_shop-tests-dotnet
     paths:
-        driver-port: system-test/dotnet/Driver.Port/MyShop
-        driver-adapter: system-test/dotnet/Driver.Adapter/MyShop
+        driver-port: system-test/dotnet/Driver.Port
+        driver-adapter: system-test/dotnet/Driver.Adapter
         external-system-driver-port: system-test/dotnet/Driver.Port/External
         external-system-driver-adapter: system-test/dotnet/Driver.Adapter/External
         at-test: system-test/dotnet/SystemTests/Latest/AcceptanceTests
-        dsl-port: system-test/dotnet/Dsl.Port/MyShop
-        dsl-core: system-test/dotnet/Dsl.Core/UseCase/MyShop
+        dsl-port: system-test/dotnet/Dsl.Port
+        dsl-core: system-test/dotnet/Dsl.Core/UseCase
         ct-test: system-test/dotnet/SystemTests/Latest/ExternalSystemContractTests
 external-systems:
     stubs:
