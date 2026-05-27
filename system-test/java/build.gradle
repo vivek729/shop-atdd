@@ -123,9 +123,28 @@ tasks.named('test') {
 		maxParallelForks = Math.max(1, Runtime.runtime.availableProcessors().intdiv(2))
 	}
 
+	// Capture per-test failures so the testLogging.afterSuite below can replay
+	// them in a single block right before "BUILD FAILED". Without the replay,
+	// each assertion is printed inline at the moment it fails — and gets
+	// scrolled past by subsequent parallel-fork output and the Gradle summary
+	// footer, leaving operators with only the HTML-report link to click.
+	def failedTests = []
+
+	afterTest { desc, result ->
+		if (result.failedTestCount > 0) {
+			failedTests << [
+				className : desc.className,
+				name      : desc.name,
+				exceptions: result.exceptions,
+			]
+		}
+	}
+
 	testLogging {
 		events "passed", "skipped", "failed"
-		showStandardStreams = true
+		// false: SUT app logs (Spring Boot startup, request/response dumps)
+		// would otherwise bury the assertion stack in thousands of lines.
+		showStandardStreams = false
 		exceptionFormat = 'full'
 		showExceptions = true
 		showCauses = true
@@ -137,6 +156,30 @@ tasks.named('test') {
 			if (!desc.parent) {
 				println "\nTest Summary: ${result.resultType}"
 				println "Total: ${result.testCount}, Passed: ${result.successfulTestCount}, Failed: ${result.failedTestCount}, Skipped: ${result.skippedTestCount}"
+				if (failedTests) {
+					def bar = '=' * 70
+					def sub = '-' * 70
+					println ""
+					println bar
+					println "Failed tests (assertion details):"
+					println bar
+					failedTests.each { t ->
+						println ""
+						println "${t.className}.${t.name}"
+						println sub
+						t.exceptions.each { ex ->
+							println ex.toString()
+							ex.stackTrace.take(15).each { line -> println "    at ${line}" }
+							def cause = ex.cause
+							while (cause != null) {
+								println "Caused by: ${cause}"
+								cause.stackTrace.take(8).each { line -> println "    at ${line}" }
+								cause = cause.cause
+							}
+						}
+					}
+					println bar
+				}
 			}
 		}
 
