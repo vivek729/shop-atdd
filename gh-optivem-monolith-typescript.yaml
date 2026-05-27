@@ -24,7 +24,7 @@ system-test:
         external-system-driver-adapter: system-test/typescript/src/testkit/driver/adapter/external
         at-test: system-test/typescript/tests/latest/acceptance
         dsl-port: system-test/typescript/src/testkit/dsl/port
-        dsl-core: system-test/typescript/src/testkit/dsl/core/usecase
+        dsl-core: system-test/typescript/src/testkit/dsl/core
         ct-test: system-test/typescript/tests/latest/contract
 external-systems:
     stubs:

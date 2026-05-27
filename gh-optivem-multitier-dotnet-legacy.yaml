@@ -30,7 +30,7 @@ system-test:
         external-system-driver-adapter: system-test/dotnet/Driver.Adapter/External
         at-test: system-test/dotnet/SystemTests/Latest/AcceptanceTests
         dsl-port: system-test/dotnet/Dsl.Port/MyShop
-        dsl-core: system-test/dotnet/Dsl.Core/UseCase/MyShop
+        dsl-core: system-test/dotnet/Dsl.Core/MyShop
         ct-test: system-test/dotnet/SystemTests/Latest/ExternalSystemContractTests
 external-systems:
     stubs:
