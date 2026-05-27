@@ -2,11 +2,11 @@ import { test as base } from '@playwright/test';
 import { chromium } from 'playwright';
 import type { Browser } from 'playwright';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
-import type { MyShopDriver } from '../../../../src/testkit/driver/port/myShop/my-shop-driver.js';
+import type { MyShopDriver } from '../../../../src/testkit/driver/port/my-shop-driver.js';
 import type { ErpDriver } from '../../../../src/testkit/driver/port/external/erp/erp-driver.js';
 import type { TaxDriver } from '../../../../src/testkit/driver/port/external/tax/tax-driver.js';
-import { MyShopApiDriver } from '../../../../src/testkit/driver/adapter/myShop/api/my-shop-api-driver.js';
-import { MyShopUiDriver } from '../../../../src/testkit/driver/adapter/myShop/ui/my-shop-ui-driver.js';
+import { MyShopApiDriver } from '../../../../src/testkit/driver/adapter/api/my-shop-api-driver.js';
+import { MyShopUiDriver } from '../../../../src/testkit/driver/adapter/ui/my-shop-ui-driver.js';
 import { ErpRealDriver } from '../../../../src/testkit/driver/adapter/external/erp/erp-real-driver.js';
 import { TaxRealDriver } from '../../../../src/testkit/driver/adapter/external/tax/tax-real-driver.js';
 

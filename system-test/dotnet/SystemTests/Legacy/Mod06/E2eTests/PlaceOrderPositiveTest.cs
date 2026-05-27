@@ -1,6 +1,6 @@
 using Common;
-using Dsl.Core.MyShop;
-using Driver.Port.MyShop.Dtos;
+using Dsl.Core.UseCase;
+using Driver.Port.Dtos;
 using Driver.Port.External.Erp.Dtos;
 using SystemTests.Commons.Constants;
 using SystemTests.Legacy.Mod06.E2eTests.Base;

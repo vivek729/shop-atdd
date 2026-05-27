@@ -1,12 +1,12 @@
-using Dsl.Port.MyShop;
+using Dsl.Port;
 using Dsl.Core.External.Clock;
 using Driver.Port.External.Clock;
 using Dsl.Core.External.Erp;
 using Driver.Port.External.Erp;
-using Driver.Adapter.MyShop.Api;
-using Driver.Adapter.MyShop.Ui;
-using Dsl.Core.MyShop;
-using Driver.Port.MyShop;
+using Driver.Adapter.Api;
+using Driver.Adapter.Ui;
+using Dsl.Core.UseCase;
+using Driver.Port;
 using Driver.Port.External.Tax;
 using Dsl.Core.External.Tax;
 using Driver.Adapter.External.Erp;

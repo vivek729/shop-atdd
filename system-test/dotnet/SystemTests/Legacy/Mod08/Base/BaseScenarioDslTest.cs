@@ -1,4 +1,4 @@
-using Dsl.Port.MyShop;
+using Dsl.Port;
 using SystemTests.TestInfrastructure.Configuration;
 using Dsl.Core;
 using Optivem.Testing;

@@ -1,6 +1,6 @@
 import { uiTest as test, expect } from './base/BaseE2eTest.js';
 import { randomUUID } from 'node:crypto';
-import { NewOrderPage } from '../../../../src/testkit/driver/adapter/myShop/ui/client/pages/NewOrderPage.js';
+import { NewOrderPage } from '../../../../src/testkit/driver/adapter/ui/client/pages/NewOrderPage.js';
 
 test('shouldPlaceOrderForValidInput', async ({ myShopUiClient, erpClient }) => {
     const sku = `SKU-${randomUUID().substring(0, 8)}`;

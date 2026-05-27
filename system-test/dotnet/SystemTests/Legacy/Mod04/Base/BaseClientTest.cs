@@ -1,8 +1,8 @@
 using SystemTests.TestInfrastructure.Configuration;
 using Dsl.Core;
 using Driver.Adapter.External.Erp.Client;
-using Driver.Adapter.MyShop.Api.Client;
-using Driver.Adapter.MyShop.Ui.Client;
+using Driver.Adapter.Api.Client;
+using Driver.Adapter.Ui.Client;
 using Driver.Adapter.External.Tax.Client;
 using Xunit;
 

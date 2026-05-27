@@ -1,6 +1,6 @@
 using Common;
 using Driver.Port.External.Erp.Dtos;
-using Driver.Port.MyShop.Dtos;
+using Driver.Port.Dtos;
 using SystemTests.Commons.Constants;
 using SystemTests.Legacy.Mod05.E2eTests.Base;
 using Shouldly;

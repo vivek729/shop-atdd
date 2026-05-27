@@ -1,6 +1,6 @@
 using Common;
 using SystemTests.Legacy.Mod07.Base;
-using Dsl.Core.MyShop;
+using Dsl.Core.UseCase;
 using Optivem.Testing;
 using Shouldly;
 using Xunit;

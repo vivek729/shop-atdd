@@ -1,4 +1,4 @@
-using Dsl.Port.MyShop;
+using Dsl.Port;
 
 namespace SystemTests.Latest.ExternalSystemContractTests.Tax;
 

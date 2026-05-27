@@ -1,10 +1,10 @@
 using Dsl.Core.Scenario.Assume;
 using Dsl.Core.Scenario.Given;
 using Dsl.Core.Scenario.When;
-using Dsl.Port.MyShop;
-using Dsl.Port.MyShop.Assume;
-using Dsl.Port.MyShop.Given;
-using Dsl.Port.MyShop.When;
+using Dsl.Port;
+using Dsl.Port.Assume;
+using Dsl.Port.Given;
+using Dsl.Port.When;
 using Driver.Adapter;
 using Optivem.Testing;
 using System;

@@ -1,6 +1,6 @@
 using SystemTests.Legacy.Mod10.AcceptanceTests.Base;
-using Dsl.Core.MyShop;
-using Driver.Port.MyShop.Dtos;
+using Dsl.Core.UseCase;
+using Driver.Port.Dtos;
 using Optivem.Testing;
 using Xunit;
 

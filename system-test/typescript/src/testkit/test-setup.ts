@@ -2,8 +2,8 @@ import { loadConfiguration, TestConfig } from '../../config/configuration-loader
 import { ScenarioDsl, AppContext } from './dsl/scenario-dsl.js';
 import type { ChannelMode } from './dsl/scenario-dsl.js';
 import { UseCaseContext } from './dsl/core/shared/use-case-context.js';
-import { MyShopApiDriver } from './driver/adapter/myShop/api/my-shop-api-driver.js';
-import { MyShopUiDriver } from './driver/adapter/myShop/ui/my-shop-ui-driver.js';
+import { MyShopApiDriver } from './driver/adapter/api/my-shop-api-driver.js';
+import { MyShopUiDriver } from './driver/adapter/ui/my-shop-ui-driver.js';
 import { ErpRealDriver } from './driver/adapter/external/erp/erp-real-driver.js';
 import { ErpStubDriver } from './driver/adapter/external/erp/erp-stub-driver.js';
 import { ClockRealDriver } from './driver/adapter/external/clock/clock-real-driver.js';

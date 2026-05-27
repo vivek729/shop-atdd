@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { SystemError } from '../../../../driver/port/myShop/dtos/errors/SystemError.js';
-import { BrowseCouponItem } from '../../../../driver/port/myShop/dtos/BrowseCouponsResponse.js';
+import { SystemError } from '../../../../driver/port/dtos/errors/SystemError.js';
+import { BrowseCouponItem } from '../../../../driver/port/dtos/BrowseCouponsResponse.js';
 import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';

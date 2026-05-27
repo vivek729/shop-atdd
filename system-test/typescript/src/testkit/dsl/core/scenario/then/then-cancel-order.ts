@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { SystemError } from '../../../../driver/port/myShop/dtos/errors/SystemError.js';
-import { ViewOrderResponse } from '../../../../driver/port/myShop/dtos/ViewOrderResponse.js';
+import { SystemError } from '../../../../driver/port/dtos/errors/SystemError.js';
+import { ViewOrderResponse } from '../../../../driver/port/dtos/ViewOrderResponse.js';
 import { DEFAULTS } from '../defaults.js';
 import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';

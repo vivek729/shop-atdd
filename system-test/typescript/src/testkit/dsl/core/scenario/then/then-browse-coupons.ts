@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { BrowseCouponsResponse } from '../../../../driver/port/myShop/dtos/BrowseCouponsResponse.js';
+import { BrowseCouponsResponse } from '../../../../driver/port/dtos/BrowseCouponsResponse.js';
 import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';

@@ -1,6 +1,6 @@
 import type { AppContext, ChannelMode } from '../scenario/app-context.js';
 import { UseCaseContext, type ExternalSystemMode } from '../shared/use-case-context.js';
-import { MyShopDsl } from './myShop/MyShopDsl.js';
+import { MyShopDsl } from './MyShopDsl.js';
 import { ClockDsl } from './external/clock/ClockDsl.js';
 import { ErpDsl } from './external/erp/ErpDsl.js';
 import { TaxDsl } from './external/tax/TaxDsl.js';

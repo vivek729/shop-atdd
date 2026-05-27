@@ -1,4 +1,4 @@
-using Dsl.Core.MyShop;
+using Dsl.Core.UseCase;
 using SystemTests.Commons.Constants;
 using SystemTests.Legacy.Mod07.E2eTests.Base;
 using Optivem.Testing;

@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Dsl.Port.MyShop.Then.Steps;
+using Dsl.Port.Then.Steps;
 using Dsl.Core.Shared;
 
 namespace Dsl.Core.Scenario.Then;

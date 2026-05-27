@@ -1,4 +1,4 @@
-using Dsl.Port.MyShop;
+using Dsl.Port;
 using Dsl.Core.Shared;
 using SystemTests.Legacy.Mod10.Base;
 

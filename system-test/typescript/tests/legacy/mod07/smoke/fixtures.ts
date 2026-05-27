@@ -3,8 +3,8 @@ import { ChannelContext, bindChannels, bindTestEach } from '@optivem/optivem-tes
 import { chromium } from 'playwright';
 import type { Browser } from 'playwright';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
-import { MyShopApiDriver } from '../../../../src/testkit/driver/adapter/myShop/api/my-shop-api-driver.js';
-import { MyShopUiDriver } from '../../../../src/testkit/driver/adapter/myShop/ui/my-shop-ui-driver.js';
+import { MyShopApiDriver } from '../../../../src/testkit/driver/adapter/api/my-shop-api-driver.js';
+import { MyShopUiDriver } from '../../../../src/testkit/driver/adapter/ui/my-shop-ui-driver.js';
 import { ErpRealDriver } from '../../../../src/testkit/driver/adapter/external/erp/erp-real-driver.js';
 import { TaxRealDriver } from '../../../../src/testkit/driver/adapter/external/tax/tax-real-driver.js';
 import { ClockRealDriver } from '../../../../src/testkit/driver/adapter/external/clock/clock-real-driver.js';

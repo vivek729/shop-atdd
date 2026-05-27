@@ -6,7 +6,7 @@ import { UseCaseContext } from '../../shared/use-case-context.js';
 import { AppContext } from '../app-context.js';
 import { ScenarioContext } from '../scenario-context.js';
 
-import type { ThenStage as IThenStage } from '../../../port/myShop/then/then-stage.js';
+import type { ThenStage as IThenStage } from '../../../port/then/then-stage.js';
 
 export class ThenContractStage implements PromiseLike<void>, IThenStage {
   private readonly _clockAssertions: ((time: GetTimeResponse) => void)[] = [];

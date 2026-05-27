@@ -1,4 +1,4 @@
-using Dsl.Port.MyShop;
+using Dsl.Port;
 using Microsoft.Extensions.Configuration;
 using Dsl.Core.Shared;
 using Dsl.Core;

@@ -1,5 +1,5 @@
 using Dsl.Core.External.Erp.UseCases;
-using Dsl.Port.MyShop.Then.Steps;
+using Dsl.Port.Then.Steps;
 using Driver.Adapter;
 
 namespace Dsl.Core.Scenario.Then.Steps;

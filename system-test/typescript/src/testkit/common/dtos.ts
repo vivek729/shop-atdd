@@ -2,14 +2,14 @@
 // This file preserves backward compatibility for existing imports.
 
 // MyShop
-export type { PlaceOrderRequest } from '../driver/port/myShop/dtos/PlaceOrderRequest.js';
-export type { PlaceOrderResponse } from '../driver/port/myShop/dtos/PlaceOrderResponse.js';
-export type { ViewOrderResponse } from '../driver/port/myShop/dtos/ViewOrderResponse.js';
-export { OrderStatus } from '../driver/port/myShop/dtos/OrderStatus.js';
-export type { PublishCouponRequest } from '../driver/port/myShop/dtos/PublishCouponRequest.js';
-export type { BrowseCouponItem, BrowseCouponsResponse } from '../driver/port/myShop/dtos/BrowseCouponsResponse.js';
-export type { SystemError, FieldError } from '../driver/port/myShop/dtos/errors/SystemError.js';
-export type { ProblemDetailResponse } from '../driver/adapter/myShop/api/client/dtos/errors/ProblemDetailResponse.js';
+export type { PlaceOrderRequest } from '../driver/port/dtos/PlaceOrderRequest.js';
+export type { PlaceOrderResponse } from '../driver/port/dtos/PlaceOrderResponse.js';
+export type { ViewOrderResponse } from '../driver/port/dtos/ViewOrderResponse.js';
+export { OrderStatus } from '../driver/port/dtos/OrderStatus.js';
+export type { PublishCouponRequest } from '../driver/port/dtos/PublishCouponRequest.js';
+export type { BrowseCouponItem, BrowseCouponsResponse } from '../driver/port/dtos/BrowseCouponsResponse.js';
+export type { SystemError, FieldError } from '../driver/port/dtos/errors/SystemError.js';
+export type { ProblemDetailResponse } from '../driver/adapter/api/client/dtos/errors/ProblemDetailResponse.js';
 
 // Clock
 export type { GetTimeResponse } from '../driver/port/external/clock/dtos/GetTimeResponse.js';

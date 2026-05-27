@@ -1,10 +1,10 @@
 using SystemTests.TestInfrastructure.Configuration;
 using Dsl.Core;
 using Driver.Port.External.Erp;
-using Driver.Port.MyShop;
+using Driver.Port;
 using Driver.Adapter.External.Erp;
-using Driver.Adapter.MyShop.Api;
-using Driver.Adapter.MyShop.Ui;
+using Driver.Adapter.Api;
+using Driver.Adapter.Ui;
 using Driver.Adapter.External.Tax;
 using Xunit;
 

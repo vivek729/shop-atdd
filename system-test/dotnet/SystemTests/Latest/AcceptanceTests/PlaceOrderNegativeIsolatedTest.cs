@@ -1,5 +1,5 @@
 using SystemTests.Latest.AcceptanceTests.Base;
-using Dsl.Core.MyShop;
+using Dsl.Core.UseCase;
 using Optivem.Testing;
 using Xunit;
 

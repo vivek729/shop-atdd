@@ -2,7 +2,7 @@ import { PromotionConfig } from '../scenario-context.js';
 import { ThenContractStage } from '../then/then-contract.js';
 import { WhenStage } from '../when/when-stage.js';
 import type { GivenStage } from './given-stage.js';
-import type { GivenPromotion as IGivenPromotion } from '../../../port/myShop/given/steps/given-promotion.js';
+import type { GivenPromotion as IGivenPromotion } from '../../../port/given/steps/given-promotion.js';
 
 export class GivenPromotion implements IGivenPromotion {
   constructor(

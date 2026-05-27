@@ -1,9 +1,9 @@
 using System.Runtime.CompilerServices;
-using Dsl.Port.MyShop.Then.Steps;
+using Dsl.Port.Then.Steps;
 using Dsl.Core.Shared;
 using Dsl.Core.Scenario;
 using Driver.Adapter;
-using Dsl.Core.MyShop.UseCases;
+using Dsl.Core.UseCase.UseCases;
 
 namespace Dsl.Core.Scenario.Then;
 

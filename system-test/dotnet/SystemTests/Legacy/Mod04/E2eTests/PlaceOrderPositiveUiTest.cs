@@ -1,7 +1,7 @@
 using Common;
 using Driver.Adapter.External.Erp.Client.Dtos;
-using Driver.Adapter.MyShop.Ui.Client.Pages;
-using Driver.Port.MyShop.Dtos;
+using Driver.Adapter.Ui.Client.Pages;
+using Driver.Port.Dtos;
 using SystemTests.Commons.Constants;
 using SystemTests.Legacy.Mod04.E2eTests.Base;
 using Shouldly;

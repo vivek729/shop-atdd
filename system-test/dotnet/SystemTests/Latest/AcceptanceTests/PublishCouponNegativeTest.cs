@@ -1,6 +1,6 @@
 using SystemTests.Latest.AcceptanceTests.Base;
 using SystemTests.Commons.Providers;
-using Dsl.Core.MyShop;
+using Dsl.Core.UseCase;
 using Optivem.Testing;
 
 namespace SystemTests.Latest.AcceptanceTests;

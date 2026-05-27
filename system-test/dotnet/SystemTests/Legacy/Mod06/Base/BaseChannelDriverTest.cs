@@ -1,10 +1,10 @@
 using SystemTests.TestInfrastructure.Configuration;
 using Dsl.Core;
 using Driver.Port.External.Erp;
-using Driver.Adapter.MyShop.Api;
-using Driver.Adapter.MyShop.Ui;
-using Dsl.Core.MyShop;
-using Driver.Port.MyShop;
+using Driver.Adapter.Api;
+using Driver.Adapter.Ui;
+using Dsl.Core.UseCase;
+using Driver.Port;
 using Driver.Adapter.External.Erp;
 using Driver.Adapter.External.Tax;
 using Optivem.Testing;

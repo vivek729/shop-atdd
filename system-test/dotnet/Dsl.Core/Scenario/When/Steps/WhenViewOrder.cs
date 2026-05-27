@@ -1,9 +1,9 @@
 using Driver.Adapter;
 using Dsl.Core.Scenario.When.Steps.Base;
-using Dsl.Port.MyShop;
-using Dsl.Port.MyShop.When.Steps;
-using Driver.Port.MyShop.Dtos;
-using Dsl.Core.MyShop.UseCases;
+using Dsl.Port;
+using Dsl.Port.When.Steps;
+using Driver.Port.Dtos;
+using Dsl.Core.UseCase.UseCases;
 using Optivem.Testing;
 using static Dsl.Core.Scenario.ScenarioDefaults;
 

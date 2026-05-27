@@ -2,8 +2,8 @@ import { test as base } from '@playwright/test';
 import { chromium } from 'playwright';
 import type { Browser } from 'playwright';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
-import { MyShopApiClient } from '../../../../src/testkit/driver/adapter/myShop/api/client/MyShopApiClient.js';
-import { MyShopUiClient } from '../../../../src/testkit/driver/adapter/myShop/ui/client/MyShopUiClient.js';
+import { MyShopApiClient } from '../../../../src/testkit/driver/adapter/api/client/MyShopApiClient.js';
+import { MyShopUiClient } from '../../../../src/testkit/driver/adapter/ui/client/MyShopUiClient.js';
 import { ErpRealClient } from '../../../../src/testkit/driver/adapter/external/erp/client/ErpRealClient.js';
 
 process.env.EXTERNAL_SYSTEM_MODE = process.env.EXTERNAL_SYSTEM_MODE ?? 'real';

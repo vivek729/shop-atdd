@@ -2,7 +2,7 @@ import { test as base } from '@playwright/test';
 import { chromium } from 'playwright';
 import type { Browser, BrowserContext, Page } from 'playwright';
 import { loadConfiguration } from '../../../../config/configuration-loader.js';
-import { MyShopApiClient } from '../../../../src/testkit/driver/adapter/myShop/api/client/MyShopApiClient.js';
+import { MyShopApiClient } from '../../../../src/testkit/driver/adapter/api/client/MyShopApiClient.js';
 import { ErpRealClient } from '../../../../src/testkit/driver/adapter/external/erp/client/ErpRealClient.js';
 import { TaxRealClient } from '../../../../src/testkit/driver/adapter/external/tax/client/TaxRealClient.js';
 

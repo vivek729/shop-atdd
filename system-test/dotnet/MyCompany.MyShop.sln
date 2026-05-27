@@ -26,7 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy-acceptance-environme
 		.github\actions\deploy-acceptance-environment\action.yml = .github\actions\deploy-acceptance-environment\action.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyShop", "Dsl.Core\UseCase\MyShop\MyShop.csproj", "{8F5F23B7-0DA0-41EF-B994-71294FD6AFBA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UseCase", "Dsl.Core\UseCase\UseCase.csproj", "{8F5F23B7-0DA0-41EF-B994-71294FD6AFBA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Erp", "Dsl.Core\UseCase\External\Erp\Erp.csproj", "{2CCE53DA-8189-4B87-A601-121261686691}"
 EndProject

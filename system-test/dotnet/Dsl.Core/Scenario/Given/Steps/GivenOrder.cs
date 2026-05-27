@@ -1,7 +1,7 @@
 using Common;
-using Dsl.Port.MyShop.Given.Steps;
+using Dsl.Port.Given.Steps;
 using Dsl.Core.Scenario.Given;
-using Driver.Port.MyShop.Dtos;
+using Driver.Port.Dtos;
 using static Dsl.Core.Scenario.ScenarioDefaults;
 
 namespace Dsl.Core.Scenario.Given;
