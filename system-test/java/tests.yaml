@@ -41,6 +41,7 @@ setupCommands:
   - name: Clean Build
     command: .\gradlew.bat clean compileJava compileTestJava
 testFilter: --tests '*.<test>'
+testFilterJoin: repeat
 suiteGroups:
   acceptance: [acceptance-api, acceptance-ui]
 suites:
