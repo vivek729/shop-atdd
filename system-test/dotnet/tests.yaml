@@ -43,6 +43,7 @@ setupCommands:
   - name: Build
     command: dotnet build
 testFilter: '&DisplayName~<test>'
+testFilterJoin: fragment-or
 suiteGroups:
   acceptance: [acceptance-api, acceptance-ui]
 suites:

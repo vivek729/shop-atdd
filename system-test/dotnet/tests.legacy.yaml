@@ -16,6 +16,7 @@ setupCommands:
   - name: Build
     command: dotnet build
 testFilter: '&DisplayName~<test>'
+testFilterJoin: fragment-or
 suites:
   - id: mod02-smoke
     name: mod02 - Smoke (real)
