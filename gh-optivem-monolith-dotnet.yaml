@@ -11,6 +11,7 @@ system:
     repo: optivem/shop
     lang: dotnet
     sonar-project: optivem_shop-monolith-dotnet
+    db-migration-path: system/db/migrations
 system-test:
     path: system-test/dotnet
     config: system-test/dotnet/tests.yaml

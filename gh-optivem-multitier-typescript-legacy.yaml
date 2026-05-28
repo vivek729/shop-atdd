@@ -17,6 +17,7 @@ system:
         repo: optivem/shop
         lang: typescript
         sonar-project: optivem_shop-multitier-frontend-react
+    db-migration-path: system/db/migrations
 system-test:
     path: system-test/typescript
     config: system-test/typescript/tests.legacy.yaml
