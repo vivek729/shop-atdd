@@ -168,6 +168,8 @@ jobs:
 
       - name: Validate all gh-optivem configs
         if: ${{ steps.decide.outputs.should_run == 'true' }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: bash ./validate-all-gh-optivem-config.sh
 
       - name: Read VERSION values
