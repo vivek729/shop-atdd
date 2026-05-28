@@ -40,7 +40,7 @@ gh optivem system stop
 
 This runs one sample test per suite across all test categories (smoke, acceptance, contract, e2e) to catch regressions without running the full suite. All sample tests must pass before committing.
 
-For full-suite runs across all three languages (latest + legacy), use `./test-all.sh` from the repo root — see [docs/operations/running-system-tests.md](docs/operations/running-system-tests.md).
+For full-suite runs across all three languages (latest + legacy), use `./test-all.sh` from the repo root — see [CONTRIBUTING.md](CONTRIBUTING.md#running-system-tests).
 
 ## Fixing Failing Workflows
 

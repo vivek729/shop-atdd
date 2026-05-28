@@ -1,12 +1,87 @@
-# Schema changes
+# Contributing
+
+How to verify changes locally and make schema changes safely.
+
+- [Running system tests](#running-system-tests)
+- [Schema changes](#schema-changes)
+
+## Running system tests
+
+The `gh optivem` CLI extension orchestrates the docker-compose stacks and runs
+the test suites. Install it once with:
+
+```bash
+gh extension install optivem/gh-optivem
+```
+
+### All languages at once — `test-all.sh`
+
+From the repo root:
+
+```bash
+./test-all.sh -a monolith
+```
+
+Runs both **latest** and **legacy** suites across all three languages (.NET,
+Java, TypeScript) sequentially, prints a per-language / per-phase summary, and
+exits non-zero on any failure.
+
+Useful flags:
+
+- `-l dotnet,java` — run only a subset of languages
+- `-a multitier` — run against the multitier architecture instead of monolith
+
+This is the preferred entry point for verifying cross-language changes.
+
+### Single language — `gh optivem test run`
+
+Point `GH_OPTIVEM_CONFIG` at the variant yaml at the repo root, then run the
+commands without per-flag overrides. Substitute `<language>` ∈ {java, dotnet,
+typescript} and `<architecture>` ∈ {monolith, multitier}:
+
+```pwsh
+$env:GH_OPTIVEM_CONFIG = "gh-optivem-<architecture>-<language>.yaml"
+
+# Bring up the docker-compose stacks
+gh optivem system start
+
+# Prepare the test harness (npm ci / gradle compile / dotnet build, depending on language)
+gh optivem test setup
+
+# Run the latest suites
+gh optivem test run
+
+# Or a fast smoke (one sample per suite)
+gh optivem test run --sample
+
+# Stop when done
+gh optivem system stop
+```
+
+For the legacy suites, switch the env var to the `-legacy` sibling and re-run setup (legacy has its own setupCommands block):
+
+```pwsh
+$env:GH_OPTIVEM_CONFIG = "gh-optivem-<architecture>-<language>-legacy.yaml"
+gh optivem test setup
+gh optivem test run
+```
+
+Use this when iterating on a single language, or for the `--sample`
+pre-commit verification described in [CLAUDE.md](CLAUDE.md).
+
+Do **not** substitute `./gradlew test`, `mvn test`, `dotnet test`, or `npm
+test` — these wrappers manage Docker containers and per-suite environment
+variables that the raw toolchain does not.
+
+## Schema changes
 
 How to change the shop database schema safely.
 
 The shop has a single canonical schema in `system/db/migrations/`, applied to every Postgres instance by the `db-migrate` Flyway sidecar before any app starts. All six SUT implementations (3 languages × 2 architectures) are pure schema consumers — none of them create, drop, or alter tables on boot.
 
-Every schema change is a new SQL migration file. Read this whole document before opening a PR that touches `system/db/migrations/`.
+Every schema change is a new SQL migration file. Read this whole section before opening a PR that touches `system/db/migrations/`.
 
-## 1. Forward-only doctrine
+### 1. Forward-only doctrine
 
 No `U__*.sql` undo files. The Flyway undo feature is treated as if it doesn't exist. The sidecar runs with `FLYWAY_CLEAN_DISABLED=true` so a misconfigured CI step cannot wipe a schema.
 
@@ -18,7 +93,7 @@ Why forward-only:
 - Forward-only forces every migration to be safe-by-construction at write time, when you still have the context, rather than relying on a hypothetical reversal step at incident time.
 - Tools that offer undo (Flyway undo, EF Core `Down()`, ActiveRecord `down`) are footguns in any environment with real data. The Postgres community has been clear about this for years.
 
-## 2. App rollback ≠ schema rollback
+### 2. App rollback ≠ schema rollback
 
 Apps roll back via the platform — `kubectl rollout undo`, `docker compose up` with the previous image, blue/green flip. Seconds, no data risk.
 
@@ -35,9 +110,9 @@ This only works if every migration preserves the previous app version's invarian
 
 The right-hand column is the **expand-contract pattern**: every change is split into safe steps that each leave both the previous and the new app version functional.
 
-## 3. Expand-contract worked examples
+### 3. Expand-contract worked examples
 
-### Renaming a column (`old_name` → `new_name`)
+#### Renaming a column (`old_name` → `new_name`)
 
 1. **Expand.** Add `new_name` alongside `old_name`. Both nullable, no constraints yet.
 2. **Dual-write.** Update the app to write to both columns. Deploy.
@@ -48,20 +123,20 @@ The right-hand column is the **expand-contract pattern**: every change is split 
 
 Five or six migrations across multiple deploys. Every intermediate state is rollback-safe.
 
-### Dropping a column
+#### Dropping a column
 
 1. **Stop writing it.** Deploy.
 2. **Wait.** Confirm no traffic still depends on it (logs, metrics, retention window for in-flight requests).
 3. **Stop reading it.** Deploy.
 4. **Contract.** Drop the column.
 
-### Tightening a constraint (`NULL`-able → `NOT NULL`)
+#### Tightening a constraint (`NULL`-able → `NOT NULL`)
 
 1. **Add a tolerant default.** `ALTER COLUMN … SET DEFAULT …` so new writes can't insert NULL.
 2. **Backfill.** Update any existing NULL rows to the default value.
 3. **Contract.** `ALTER COLUMN … SET NOT NULL`.
 
-## 4. PR checklist
+### 4. PR checklist
 
 Before merging a PR that touches `system/db/migrations/`:
 
@@ -71,13 +146,13 @@ Before merging a PR that touches `system/db/migrations/`:
 - [ ] If renaming a column or table, you are doing it in expand-contract steps and not all at once.
 - [ ] Local verification: `docker compose down -v && docker compose up` from at least one of the six stack/mode pairings boots cleanly and `flyway_schema_history` shows `success=t` for the new entry.
 
-## 5. Open work
+### 5. Open work
 
 - **Previous-version smoke test** is not yet implemented. The shop has no production deploys today, so rolling-deploy safety is theoretical. When shop adopts release tagging for deploys, add a CI job that runs the previous release's image against the current migration set. Until then, rollback-safety is enforced by review against the table above.
 
-## References
+### References
 
 - Humble & Farley, *Continuous Delivery*, ch. 12 ("Managing Data")
 - Sadalage & Fowler, *Refactoring Databases* — full expand-contract catalogue
 - Origin incident: Issue #61 acceptance retry (rehearsal-20260513), `coupons.used_count` NULL constraint
-- Migration set conventions: [`system/db/migrations/README.md`](../../system/db/migrations/README.md)
+- Migration set conventions: [`system/db/migrations/README.md`](system/db/migrations/README.md)

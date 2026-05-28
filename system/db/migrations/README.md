@@ -10,7 +10,7 @@ Single ordered Flyway migration set, applied by a `db-migrate` sidecar before an
 
 ## Runbook
 
-See [`shop/docs/operations/schema-changes.md`](../../docs/operations/schema-changes.md) for the forward-only doctrine, expand-contract worked examples, and the rollback-safety table.
+See [`shop/CONTRIBUTING.md`](../../CONTRIBUTING.md#schema-changes) for the forward-only doctrine, expand-contract worked examples, and the rollback-safety table.
 
 ## Background
 
