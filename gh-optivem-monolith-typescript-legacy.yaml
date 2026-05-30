@@ -2,6 +2,7 @@ project:
     provider: github
     url: https://github.com/orgs/optivem/projects/20
 repo-strategy: mono-repo
+channels: [api, ui]
 sonar:
     organization: optivem
 system:
