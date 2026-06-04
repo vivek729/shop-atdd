@@ -73,12 +73,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
 
-      - name: Log in to Docker Hub
-        uses: optivem/actions/docker-login@v1
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Log in to GHCR
         uses: optivem/actions/docker-login@v1
         with:

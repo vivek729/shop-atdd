@@ -75,12 +75,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
 
-      - name: Log in to Docker Hub
-        uses: optivem/actions/docker-login@v1
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Log in to GHCR
         uses: optivem/actions/docker-login@v1
         with:
@@ -135,6 +129,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
 
+      # Authenticated pulls get higher Docker Hub rate limits (anonymous pulls are throttled on shared-IP runners).
       - name: Log in to Docker Hub
         uses: optivem/actions/docker-login@v1
         with:
