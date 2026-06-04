@@ -2,6 +2,12 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
+# npm retries transient registry failures (ECONNRESET, 5xx) on its own; raise
+# the retry budget above the 2-retry default so a flaky network doesn't fail
+# the build. Hard failures (404, ETARGET) still fail fast.
+ENV npm_config_fetch_retries=5 \
+    npm_config_fetch_retry_mintimeout=20000 \
+    npm_config_fetch_retry_maxtimeout=120000
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 FROM node:22-alpine

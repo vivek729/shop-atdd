@@ -7,7 +7,12 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies. npm retries transient registry failures (ECONNRESET,
+# 5xx) on its own; raise the retry budget above the 2-retry default so a flaky
+# network doesn't fail the build. Hard failures (404, ETARGET) still fail fast.
+ENV npm_config_fetch_retries=5 \
+    npm_config_fetch_retry_mintimeout=20000 \
+    npm_config_fetch_retry_maxtimeout=120000
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 # Copy source code
