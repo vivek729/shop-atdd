@@ -51,16 +51,12 @@ jobs:
         uses: optivem/actions/validate-env-vars-defined@v1
         with:
           names: |
-            DOCKERHUB_USERNAME
-            DOCKERHUB_TOKEN
             GCP_PROJECT_ID
             GCP_REGION
             GCP_WORKLOAD_IDENTITY_PROVIDER
             GCP_SERVICE_ACCOUNT
             WORKFLOW_TOKEN
         env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
           GCP_REGION: ${{ vars.GCP_REGION }}
           GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
