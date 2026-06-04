@@ -26,14 +26,17 @@ system-test:
     lang: java
     sonar-project: optivem_shop-tests-java
     paths:
-        driver-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/port
-        driver-adapter: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter
+        system-driver-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/port
+        system-driver-adapter: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter
         external-system-driver-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/port/external
         external-system-driver-adapter: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/external
         at-test: system-test/java/src/test/java/com/mycompany/myshop/systemtest/latest/acceptance
         dsl-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/dsl/port
         dsl-core: system-test/java/src/main/java/com/mycompany/myshop/testkit/dsl/core
         ct-test: system-test/java/src/test/java/com/mycompany/myshop/systemtest/latest/contract
+    system-driver-adapter-channels:
+        api: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/api
+        ui: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/ui
 external-systems:
     stubs:
         path: external-systems/stubs

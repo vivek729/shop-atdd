@@ -20,14 +20,17 @@ system-test:
     lang: typescript
     sonar-project: optivem_shop-tests-typescript
     paths:
-        driver-port: system-test/typescript/src/testkit/driver/port
-        driver-adapter: system-test/typescript/src/testkit/driver/adapter
+        system-driver-port: system-test/typescript/src/testkit/driver/port
+        system-driver-adapter: system-test/typescript/src/testkit/driver/adapter
         external-system-driver-port: system-test/typescript/src/testkit/driver/port/external
         external-system-driver-adapter: system-test/typescript/src/testkit/driver/adapter/external
         at-test: system-test/typescript/tests/latest/acceptance
         dsl-port: system-test/typescript/src/testkit/dsl/port
         dsl-core: system-test/typescript/src/testkit/dsl/core
         ct-test: system-test/typescript/tests/latest/contract
+    system-driver-adapter-channels:
+        api: system-test/typescript/src/testkit/driver/adapter/api
+        ui: system-test/typescript/src/testkit/driver/adapter/ui
 external-systems:
     stubs:
         path: external-systems/stubs
