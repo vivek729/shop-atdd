@@ -127,12 +127,12 @@ jobs:
         working-directory: system/multitier/backend-java
 
       - name: Build for Sonar
-        if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
+        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         run: ./gradlew build
         working-directory: system/multitier/backend-java
 
       - name: Run Code Analysis
-        if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
+        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         uses: optivem/actions/retry@v1
         with:
           working-directory: system/multitier/backend-java

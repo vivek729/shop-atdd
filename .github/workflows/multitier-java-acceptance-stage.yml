@@ -375,6 +375,7 @@ jobs:
           command: cd system-test/java && ./gradlew --version
 
       - name: Run Sonar Analysis
+        if: vars.SKIP_SONAR != 'true'
         uses: optivem/actions/retry@v1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

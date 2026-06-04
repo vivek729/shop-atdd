@@ -122,7 +122,7 @@ jobs:
         working-directory: system/monolith/typescript
 
       - name: Run Code Analysis
-        if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
+        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         uses: optivem/actions/retry@v1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

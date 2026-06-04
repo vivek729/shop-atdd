@@ -118,13 +118,13 @@ jobs:
         working-directory: system/monolith/dotnet
 
       - name: Install dotnet-sonarscanner
-        if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
+        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         uses: optivem/actions/retry@v1
         with:
           command: dotnet tool install --global dotnet-sonarscanner
 
       - name: Begin Sonar Analysis
-        if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
+        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         # Ignore list extends multitier-backend-dotnet with e4 (css:S4654 wwwroot)
         # and e5 (csharpsquid:S1186 Pages/**) — Razor Pages-specific rules that
         # do not apply to the API-only backend.
@@ -133,12 +133,12 @@ jobs:
         working-directory: system/monolith/dotnet
 
       - name: Build for Sonar
-        if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
+        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         run: dotnet build
         working-directory: system/monolith/dotnet
 
       - name: End Sonar Analysis
-        if: steps.verify-main.outputs.on-branch == 'true' && env.SONAR_TOKEN != ''
+        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         uses: optivem/actions/retry@v1
         with:
           working-directory: system/monolith/dotnet
