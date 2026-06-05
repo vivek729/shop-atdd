@@ -2,7 +2,7 @@
 # Runs SonarScanner analysis on the .NET system tests.
 #
 # Local helper that pushes a SonarCloud analysis using your personal token.
-# CI runs the same analysis from monolith-dotnet-acceptance-stage.yml and
+# CI runs the same analysis (auto-retried in CI via optivem/actions) from monolith-dotnet-acceptance-stage.yml and
 # multitier-dotnet-acceptance-stage.yml after tests finish; this script is
 # for manual runs.
 # Get token: https://sonarcloud.io/account/security

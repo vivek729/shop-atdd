@@ -2,7 +2,7 @@
 # Runs SonarScanner analysis on the multitier .NET backend.
 #
 # Local helper that pushes a SonarCloud analysis using your personal token.
-# CI runs the same analysis from multitier-dotnet-acceptance-stage.yml;
+# CI runs the same analysis (auto-retried in CI via optivem/actions) from multitier-dotnet-acceptance-stage.yml;
 # this script is for manual runs.
 # Get token: https://sonarcloud.io/account/security
 #

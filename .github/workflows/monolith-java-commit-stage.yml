@@ -136,7 +136,7 @@ jobs:
         uses: optivem/actions/retry@v1
         with:
           working-directory: system/monolith/java
-          command: ./gradlew sonar --info
+          command: ./gradlew sonar --info -Dsonar.scanner.skipJreProvisioning=true
 
       - name: Compose Dev Version
         if: steps.verify-main.outputs.on-branch == 'true'

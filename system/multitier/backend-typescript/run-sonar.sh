@@ -2,7 +2,7 @@
 # Runs SonarScanner analysis on the multitier TypeScript backend.
 #
 # Local helper that pushes a SonarCloud analysis using your personal token.
-# CI runs the same analysis from multitier-typescript-acceptance-stage.yml;
+# CI runs the same analysis (auto-retried in CI via optivem/actions) from multitier-typescript-acceptance-stage.yml;
 # this script is for manual runs.
 # Ignore rules in sonar-project.properties (auto-loaded from this dir).
 # Get token: https://sonarcloud.io/account/security

@@ -2,7 +2,7 @@
 # Runs SonarScanner analysis on the TypeScript system tests.
 #
 # Local helper that pushes a SonarCloud analysis using your personal token.
-# CI runs the same analysis from monolith-typescript-acceptance-stage.yml and
+# CI runs the same analysis (auto-retried in CI via optivem/actions) from monolith-typescript-acceptance-stage.yml and
 # multitier-typescript-acceptance-stage.yml after tests finish; this script
 # is for manual runs.
 # Get token: https://sonarcloud.io/account/security

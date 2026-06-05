@@ -2,7 +2,7 @@
 # Runs SonarScanner analysis on the Java system tests.
 #
 # Local helper that pushes a SonarCloud analysis using your personal token.
-# CI runs the same analysis from monolith-java-acceptance-stage.yml and
+# CI runs the same analysis (auto-retried in CI via optivem/actions) from monolith-java-acceptance-stage.yml and
 # multitier-java-acceptance-stage.yml after tests finish; this script is for
 # manual runs.
 # Project key: optivem_shop-tests-java (config in build.gradle).
@@ -22,6 +22,6 @@ fi
 
 echo "Running SonarScanner for Java system tests..."
 
-./gradlew classes testClasses sonar --info "-Dsonar.token=$TOKEN"
+./gradlew classes testClasses sonar --info "-Dsonar.token=$TOKEN" -Dsonar.scanner.skipJreProvisioning=true
 
 echo "Sonar analysis complete."
