@@ -165,7 +165,7 @@ jobs:
       # pure-local — no docker, no network beyond the gh extension install.
       - name: Install gh-optivem CLI extension
         if: ${{ steps.decide.outputs.should_run == 'true' }}
-        uses: ./.github/actions/install-gh-optivem
+        uses: optivem/actions/install-gh-optivem@v1
         with:
           ref: ${{ inputs.gh-optivem-ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

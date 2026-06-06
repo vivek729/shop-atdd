@@ -220,7 +220,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: Install gh-optivem CLI extension
-        uses: ./.github/actions/install-gh-optivem
+        uses: optivem/actions/install-gh-optivem@v1
         with:
           ref: ${{ inputs.gh-optivem-ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

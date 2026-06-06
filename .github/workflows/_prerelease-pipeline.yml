@@ -206,7 +206,7 @@ jobs:
       # `gh optivem system start` and `gh optivem test run` subcommands
       # used to bring up the docker-compose stacks and run the test suites.
       - name: Install gh-optivem CLI extension
-        uses: ./.github/actions/install-gh-optivem
+        uses: optivem/actions/install-gh-optivem@v1
         with:
           ref: ${{ inputs.gh-optivem-ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

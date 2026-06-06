@@ -259,7 +259,7 @@ jobs:
 
       - name: Install gh-optivem CLI extension
         if: ${{ !inputs.debug-skip-tests }}
-        uses: ./.github/actions/install-gh-optivem
+        uses: optivem/actions/install-gh-optivem@v1
         with:
           ref: ${{ inputs.gh-optivem-ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
