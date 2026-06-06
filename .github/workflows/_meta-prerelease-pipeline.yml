@@ -43,6 +43,11 @@ on:
         required: false
         type: string
         default: '14400'
+      gh-optivem-ref:
+        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release. Forwarded to every gh-optivem install site (check, local, acceptance, legacy, cross-lang, drift).'
+        required: false
+        type: string
+        default: ''
     outputs:
       commit_sha:
         description: 'SHA the verification ran against. Equals the trigger SHA unless the check job auto-bumped via meta-bump-all, in which case it is the post-bump main HEAD. Callers that tag artifacts (e.g. meta-prerelease-stage tagging meta-rc) should use this rather than github.sha so the tag lands on the SHA that was actually verified.'
@@ -160,11 +165,10 @@ jobs:
       # pure-local — no docker, no network beyond the gh extension install.
       - name: Install gh-optivem CLI extension
         if: ${{ steps.decide.outputs.should_run == 'true' }}
-        uses: optivem/actions/retry@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/install-gh-optivem
         with:
-          command: gh extension install optivem/gh-optivem
+          ref: ${{ inputs.gh-optivem-ref }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate all gh-optivem configs
         if: ${{ steps.decide.outputs.should_run == 'true' }}
@@ -479,7 +483,7 @@ jobs:
         uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
-          workflow-inputs: '{"level": "local", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ needs.check.outputs.commit_sha }}"}'
+          workflow-inputs: '{"level": "local", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ needs.check.outputs.commit_sha }}", "gh-optivem-ref": "${{ inputs.gh-optivem-ref }}"}'
 
   # Phase 1b: Run all commit stages in parallel (deduplicated — frontend-react is shared
   # across multitier variants). Independent of `local` (Phase 1a) — both gate only on `check`
@@ -548,7 +552,7 @@ jobs:
         with:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
           timeout-seconds: ${{ inputs.pipeline-timeout-seconds }}
-          workflow-inputs: '{"level": "${{ inputs.level }}", "skip-local-stage": "true", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ needs.check.outputs.commit_sha }}", "debug-skip-tests": "${{ inputs.debug-skip-tests }}"}'
+          workflow-inputs: '{"level": "${{ inputs.level }}", "skip-local-stage": "true", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ needs.check.outputs.commit_sha }}", "debug-skip-tests": "${{ inputs.debug-skip-tests }}", "gh-optivem-ref": "${{ inputs.gh-optivem-ref }}"}'
 
   # Cross-language behavior-parity regression check. Runs in parallel with `pipeline`
   # above — both need `commit` because cross-lang pulls the `sha-<sha>` images that
@@ -569,6 +573,7 @@ jobs:
     secrets: inherit
     with:
       commit-sha: ${{ needs.check.outputs.commit_sha }}
+      gh-optivem-ref: ${{ inputs.gh-optivem-ref }}
 
   # Cross-language schema drift check. Parallel sibling of `cross-lang` — same
   # gate (needs `commit` for the `sha-<sha>` images; variant=='all' because
@@ -594,3 +599,4 @@ jobs:
     secrets: inherit
     with:
       commit-sha: ${{ needs.check.outputs.commit_sha }}
+      gh-optivem-ref: ${{ inputs.gh-optivem-ref }}

@@ -50,6 +50,11 @@ on:
         required: false
         type: boolean
         default: false
+      gh-optivem-ref:
+        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release. Forwarded to the local stage and the acceptance / acceptance-legacy stages.'
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -201,11 +206,10 @@ jobs:
       # `gh optivem system start` and `gh optivem test run` subcommands
       # used to bring up the docker-compose stacks and run the test suites.
       - name: Install gh-optivem CLI extension
-        uses: optivem/actions/retry@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/install-gh-optivem
         with:
-          command: gh extension install optivem/gh-optivem
+          ref: ${{ inputs.gh-optivem-ref }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Bring up the docker-compose stacks (real + stub) and wait for health.
       - name: Start system
@@ -261,7 +265,7 @@ jobs:
           workflow: ${{ inputs.prefix }}-acceptance-stage.yml
           poll-interval: ${{ inputs.debug-skip-tests && '60' || '180' }}
           timeout-seconds: '7200'
-          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}", "debug-skip-tests": "${{ inputs.debug-skip-tests }}", "force-run": "true"}'
+          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}", "debug-skip-tests": "${{ inputs.debug-skip-tests }}", "force-run": "true", "gh-optivem-ref": "${{ inputs.gh-optivem-ref }}"}'
 
       # Resolve the rc tag that actually points at the tested SHA — whether our
       # dispatched run created it or a concurrent scheduled run did. This makes
@@ -296,7 +300,7 @@ jobs:
           workflow: ${{ inputs.prefix }}-acceptance-stage-legacy.yml
           poll-interval: ${{ inputs.debug-skip-tests && '60' || '180' }}
           timeout-seconds: '7200'
-          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}", "debug-skip-tests": "${{ inputs.debug-skip-tests }}", "force-run": "true"}'
+          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}", "debug-skip-tests": "${{ inputs.debug-skip-tests }}", "force-run": "true", "gh-optivem-ref": "${{ inputs.gh-optivem-ref }}"}'
 
   qa-stage:
     needs: [acceptance-stage, acceptance-stage-legacy]

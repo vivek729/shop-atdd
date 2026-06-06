@@ -19,6 +19,11 @@ on:
         required: false
         type: boolean
         default: false
+      gh-optivem-ref:
+        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release.'
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -259,11 +264,10 @@ jobs:
 
       - name: Install gh-optivem CLI extension
         if: ${{ !inputs.debug-skip-tests }}
-        uses: optivem/actions/retry@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/install-gh-optivem
         with:
-          command: gh extension install optivem/gh-optivem
+          ref: ${{ inputs.gh-optivem-ref }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # `gh optivem test setup` runs the setupCommands block (dotnet clean +
       # build) once for the whole batch; the per-suite `test system` steps

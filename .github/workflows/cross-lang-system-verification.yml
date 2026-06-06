@@ -22,6 +22,11 @@ on:
         description: 'Git SHA to test — must point at a SHA whose commit-stage images exist in GHCR.'
         required: true
         type: string
+      gh-optivem-ref:
+        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release.'
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -139,11 +144,10 @@ jobs:
           node-version: 22
 
       - name: Install gh-optivem CLI extension
-        uses: optivem/actions/retry@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/install-gh-optivem
         with:
-          command: gh extension install optivem/gh-optivem
+          ref: ${{ inputs.gh-optivem-ref }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Docker Hub
         uses: optivem/actions/docker-login@v1

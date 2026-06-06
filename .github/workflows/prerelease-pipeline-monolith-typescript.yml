@@ -40,6 +40,11 @@ on:
         required: false
         type: boolean
         default: false
+      gh-optivem-ref:
+        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release.'
+        required: false
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -65,3 +70,4 @@ jobs:
       skip-acceptance-legacy: ${{ inputs.skip-acceptance-legacy == true }}
       commit-sha: ${{ inputs.commit-sha }}
       debug-skip-tests: ${{ inputs.debug-skip-tests == true }}
+      gh-optivem-ref: ${{ inputs.gh-optivem-ref }}
