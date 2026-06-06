@@ -25,9 +25,10 @@
 # `suiteGroups` (optional) maps an alias name to a list of suite ids —
 # `gh optivem test run --suite <alias>` substitutes the alias with its
 # constituent ids before the runner sees them. Per-project entries here
-# override the Go-side default registry (today only
-# `acceptance: [acceptance-api, acceptance-ui]`); omit the block to fall
-# back to the default. The BPMN runtime emits `--suite=acceptance` from
+# override the Go-side default registry (today only `acceptance:
+# [acceptance-api, acceptance-ui, acceptance-isolated-api, acceptance-isolated-ui]`);
+# omit the block to fall back to the default. The BPMN runtime emits
+# `--suite=acceptance` from
 # the verify-tests-pass / verify-tests-fail call-activities.
 #
 # `setupCommands` runs once when invoked via `gh optivem test setup` —
@@ -44,7 +45,7 @@ setupCommands:
     command: npx playwright install chromium
 testFilter: --grep '<test>'
 suiteGroups:
-  acceptance: [acceptance-api, acceptance-ui]
+  acceptance: [acceptance-api, acceptance-ui, acceptance-isolated-api, acceptance-isolated-ui]
 suites:
   - id: smoke-stub
     name: latest - Smoke (stub)
