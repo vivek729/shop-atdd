@@ -34,6 +34,7 @@ system-test:
         dsl-port: system-test/java/src/main/java/com/mycompany/myshop/testkit/dsl/port
         dsl-core: system-test/java/src/main/java/com/mycompany/myshop/testkit/dsl/core
         ct-test: system-test/java/src/test/java/com/mycompany/myshop/systemtest/latest/contract
+        system-driver-adapter-shared: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/shared
     system-driver-adapter-channels:
         api: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/api
         ui: system-test/java/src/main/java/com/mycompany/myshop/testkit/driver/adapter/ui
