@@ -33,9 +33,27 @@ system-test:
         api: system-test/typescript/src/testkit/driver/adapter/api
         ui: system-test/typescript/src/testkit/driver/adapter/ui
 external-systems:
-    stubs:
-        path: external-systems/stubs
-        repo: optivem/shop
-    simulators:
-        path: external-systems/simulators
-        repo: optivem/shop
+    clock:
+        real-kind: simulator
+        stub:
+            path: external-systems/stubs
+            repo: optivem/shop
+        simulator:
+            path: external-systems/simulators
+            repo: optivem/shop
+    erp:
+        real-kind: simulator
+        stub:
+            path: external-systems/stubs
+            repo: optivem/shop
+        simulator:
+            path: external-systems/simulators
+            repo: optivem/shop
+    tax:
+        real-kind: simulator
+        stub:
+            path: external-systems/stubs
+            repo: optivem/shop
+        simulator:
+            path: external-systems/simulators
+            repo: optivem/shop
