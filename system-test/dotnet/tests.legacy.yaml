@@ -17,6 +17,19 @@ setupCommands:
     command: dotnet build
 testFilter: '&DisplayName~<test>'
 testFilterJoin: fragment-or
+# suiteGroups bridges the BPMN process-flow suite literals — acceptance,
+# contract-stub, contract-real, emitted by the verify-tests-pass /
+# verify-tests-fail call-activities — onto the mod10/mod11 legacy suite ids,
+# so the legacy configs run through the exact same runtime/preflight path as
+# the latest-cycle tests.yaml. Mirrors that file's `acceptance` group
+# (isolated suites included), extended with the two contract aliases because
+# the legacy suites carry mod-prefixed ids rather than the bare canonical
+# names. As in tests.yaml, `contract-stub` is the non-isolated suite only;
+# mod11-contract-stub-isolated stays declared-but-unreferenced.
+suiteGroups:
+  acceptance: [mod10-acceptance-api, mod10-acceptance-ui, mod10-acceptance-isolated-api, mod10-acceptance-isolated-ui]
+  contract-stub: [mod11-contract-stub]
+  contract-real: [mod11-contract-real]
 suites:
   - id: mod02-smoke
     name: mod02 - Smoke (real)
