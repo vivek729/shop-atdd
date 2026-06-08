@@ -35,7 +35,6 @@ system-test:
         dsl-port: system-test/typescript/src/testkit/dsl/port
         dsl-core: system-test/typescript/src/testkit/dsl/core
         ct-test: system-test/typescript/tests/latest/contract
-        system-driver-adapter-shared: system-test/typescript/src/testkit/driver/adapter/shared
     system-driver-adapter-channels:
         api: system-test/typescript/src/testkit/driver/adapter/api
         ui: system-test/typescript/src/testkit/driver/adapter/ui

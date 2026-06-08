@@ -29,7 +29,6 @@ system-test:
         dsl-port: system-test/dotnet/Dsl.Port
         dsl-core: system-test/dotnet/Dsl.Core
         ct-test: system-test/dotnet/SystemTests/Latest/ExternalSystemContractTests
-        system-driver-adapter-shared: system-test/dotnet/Driver.Adapter/Shared
     system-driver-adapter-channels:
         api: system-test/dotnet/Driver.Adapter/Api
         ui: system-test/dotnet/Driver.Adapter/Ui
