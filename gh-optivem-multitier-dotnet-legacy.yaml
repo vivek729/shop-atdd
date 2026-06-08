@@ -28,6 +28,7 @@ system-test:
     paths:
         system-driver-port: system-test/dotnet/Driver.Port
         system-driver-adapter: system-test/dotnet/Driver.Adapter
+        system-driver-adapter-shared: system-test/dotnet/Driver.Adapter/Shared
         external-system-driver-port: system-test/dotnet/Driver.Port/External
         external-system-driver-adapter: system-test/dotnet/Driver.Adapter/External
         at-test: system-test/dotnet/SystemTests/Latest/AcceptanceTests

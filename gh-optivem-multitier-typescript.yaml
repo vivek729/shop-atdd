@@ -28,6 +28,7 @@ system-test:
     paths:
         system-driver-port: system-test/typescript/src/testkit/driver/port
         system-driver-adapter: system-test/typescript/src/testkit/driver/adapter
+        system-driver-adapter-shared: system-test/typescript/src/testkit/driver/adapter/shared
         external-system-driver-port: system-test/typescript/src/testkit/driver/port/external
         external-system-driver-adapter: system-test/typescript/src/testkit/driver/adapter/external
         at-test: system-test/typescript/tests/latest/acceptance
