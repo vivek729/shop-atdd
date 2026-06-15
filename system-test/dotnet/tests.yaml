@@ -10,6 +10,11 @@
 #     ambient environment
 #   - path: cwd for the test process, relative to this file's directory
 #   - testReportPath: where the language runner drops the HTML report
+#   - testCountPath: machine-readable report (TRX) parsed ONLY to count
+#     executed tests; arms the empty-selection guard for dotnet, which exits
+#     0 on a zero-match filter (so a pass-verify would otherwise green on
+#     zero tests). The TRX is already emitted by each command's
+#     `--logger 'trx;...'`; this just points the guard at it.
 #   - sampleTest: the canonical test name passed to `command` when the user
 #     runs with `--sample` — NOT "the test that always runs", just a
 #     known-good example for smoke-checking the pipeline plumbing
@@ -53,6 +58,7 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=stub --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -61,6 +67,7 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -69,12 +76,14 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-ui
     name: latest - Acceptance (stub) - UI
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldBeAbleToPlaceOrderForValidInput
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -83,12 +92,14 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldRecordPlacementTimestamp
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldRecordPlacementTimestamp
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -97,24 +108,28 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldBeAbleToGetTime
   - id: contract-stub-isolated
     name: latest - Contract Isolated (stub)
     command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldBeAbleToGetConfiguredTime
   - id: contract-real
     name: latest - Contract (real)
     command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Real' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldBeAbleToGetTime
   - id: e2e-api
     name: latest - E2E (real) - API
     command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -123,6 +138,7 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
+    testCountPath: SystemTests\TestResults\testResults.trx
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
