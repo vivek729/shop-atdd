@@ -58,7 +58,7 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=stub --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -67,7 +67,7 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.SmokeTests' -e EXTERNAL_SYSTEM_MODE=real --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGoToMyShop
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -76,14 +76,14 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-ui
     name: latest - Acceptance (stub) - UI
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToPlaceOrderForValidInput
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -92,14 +92,14 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldRecordPlacementTimestamp
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
     command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldRecordPlacementTimestamp
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -108,28 +108,28 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGetTime
   - id: contract-stub-isolated
     name: latest - Contract Isolated (stub)
     command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category=isolated' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGetConfiguredTime
   - id: contract-real
     name: latest - Contract (real)
     command: dotnet test --filter 'FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Real' --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldBeAbleToGetTime
   - id: e2e-api
     name: latest - E2E (real) - API
     command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
@@ -138,7 +138,7 @@ suites:
     command: dotnet test --filter 'FullyQualifiedName~.Latest.E2eTests' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests\TestResults\testResults.html
-    testCountPath: SystemTests\TestResults\testResults.trx
+    testCountPath: TestResults/testResults.trx
     sampleTest: ShouldPlaceOrder
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
