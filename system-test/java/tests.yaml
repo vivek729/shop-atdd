@@ -63,42 +63,49 @@ suites:
     command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API
     path: .
     testReportPath: build\reports\tests\test\index.html
+    testCountPath: build\test-results\test
     sampleTest: shouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-ui
     name: latest - Acceptance (stub) - UI
     command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static
     path: .
     testReportPath: build\reports\tests\test\index.html
+    testCountPath: build\test-results\test
     sampleTest: shouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-isolated-api
     name: latest - Acceptance Isolated (stub) - API
     command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API
     path: .
     testReportPath: build\reports\tests\test\index.html
+    testCountPath: build\test-results\test
     sampleTest: shouldRecordPlacementTimestamp
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
     command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static
     path: .
     testReportPath: build\reports\tests\test\index.html
+    testCountPath: build\test-results\test
     sampleTest: shouldRecordPlacementTimestamp
   - id: contract-stub
     name: latest - Contract (stub)
     command: .\gradlew.bat test -Dversion=latest -Dtype=contract -DexcludeTags=isolated -DexternalSystemMode=stub
     path: .
     testReportPath: build\reports\tests\test\index.html
+    testCountPath: build\test-results\test
     sampleTest: shouldBeAbleToGetProduct
   - id: contract-stub-isolated
     name: latest - Contract Isolated (stub)
     command: .\gradlew.bat test -Dversion=latest -Dtype=contract -DincludeTags=isolated -DexternalSystemMode=stub
     path: .
     testReportPath: build\reports\tests\test\index.html
+    testCountPath: build\test-results\test
     sampleTest: shouldBeAbleToGetConfiguredTime
   - id: contract-real
     name: latest - Contract (real)
     command: .\gradlew.bat test -Dversion=latest -Dtype=contract -DexternalSystemMode=real
     path: .
     testReportPath: build\reports\tests\test\index.html
+    testCountPath: build\test-results\test
     sampleTest: shouldBeAbleToGetProduct
   - id: e2e-api
     name: latest - E2E (real) - API
