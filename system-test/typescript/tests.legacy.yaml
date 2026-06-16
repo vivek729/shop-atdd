@@ -36,14 +36,14 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: mod03-e2e
     name: mod03 - E2E
     command: npx playwright test --project=e2e-test tests/legacy/mod03/e2e
     env: {}
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod04-smoke
     name: mod04 - Smoke (real)
@@ -51,14 +51,14 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: mod04-e2e
     name: mod04 - E2E
     command: npx playwright test --project=e2e-test tests/legacy/mod04/e2e
     env: {}
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod05-smoke
     name: mod05 - Smoke (real)
@@ -66,14 +66,14 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: mod05-e2e
     name: mod05 - E2E
     command: npx playwright test --project=e2e-test tests/legacy/mod05/e2e
     env: {}
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod06-smoke
     name: mod06 - Smoke (real)
@@ -81,7 +81,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: mod06-e2e-api
     name: mod06 - E2E - API
@@ -89,7 +89,7 @@ suites:
     env:
       CHANNEL: API
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod06-e2e-ui
     name: mod06 - E2E - UI
@@ -97,7 +97,7 @@ suites:
     env:
       CHANNEL: UI
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod07-smoke
     name: mod07 - Smoke (real)
@@ -105,7 +105,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: mod07-e2e-api
     name: mod07 - E2E - API
@@ -113,7 +113,7 @@ suites:
     env:
       CHANNEL: API
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod07-e2e-ui
     name: mod07 - E2E - UI
@@ -121,7 +121,7 @@ suites:
     env:
       CHANNEL: UI
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod08-smoke
     name: mod08 - Smoke (real)
@@ -129,7 +129,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: mod08-e2e-api
     name: mod08 - E2E - API
@@ -137,7 +137,7 @@ suites:
     env:
       CHANNEL: API
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod08-e2e-ui
     name: mod08 - E2E - UI
@@ -146,7 +146,7 @@ suites:
       CHANNEL: UI
       CHANNEL_MODE: static
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod09-smoke-stub
     name: mod09 - Smoke (stub)
@@ -154,7 +154,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: mod09-smoke-real
     name: mod09 - Smoke (real)
@@ -162,7 +162,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: mod10-acceptance-api
     name: mod10 - Acceptance (stub) - API
@@ -171,7 +171,7 @@ suites:
       CHANNEL: API
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: orderNumberShouldStartWithORD
   - id: mod10-acceptance-ui
     name: mod10 - Acceptance (stub) - UI
@@ -181,7 +181,7 @@ suites:
       CHANNEL_MODE: static
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: orderNumberShouldStartWithORD
   - id: mod10-acceptance-isolated-api
     name: mod10 - Acceptance Isolated (stub) - API
@@ -190,7 +190,7 @@ suites:
       CHANNEL: API
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldRecordPlacementTimestamp
   - id: mod10-acceptance-isolated-ui
     name: mod10 - Acceptance Isolated (stub) - UI
@@ -200,7 +200,7 @@ suites:
       CHANNEL_MODE: static
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldRecordPlacementTimestamp
   - id: mod11-contract-stub
     name: mod11 - Contract (stub)
@@ -208,7 +208,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGetTime
   - id: mod11-contract-stub-isolated
     name: mod11 - Contract Isolated (stub)
@@ -216,7 +216,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGetTime
   - id: mod11-contract-real
     name: mod11 - Contract (real)
@@ -224,7 +224,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGetTime
   - id: mod11-e2e-api
     name: mod11 - E2E - API
@@ -232,7 +232,7 @@ suites:
     env:
       CHANNEL: API
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: mod11-e2e-ui
     name: mod11 - E2E - UI
@@ -241,5 +241,5 @@ suites:
       CHANNEL: UI
       CHANNEL_MODE: static
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
