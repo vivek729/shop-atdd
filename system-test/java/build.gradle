@@ -91,6 +91,16 @@ tasks.named('test') {
 		if (type == 'contract' && externalSystemMode == 'real') {
 			includeTestsMatching "*Real*"
 		}
+
+		// The acceptance and contract categories run as several
+		// tag/channel-partitioned sub-suites (isolated vs not, API vs UI,
+		// stub vs real). A `--tests` run naming a single test matches only the
+		// partition that test lives in, so the other sub-suites legitimately
+		// select nothing. The harness verifies across all sub-suites that every
+		// named test executed somewhere, so an empty match here must not fail
+		// the build — without this, a non-matching sub-suite aborts the run
+		// with "No tests found for given includes".
+		setFailOnNoMatchingTests(false)
 	}
 
 	useJUnitPlatform {
@@ -113,6 +123,17 @@ tasks.named('test') {
 		if (value != null) {
 			systemProperty name, value
 		}
+	}
+
+	// Lift the permanent WIP-test gate (@EnabledIfEnvironmentVariable on the
+	// acceptance tests) for the forked test JVM. providers.environmentVariable
+	// reads the variable as a per-invocation build input from the invoking
+	// client, so it is honored even when a warm Gradle daemon's cached
+	// environment predates the variable being set — unlike System.getenv,
+	// which would read the stale daemon environment.
+	def wipTests = providers.environmentVariable('GH_OPTIVEM_RUN_WIP_TESTS')
+	if (wipTests.isPresent()) {
+		environment 'GH_OPTIVEM_RUN_WIP_TESTS', wipTests.get()
 	}
 
 	def includeTags = System.getProperty('includeTags')

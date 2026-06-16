@@ -6,7 +6,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   fullyParallel: true,
   workers: process.env.CI ? 2 : 4,
-  reporter: [['./channel-list-reporter.ts'], ['html', { open: 'never' }]],
+  reporter: [['./channel-list-reporter.ts'], ['html', { open: 'never' }], ['json', { outputFile: 'playwright-report/results.json' }]],
   use: {
     trace: 'on-first-retry',
     timezoneId: 'UTC',
