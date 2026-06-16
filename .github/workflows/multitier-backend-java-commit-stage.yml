@@ -205,6 +205,44 @@ jobs:
         shell: bash
         run: echo "value=ghcr.io/${{ github.repository }}/multitier-backend-java@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # OPTIONAL opt-in layer — NOT part of the default build/commit gate.
+  # Exercises the in-process component + Pact contract tests that live in the
+  # `componentTest` source set (kept off `./gradlew build`/`test`). Runs in
+  # parallel with `run` and does not gate image build/push. Students who clone
+  # the template never run these by default; delete this job to drop the layer.
+  # Requires Docker for Testcontainers-Postgres (provided on ubuntu-latest).
+  # ─────────────────────────────────────────────────────────────────────────
+  component-contract-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cd system/multitier/backend-java && ./gradlew --version
+
+      - name: Run Component + Contract Tests (opt-in)
+        run: ./gradlew componentTest
+        working-directory: system/multitier/backend-java
+
   summary:
     needs: [check, run]
     if: always()

@@ -198,6 +198,44 @@ jobs:
         shell: bash
         run: echo "value=ghcr.io/${{ github.repository }}/multitier-frontend-react@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # OPTIONAL opt-in layer — NOT part of the default build/commit gate.
+  # Exercises the in-process component + consumer Pact contract suites that the
+  # default `npm test` deliberately excludes (they run via vitest.opt-in.config.ts).
+  # Runs in parallel with `run` and does not gate image build/push. No compose,
+  # no broker — the consumer pact is written to / read from the repo-owned
+  # `contracts/` folder. Students who clone never run these by default; delete
+  # this job to drop the layer.
+  # ─────────────────────────────────────────────────────────────────────────
+  component-contract-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          cache-dependency-path: system/multitier/frontend-react/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: system/multitier/frontend-react
+
+      - name: Run Component Tests (opt-in)
+        run: npm run test:component
+        working-directory: system/multitier/frontend-react
+
+      - name: Run Contract (Pact) Tests (opt-in)
+        run: npm run test:pact
+        working-directory: system/multitier/frontend-react
+
   summary:
     needs: [check, run]
     if: always()
