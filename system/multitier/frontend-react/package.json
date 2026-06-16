@@ -11,7 +11,9 @@
     "type-check": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:component": "vitest run --config vitest.opt-in.config.ts src/test/component",
+    "test:pact": "vitest run --config vitest.opt-in.config.ts src/test/pact"
   },
   "devDependencies": {
     "@pact-foundation/pact": "^13.2.0",

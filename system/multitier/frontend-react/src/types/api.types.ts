@@ -62,10 +62,6 @@ export interface PublishCouponRequest {
   usageLimit?: number;
 }
 
-export interface CreateCouponResponse {
-  code: string;
-}
-
 export interface BrowseCouponsItemResponse {
   code: string;
   discountRate: number;

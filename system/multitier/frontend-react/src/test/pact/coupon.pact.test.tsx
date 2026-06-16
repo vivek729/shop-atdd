@@ -17,7 +17,9 @@ const { like, eachLike, integer, decimal } = MatchersV3;
 const provider = new PactV3({
   consumer: 'frontend-react',
   provider: 'backend-java',
-  dir: path.resolve(process.cwd(), 'pacts'),
+  // Repo-owned neutral contracts/ folder (shop/contracts), not under the
+  // consumer. The backend provider points @PactFolder at the same location.
+  dir: path.resolve(process.cwd(), '../../../contracts'),
 });
 
 afterEach(() => {
@@ -51,7 +53,7 @@ describe('coupon consumer contract', () => {
     });
   });
 
-  it('publishes a coupon (POST /api/coupons -> 201)', async () => {
+  it('publishes a coupon (POST /api/coupons -> 204)', async () => {
     provider
       .given('no coupon SAVE10 exists yet')
       .uponReceiving('a publish-coupon request')
@@ -61,10 +63,10 @@ describe('coupon consumer contract', () => {
         headers: { 'Content-Type': 'application/json' },
         body: { code: 'SAVE10', discountRate: 0.2 },
       })
+      // Backend returns 204 No Content (and the real backend + system tests
+      // agree); the consumer publish flow only needs success, not a body.
       .willRespondWith({
-        status: 201,
-        headers: { 'Content-Type': 'application/json' },
-        body: { code: like('SAVE10') },
+        status: 204,
       });
 
     await provider.executeTest(async (mockserver) => {
@@ -73,9 +75,6 @@ describe('coupon consumer contract', () => {
       const result = await createCoupon('SAVE10', 0.2, null, null, null);
 
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.code).toBe('SAVE10');
-      }
     });
   });
 });

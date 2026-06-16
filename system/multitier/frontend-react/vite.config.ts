@@ -1,5 +1,6 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
@@ -16,6 +17,12 @@ export default defineConfig({
     // Consumer test files share one pact contract file (frontend-react-backend.json);
     // run files sequentially so concurrent writers don't race on the merge.
     fileParallelism: false,
+    // OPT-IN LAYER: the in-process component + Pact contract suites are kept OFF
+    // the default `npm test` so the default build is unchanged for students who
+    // never opted in. They run via `npm run test:component` / `test:pact`
+    // (vitest.opt-in.config.ts). Default `npm test` runs only the fast,
+    // no-network unit tests at the top level of src/test (e.g. harness.test.tsx).
+    exclude: [...configDefaults.exclude, 'src/test/component/**', 'src/test/pact/**'],
   },
   publicDir: 'public',
   build: {

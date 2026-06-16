@@ -206,7 +206,7 @@
           "status": 422
         },
         "headers": {
-          "Content-Type": "application/json"
+          "Content-Type": "application/problem+json"
         },
         "matchingRules": {
           "body": {
@@ -287,27 +287,7 @@
         "path": "/api/coupons"
       },
       "response": {
-        "body": {
-          "code": "SAVE10"
-        },
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "matchingRules": {
-          "body": {
-            "$.code": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            }
-          },
-          "header": {},
-          "status": {}
-        },
-        "status": 201
+        "status": 204
       }
     },
     {
@@ -472,7 +452,7 @@
           "status": 404
         },
         "headers": {
-          "Content-Type": "application/json"
+          "Content-Type": "application/problem+json"
         },
         "matchingRules": {
           "body": {

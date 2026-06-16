@@ -1,16 +1,18 @@
-import { PublishCouponRequest, CreateCouponResponse, BrowseCouponsResponse } from '../types/api.types';
+import { PublishCouponRequest, BrowseCouponsResponse } from '../types/api.types';
 import { fetchJson } from '../common';
 import type { Result } from '../types/result.types';
 
 const API_BASE_URL = '/api/coupons';
 
+// Publish-coupon returns 204 No Content — the backend (and the system tests)
+// produce no body, so the result carries no data.
 export async function createCoupon(
   code: string,
   discountRate: number,
   validFrom: string | null,
   validTo: string | null,
   usageLimit: number | null
-): Promise<Result<CreateCouponResponse>> {
+): Promise<Result<void>> {
   const request: PublishCouponRequest = {
     code,
     discountRate,
@@ -19,7 +21,7 @@ export async function createCoupon(
     usageLimit: usageLimit ?? undefined
   };
 
-  return await fetchJson<CreateCouponResponse>(API_BASE_URL, {
+  return await fetchJson<void>(API_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

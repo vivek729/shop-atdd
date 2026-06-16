@@ -6,9 +6,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { NewOrder } from '../pages/NewOrder';
-import { OrderHistory } from '../pages/OrderHistory';
-import { renderWithProviders } from './test-utils';
+import { NewOrder } from '../../pages/NewOrder';
+import { OrderHistory } from '../../pages/OrderHistory';
+import { renderWithProviders } from '../test-utils';
 
 afterEach(() => {
   vi.unstubAllGlobals();
