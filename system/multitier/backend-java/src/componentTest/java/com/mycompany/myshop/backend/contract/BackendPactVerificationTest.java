@@ -17,14 +17,14 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Replays the frontend-react consumer contract against the in-process provider, with external
+ * Replays the frontend consumer contract against the in-process provider, with external
  * systems WireMock-stubbed and provider states seeded into the Testcontainers Postgres. Fails the
  * build if the backend drifts from the contract. All 7 interactions are verified.
  *
  * <p>The contract is read from the repo-owned {@code shop/contracts/} folder (the consumer writes
  * the pact there; this provider reads it from the same neutral location).
  */
-@Provider("backend-java")
+@Provider("backend")
 @PactFolder("../../../contracts")
 class BackendPactVerificationTest extends AbstractComponentTest {
 

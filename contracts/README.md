@@ -3,8 +3,10 @@
 This folder holds the **consumer-generated Pact contract** shared between the
 multitier tiers:
 
-- `frontend-react-backend-java.json` — written by the frontend's consumer Pact
-  tests, verified by the backend's provider Pact verification.
+- `frontend-backend.json` — written by the frontend's consumer Pact
+  tests, verified by the backend's provider Pact verification. The
+  tech-agnostic name comes from the Pact consumer/provider ids (`frontend`,
+  `backend`).
 
 It exists to support the **optional, opt-in** in-process component & contract
 test layer in the canonical multitier projects. It is **not** part of the
@@ -24,17 +26,22 @@ Contract distribution here is deliberately **broker-less**:
 3. The pact is **committed to git**, so both tiers see the same contract with no
    external service, no network call, and no cost.
 
-**Rule of thumb:** the contract lives in the *nearest repo that owns both the
-consumer and the provider*.
+**Rule of thumb:** the committed pact lives in a `contracts/` folder in *every
+repo that runs a Pact tier*, resolved as `../contracts` from the flattened
+`backend/` (provider) and `frontend/` (consumer) module dirs.
 
-- **Monolith** → `shop/contracts/` (this folder; peer of `system/` + `system-test/`).
-- **Multitier (3-repo gh-optivem model:** `shop-backend`, `shop-frontend`,
-  `shop-tests`**)** → the contract lives in **`shop-tests/pacts/`**, the only repo
-  where both tiers' artifacts coexist and where provider verification runs
-  alongside the existing `ct-test`. It is named `pacts/` (not `contracts/`) to
-  stay distinct from the *external-system* `ct-test` contracts (Clock / ERP /
-  Tax) that same repo already hosts. This split is realized only at generation
-  time; in this single-repo template the pact lives here.
+- **Monorepo** (single scaffolded repo) → one `contracts/` at the repo root,
+  peer of `backend/` + `frontend/`; both tiers resolve `../contracts`.
+- **Multirepo** (separate `*-backend` / `*-frontend` repos) → the pact is
+  committed into **both** repos at `contracts/` (broker-less duplication, since
+  no single repo owns both tiers). The provider verification runs in the
+  **backend** commit stage and reads `../contracts`; the frontend consumer test
+  regenerates its own copy at `../contracts`. The two copies can drift between
+  runs — that is the accepted cost of the zero-infra, broker-less default.
+
+In this single-repo template the pact lives here at `shop/contracts/`; the
+scaffolder copies it into the repo(s) above and rewrites the deep
+`../../../contracts` template path to `../contracts`.
 
 ## Optional: a Pact Broker (cost-labelled, never the default)
 

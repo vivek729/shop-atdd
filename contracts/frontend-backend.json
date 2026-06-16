@@ -1,6 +1,6 @@
 {
   "consumer": {
-    "name": "frontend-react"
+    "name": "frontend"
   },
   "interactions": [
     {
@@ -485,6 +485,6 @@
     }
   },
   "provider": {
-    "name": "backend-java"
+    "name": "backend"
   }
 }

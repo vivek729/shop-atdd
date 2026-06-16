@@ -15,8 +15,8 @@ import { renderWithProviders, routeApiTo } from '../test-utils';
 const { like, eachLike, integer, decimal } = MatchersV3;
 
 const provider = new PactV3({
-  consumer: 'frontend-react',
-  provider: 'backend-java',
+  consumer: 'frontend',
+  provider: 'backend',
   // Repo-owned neutral contracts/ folder (shop/contracts), not under the
   // consumer. The backend provider points @PactFolder at the same location.
   dir: path.resolve(process.cwd(), '../../../contracts'),

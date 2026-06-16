@@ -2,7 +2,7 @@
 // These render the real pages/services against the Pact mock server, so they
 // double as the happy-path (and contracted-error) component tests: one test,
 // two jobs. Running them writes the pact into the repo-owned shop/contracts/
-// folder, which the backend-java provider verification replays.
+// folder, which the backend provider verification replays.
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import path from 'node:path';
 import { PactV3, MatchersV3 } from '@pact-foundation/pact';
@@ -16,8 +16,8 @@ import { renderWithProviders, routeApiTo } from '../test-utils';
 const { like, eachLike, integer, decimal } = MatchersV3;
 
 const provider = new PactV3({
-  consumer: 'frontend-react',
-  provider: 'backend-java',
+  consumer: 'frontend',
+  provider: 'backend',
   // Repo-owned neutral contracts/ folder (shop/contracts), not under the
   // consumer. The backend provider points @PactFolder at the same location.
   dir: path.resolve(process.cwd(), '../../../contracts'),
