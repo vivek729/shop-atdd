@@ -53,7 +53,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: smoke-real
     name: latest - Smoke (real)
@@ -61,7 +61,7 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldBeAbleToGoToMyShop
   - id: acceptance-api
     name: latest - Acceptance (stub) - API
@@ -70,8 +70,8 @@ suites:
       CHANNEL: API
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
-    testCountPath: playwright-report\results.json
+    testReportPath: playwright-report/index.html
+    testCountPath: playwright-report/results.json
     sampleTest: shouldBeAbleToBrowseCoupons
   - id: acceptance-ui
     name: latest - Acceptance (stub) - UI
@@ -81,8 +81,8 @@ suites:
       CHANNEL_MODE: static
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
-    testCountPath: playwright-report\results.json
+    testReportPath: playwright-report/index.html
+    testCountPath: playwright-report/results.json
     sampleTest: shouldBeAbleToBrowseCoupons
   - id: acceptance-isolated-api
     name: latest - Acceptance Isolated (stub) - API
@@ -91,8 +91,8 @@ suites:
       CHANNEL: API
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
-    testCountPath: playwright-report\results.json
+    testReportPath: playwright-report/index.html
+    testCountPath: playwright-report/results.json
     sampleTest: shouldBeAbleToCancelOrder
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
@@ -102,8 +102,8 @@ suites:
       CHANNEL_MODE: static
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
-    testCountPath: playwright-report\results.json
+    testReportPath: playwright-report/index.html
+    testCountPath: playwright-report/results.json
     sampleTest: shouldBeAbleToCancelOrder
   - id: contract-stub
     name: latest - Contract (stub)
@@ -111,8 +111,8 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
-    testCountPath: playwright-report\results.json
+    testReportPath: playwright-report/index.html
+    testCountPath: playwright-report/results.json
     sampleTest: shouldBeAbleToGetTime
   - id: contract-stub-isolated
     name: latest - Contract Isolated (stub)
@@ -120,8 +120,8 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: stub
     path: .
-    testReportPath: playwright-report\index.html
-    testCountPath: playwright-report\results.json
+    testReportPath: playwright-report/index.html
+    testCountPath: playwright-report/results.json
     sampleTest: shouldBeAbleToGetConfiguredTime
   - id: contract-real
     name: latest - Contract (real)
@@ -129,8 +129,8 @@ suites:
     env:
       EXTERNAL_SYSTEM_MODE: real
     path: .
-    testReportPath: playwright-report\index.html
-    testCountPath: playwright-report\results.json
+    testReportPath: playwright-report/index.html
+    testCountPath: playwright-report/results.json
     sampleTest: shouldBeAbleToGetTime
   - id: e2e-api
     name: latest - E2E (real) - API
@@ -138,7 +138,7 @@ suites:
     env:
       CHANNEL: API
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder
   - id: e2e-ui
     name: latest - E2E (real) - UI
@@ -147,5 +147,5 @@ suites:
       CHANNEL: UI
       CHANNEL_MODE: static
     path: .
-    testReportPath: playwright-report\index.html
+    testReportPath: playwright-report/index.html
     sampleTest: shouldPlaceOrder

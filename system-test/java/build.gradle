@@ -125,6 +125,17 @@ tasks.named('test') {
 		}
 	}
 
+	// Lift the permanent WIP-test gate (@EnabledIfEnvironmentVariable on the
+	// acceptance tests) for the forked test JVM. providers.environmentVariable
+	// reads the variable as a per-invocation build input from the invoking
+	// client, so it is honored even when a warm Gradle daemon's cached
+	// environment predates the variable being set — unlike System.getenv,
+	// which would read the stale daemon environment.
+	def wipTests = providers.environmentVariable('GH_OPTIVEM_RUN_WIP_TESTS')
+	if (wipTests.isPresent()) {
+		environment 'GH_OPTIVEM_RUN_WIP_TESTS', wipTests.get()
+	}
+
 	def includeTags = System.getProperty('includeTags')
 	if (includeTags?.contains('isolated')) {
 		systemProperty 'junit.jupiter.execution.parallel.enabled', 'false'
