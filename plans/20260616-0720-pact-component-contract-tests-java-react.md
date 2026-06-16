@@ -19,14 +19,13 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-Design is settled (see **Decisions** below) — ready to execute. First executable unit: **add the frontend test harness** — install Vitest + React Testing Library + `@testing-library/user-event` + `@pact-foundation/pact` in `system/multitier/frontend-react`, add a `"test": "vitest run"` script to `package.json`, and prove one trivial render test green (no backend). Then the backend harness (Step 5). Resume with `/execute-plan` on this file.
+Frontend seam (Steps 2–4) is **done and committed** — `system/multitier/frontend-react` now has Vitest + RTL + Pact consumer tests (11 tests green via `npm test`, no Docker). The consumer contract is generated at **`system/multitier/frontend-react/pacts/frontend-react-backend-java.json`** (committed; canonical `<consumer>-<provider>` name — the plan's `frontend-react-backend.json` was illustrative). It holds **7 interactions** (place order 201, browse history 200, view details 200, view details 404, place order 422, browse coupons 200, publish coupon 201), each carrying a `providerState` the backend must set up.
+
+Next executable unit: **Step 5 — backend test harness** in `system/multitier/backend-java`. Add WireMock + Pact-JVM provider (`au.com.dius.pact.provider:junit5spring`) to `build.gradle` (Testcontainers-Postgres already on the test classpath), prove one trivial `@SpringBootTest(webEnvironment=RANDOM_PORT)` test green with no compose. **Pact-sharing note for Step 7:** the contract lives under `frontend-react/pacts/` — point the provider's `@PactFolder` at that relative path (`../frontend-react/pacts`) or copy the file into `backend-java/pacts/`. Resume in a fresh session with `/clear` then `/execute-plan plans/20260616-0720-pact-component-contract-tests-java-react.md`.
 
 ## Steps
 
 - [x] Step 1: Settle the open questions — done; see **Decisions** below.
-- [ ] Step 2: **Frontend test harness** — add Vitest + React Testing Library + `@testing-library/user-event` + `@pact-foundation/pact` to `frontend-react`; add a `"test": "vitest run"` script; prove one trivial render test green.
-- [ ] Step 3: **Frontend component tests** — render the order + coupon flows (pages/hooks/services). Client-only states (loading / network-down / client-side validation) via a trivial `vi.fn()` fetch stub.
-- [ ] Step 4: **Frontend Pact consumer tests (= happy-path component tests)** — render `order-service` / `coupon-service` flows against the Pact mock server (place order, browse order history, view order details, browse/publish coupons; plus contracted errors like 404/422); `verify()` writes the pact contract file. These double as the happy-path component tests.
 - [ ] Step 5: **Backend test harness** — add WireMock + Pact JVM provider (`au.com.dius.pact.provider:junit5spring`) to `build.gradle` (Testcontainers-Postgres already present); prove one trivial in-process Spring test green with no compose.
 - [ ] Step 6: **Backend component tests** — boot the app in-process, stub `ErpGateway`/`TaxGateway`/`ClockGateway` HTTP with WireMock, drive real use-case flows (place order with tax + promotion + clock, order history, coupon publish/browse) end-to-end through the API in-process.
 - [ ] Step 7: **Backend Pact provider verification** — point the provider test at the consumer pact (per the sharing decision), define provider states, stub externals with WireMock, fail the build on contract drift.

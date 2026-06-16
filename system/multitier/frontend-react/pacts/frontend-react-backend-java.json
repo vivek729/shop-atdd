@@ -1,0 +1,510 @@
+{
+  "consumer": {
+    "name": "frontend-react"
+  },
+  "interactions": [
+    {
+      "description": "a browse-coupons request",
+      "providerStates": [
+        {
+          "name": "at least one coupon exists"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/api/coupons"
+      },
+      "response": {
+        "body": {
+          "coupons": [
+            {
+              "code": "SAVE10",
+              "discountRate": 0.2,
+              "usageLimit": 100,
+              "usedCount": 0
+            }
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.coupons": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.coupons[*].code": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.coupons[*].discountRate": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.coupons[*].usageLimit": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.coupons[*].usedCount": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a browse-order-history request",
+      "providerStates": [
+        {
+          "name": "at least one order exists"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "orders": [
+            {
+              "appliedCouponCode": null,
+              "country": "US",
+              "orderNumber": "ORD-1",
+              "orderTimestamp": "2026-03-10T12:00:00Z",
+              "quantity": 2,
+              "sku": "BOOK-123",
+              "status": "PLACED",
+              "totalPrice": 22
+            }
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.orders": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.orders[*].country": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.orders[*].orderNumber": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.orders[*].orderTimestamp": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.orders[*].quantity": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.orders[*].sku": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.orders[*].status": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.orders[*].totalPrice": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a place-order request during the blackout",
+      "providerStates": [
+        {
+          "name": "order placement is blocked by the New Year blackout"
+        }
+      ],
+      "request": {
+        "body": {
+          "country": "US",
+          "quantity": 2,
+          "sku": "BOOK-123"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "detail": "Orders cannot be placed on December 31",
+          "status": 422
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.detail": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 422
+      }
+    },
+    {
+      "description": "a place-order request for BOOK-123",
+      "providerStates": [
+        {
+          "name": "product BOOK-123 exists and US is taxable"
+        }
+      ],
+      "request": {
+        "body": {
+          "country": "US",
+          "quantity": 2,
+          "sku": "BOOK-123"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "orderNumber": "ORD-1"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.orderNumber": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 201
+      }
+    },
+    {
+      "description": "a publish-coupon request",
+      "providerStates": [
+        {
+          "name": "no coupon SAVE10 exists yet"
+        }
+      ],
+      "request": {
+        "body": {
+          "code": "SAVE10",
+          "discountRate": 0.2
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/coupons"
+      },
+      "response": {
+        "body": {
+          "code": "SAVE10"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.code": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 201
+      }
+    },
+    {
+      "description": "a view-order-details request for ORD-1",
+      "providerStates": [
+        {
+          "name": "order ORD-1 exists"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/api/orders/ORD-1"
+      },
+      "response": {
+        "body": {
+          "appliedCouponCode": null,
+          "basePrice": 20,
+          "country": "US",
+          "discountAmount": 0,
+          "discountRate": 0,
+          "orderNumber": "ORD-1",
+          "orderTimestamp": "2026-03-10T12:00:00Z",
+          "quantity": 2,
+          "sku": "BOOK-123",
+          "status": "PLACED",
+          "subtotalPrice": 20,
+          "taxAmount": 2,
+          "taxRate": 0.1,
+          "totalPrice": 22,
+          "unitPrice": 10
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.basePrice": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.country": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.discountAmount": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.discountRate": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.orderTimestamp": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.quantity": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.sku": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.status": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.subtotalPrice": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.taxAmount": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.taxRate": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.totalPrice": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.unitPrice": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a view-order-details request for a missing order",
+      "providerStates": [
+        {
+          "name": "no order UNKNOWN exists"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/api/orders/UNKNOWN"
+      },
+      "response": {
+        "body": {
+          "detail": "Order not found",
+          "status": 404
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.detail": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 404
+      }
+    }
+  ],
+  "metadata": {
+    "pact-js": {
+      "version": "13.2.0"
+    },
+    "pactRust": {
+      "ffi": "0.4.22",
+      "models": "1.2.3"
+    },
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  },
+  "provider": {
+    "name": "backend-java"
+  }
+}
