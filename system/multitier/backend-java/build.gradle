@@ -12,6 +12,10 @@ checkstyle {
 	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 }
 
+// Override Spring Boot's managed Testcontainers version: 1.21.3 fails to talk to Docker Engine
+// 29.x (docker-java returns HTTP 400 on the daemon handshake); 1.21.4 fixes it.
+ext['testcontainers.version'] = '1.21.4'
+
 group = 'com.mycompany.myshop.backend'
 version = '0.0.1-SNAPSHOT'
 description = 'MyShop - Backend'
@@ -20,6 +24,20 @@ java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
+}
+
+// Opt-in component + Pact contract test layer, kept off the default `test`/`build` so the
+// template's default build stays fast and Docker-light. Run with `./gradlew componentTest`.
+sourceSets {
+	componentTest {
+		compileClasspath += sourceSets.main.output
+		runtimeClasspath += sourceSets.main.output
+	}
+}
+
+configurations {
+	componentTestImplementation.extendsFrom testImplementation
+	componentTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 repositories {
@@ -47,11 +65,24 @@ dependencies {
 	testImplementation 'org.flywaydb:flyway-core'
 	testImplementation 'org.flywaydb:flyway-database-postgresql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Component + Pact contract layer only (inherits the testImplementation deps above).
+	componentTestImplementation 'org.wiremock:wiremock-standalone:3.9.2'
+	componentTestImplementation 'au.com.dius.pact.provider:junit5spring:4.6.14'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
 	finalizedBy jacocoTestReport
+}
+
+tasks.register('componentTest', Test) {
+	description = 'Runs in-process component + Pact contract tests (requires Docker). Opt-in; not part of `build`.'
+	group = 'verification'
+	testClassesDirs = sourceSets.componentTest.output.classesDirs
+	classpath = sourceSets.componentTest.runtimeClasspath
+	useJUnitPlatform()
+	shouldRunAfter tasks.named('test')
 }
 
 jacocoTestReport {
