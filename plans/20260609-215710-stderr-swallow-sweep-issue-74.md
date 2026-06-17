@@ -1,5 +1,14 @@
 # Stderr-swallow sweep — issue #74 (shop)
 
+> **STATUS (2026-06-16): NOT STARTED — blocked on the fix-bar decision below.**
+> Only the plan exists (commits `6727ce67` create, `58a283e1` split out other-repos). No fix
+> commits. All 8 shop findings verified unchanged in the working tree. The `## OPEN DECISION —
+> fix bar` has not been made, so no edits have been applied. Reminder: all 8 shop findings are
+> preliminarily **D (defensible)** → under fix bar #1 this repo is a no-op (document rationale +
+> close the loop on #74); real code edits only happen under fix bar #2 or if triage reclassifies
+> a line. The genuine `gh repo delete` silent-failure risk lives in the **deferred** other-repos
+> plan, not here.
+
 **Source:** https://github.com/optivem/shop/issues/74 — "Stderr-swallow sweep 2026-06-08"
 **Scope (this file):** `shop` repo only — 8 findings.
 **Other repos deferred:** `actions`, `gh-optivem`, `hub` (51 findings) split out to
