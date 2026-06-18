@@ -253,7 +253,7 @@ public abstract class BaseThenResultOrder<TSuccessResponse, TSuccessVerification
         }
         else
         {
-            var shop = await _thenClause.App.MyShop(_thenClause.Channel);
+            var shop = await _thenClause.App.MyShop(_thenClause.Channel!);
             var viewOrderResult = await shop.ViewOrder().OrderNumber(orderNumber).Execute();
             verification = viewOrderResult.ShouldSucceed();
         }

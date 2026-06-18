@@ -88,7 +88,7 @@ namespace Dsl.Core.Scenario.Given
 
         public WhenStage When()
         {
-            return new WhenStage(Channel, _app, _scenario, _products.Any(), true, _countries.Any(), SetupGiven);
+            return new WhenStage(Channel, _app, _scenario, _products.Count > 0, true, _countries.Count > 0, SetupGiven);
         }
 
         IWhenStage IGivenStage.When() => When();
@@ -124,7 +124,7 @@ namespace Dsl.Core.Scenario.Given
 
         private async Task SetupErp()
         {
-            if (_orders.Any() && !_products.Any())
+            if (_orders.Count > 0 && _products.Count == 0)
             {
                 var defaultProduct = new GivenProduct(this);
                 _products.Add(defaultProduct);
@@ -138,7 +138,7 @@ namespace Dsl.Core.Scenario.Given
 
         private async Task SetupTax()
         {
-            if (_orders.Any() && !_countries.Any())
+            if (_orders.Count > 0 && _countries.Count == 0)
             {
                 var defaultCountry = new GivenCountry(this);
                 _countries.Add(defaultCountry);
@@ -158,7 +158,7 @@ namespace Dsl.Core.Scenario.Given
 
         private async Task SetupCoupons()
         {
-            if (_orders.Any() && !_coupons.Any())
+            if (_orders.Count > 0 && _coupons.Count == 0)
             {
                 var defaultCoupon = new GivenCoupon(this);
                 _coupons.Add(defaultCoupon);

@@ -4,26 +4,26 @@ import com.mycompany.myshop.testkit.dsl.core.shared.ResponseVerification;
 import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
 
-public abstract class BaseThenStep<TSuccessResponse, TSuccessVerification extends ResponseVerification<TSuccessResponse>> {
+public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
     protected final UseCaseDsl app;
     protected final ExecutionResultContext executionResult;
-    protected final TSuccessVerification successVerification;
+    protected final V successVerification;
 
-    protected BaseThenStep(UseCaseDsl app, ExecutionResultContext executionResult, TSuccessVerification successVerification) {
+    protected BaseThenStep(UseCaseDsl app, ExecutionResultContext executionResult, V successVerification) {
         this.app = app;
         this.executionResult = executionResult;
         this.successVerification = successVerification;
     }
 
-    public BaseThenStep<TSuccessResponse, TSuccessVerification> and() {
+    public BaseThenStep<R, V> and() {
         return this;
     }
 
-    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> order(String orderNumber) {
+    public ThenOrderImpl<R, V> order(String orderNumber) {
         return new ThenOrderImpl<>(app, executionResult, orderNumber, successVerification);
     }
 
-    public ThenOrderImpl<TSuccessResponse, TSuccessVerification> order() {
+    public ThenOrderImpl<R, V> order() {
         if (executionResult.getOrderNumber() == null) {
             throw new IllegalStateException("Cannot verify order: no order number available from the executed operation");
         }
@@ -45,11 +45,11 @@ public abstract class BaseThenStep<TSuccessResponse, TSuccessVerification extend
         return new ThenCountryImpl(app, executionResult, verification);
     }
 
-    public ThenCouponImpl<TSuccessResponse, TSuccessVerification> coupon(String couponCode) {
+    public ThenCouponImpl<R, V> coupon(String couponCode) {
         return new ThenCouponImpl<>(app, executionResult, couponCode, successVerification);
     }
 
-    public ThenCouponImpl<TSuccessResponse, TSuccessVerification> coupon() {
+    public ThenCouponImpl<R, V> coupon() {
         return coupon(executionResult.getCouponCode());
     }
 

@@ -81,7 +81,7 @@ public class CouponManagementPage : BasePage
         var codes = await PageClient.ReadAllTextContentsAsync(TableCellCodeSelector);
 
         // If no codes found, table is empty
-        if (!codes.Any())
+        if (codes.Count == 0)
         {
             return new List<CouponDto>();
         }

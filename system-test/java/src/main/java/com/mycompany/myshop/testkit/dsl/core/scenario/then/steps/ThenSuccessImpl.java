@@ -5,15 +5,15 @@ import com.mycompany.myshop.testkit.dsl.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.testkit.dsl.core.scenario.ExecutionResultContext;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenSuccess;
 
-public class ThenSuccessImpl<TSuccessResponse, TSuccessVerification extends ResponseVerification<TSuccessResponse>>
-        extends BaseThenStep<TSuccessResponse, TSuccessVerification> implements ThenSuccess {
+public class ThenSuccessImpl<R, V extends ResponseVerification<R>>
+        extends BaseThenStep<R, V> implements ThenSuccess {
 
-    public ThenSuccessImpl(UseCaseDsl app, ExecutionResultContext executionResult, TSuccessVerification successVerification) {
+    public ThenSuccessImpl(UseCaseDsl app, ExecutionResultContext executionResult, V successVerification) {
         super(app, executionResult, successVerification);
     }
 
     @Override
-    public ThenSuccessImpl<TSuccessResponse, TSuccessVerification> and() {
+    public ThenSuccessImpl<R, V> and() {
         return this;
     }
 }

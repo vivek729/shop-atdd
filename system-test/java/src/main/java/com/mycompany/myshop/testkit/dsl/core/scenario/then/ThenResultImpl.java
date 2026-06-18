@@ -7,22 +7,22 @@ import com.mycompany.myshop.testkit.dsl.core.scenario.then.steps.ThenFailureImpl
 import com.mycompany.myshop.testkit.dsl.core.scenario.then.steps.ThenSuccessImpl;
 import com.mycompany.myshop.testkit.dsl.port.then.ThenResultStage;
 
-public class ThenResultImpl<TSuccessResponse, TSuccessVerification extends ResponseVerification<TSuccessResponse>> extends ThenImpl implements ThenResultStage {
-    private final ExecutionResult<TSuccessResponse, TSuccessVerification> executionResult;
+public class ThenResultImpl<R, V extends ResponseVerification<R>> extends ThenImpl implements ThenResultStage {
+    private final ExecutionResult<R, V> executionResult;
 
-    public ThenResultImpl(UseCaseDsl app, ExecutionResult<TSuccessResponse, TSuccessVerification> executionResult) {
+    public ThenResultImpl(UseCaseDsl app, ExecutionResult<R, V> executionResult) {
         super(app);
         this.executionResult = executionResult;
     }
 
     @Override
-    public ThenSuccessImpl<TSuccessResponse, TSuccessVerification> shouldSucceed() {
+    public ThenSuccessImpl<R, V> shouldSucceed() {
         var successVerification = executionResult.getResult().shouldSucceed();
         return new ThenSuccessImpl<>(app, executionResult.getContext(), successVerification);
     }
 
     @Override
-    public ThenFailureImpl<TSuccessResponse, TSuccessVerification> shouldFail() {
+    public ThenFailureImpl<R, V> shouldFail() {
         return new ThenFailureImpl<>(app, executionResult.getContext(), executionResult.getResult());
     }
 }

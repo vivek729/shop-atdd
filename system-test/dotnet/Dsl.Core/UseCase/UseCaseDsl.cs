@@ -130,6 +130,8 @@ public class UseCaseDsl : IAsyncDisposable
             await _clock.DisposeAsync();
 
         ChannelContext.Clear();
+
+        GC.SuppressFinalize(this);
     }
 
     private static T GetOrCreate<T>(ref T? instance, Func<T> supplier) where T : class

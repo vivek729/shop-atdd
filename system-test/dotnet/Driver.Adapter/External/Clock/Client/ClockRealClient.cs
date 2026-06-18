@@ -4,7 +4,7 @@ using Driver.Adapter.External.Clock.Client.Dtos.Error;
 
 namespace Driver.Adapter.External.Clock.Client;
 
-public class ClockRealClient
+public static class ClockRealClient
 {
     public static Task<Result<VoidValue, ExtClockErrorResponse>> CheckHealthAsync()
     {
@@ -12,7 +12,7 @@ public class ClockRealClient
         return Task.FromResult(Result.Success<ExtClockErrorResponse>());
     }
 
-    public Task<Result<ExtGetTimeResponse, ExtClockErrorResponse>> GetTimeAsync()
+    public static Task<Result<ExtGetTimeResponse, ExtClockErrorResponse>> GetTimeAsync()
         => Task.FromResult(Result<ExtGetTimeResponse, ExtClockErrorResponse>.Success(
             new ExtGetTimeResponse { Time = Now }));
 

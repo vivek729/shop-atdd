@@ -52,7 +52,7 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
     return this._executionPromise;
   }
 
-  private async _doExecute(): Promise<void> {
+  private async _arrange(): Promise<void> {
     if (this.ctx.clockConfig) {
       await this.app.clockDriver.returnsTime({ time: this.ctx.clockConfig.time });
     }
@@ -66,15 +66,18 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
       const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(cc.country) as string;
       await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: cc.taxRate });
     }
+  }
 
-    if (this._clockAssertions.length > 0) {
-      const timeResult = await this.app.clockDriver.getTime();
-      expect(timeResult.success).toBe(true);
-      if (timeResult.success) {
-        for (const fn of this._clockAssertions) fn(timeResult.value);
-      }
+  private async _runClockAssertions(): Promise<void> {
+    if (this._clockAssertions.length === 0) return;
+    const timeResult = await this.app.clockDriver.getTime();
+    expect(timeResult.success).toBe(true);
+    if (timeResult.success) {
+      for (const fn of this._clockAssertions) fn(timeResult.value);
     }
+  }
 
+  private async _runProductAssertions(): Promise<void> {
     for (const [sku, assertions] of this._productAssertions) {
       const resolvedSku = this.useCaseContext.getParamValue(sku) as string;
       const productResult = await this.app.erpDriver.getProduct({ sku: resolvedSku });
@@ -83,7 +86,9 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
         for (const fn of assertions) fn(productResult.value);
       }
     }
+  }
 
+  private async _runCountryAssertions(): Promise<void> {
     for (const [countryCode, assertions] of this._countryAssertions) {
       const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryCode) as string;
       const taxResult = await this.app.taxDriver.getTaxRate({ country: resolvedCountry });
@@ -92,6 +97,13 @@ export class ThenContractStage implements PromiseLike<void>, IThenStage {
         for (const fn of assertions) fn(taxResult.value);
       }
     }
+  }
+
+  private async _doExecute(): Promise<void> {
+    await this._arrange();
+    await this._runClockAssertions();
+    await this._runProductAssertions();
+    await this._runCountryAssertions();
   }
 
   then<TResult1 = void, TResult2 = never>(

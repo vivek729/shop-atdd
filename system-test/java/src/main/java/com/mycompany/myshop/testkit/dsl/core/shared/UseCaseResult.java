@@ -7,21 +7,21 @@ import java.util.function.BiFunction;
 
 import static com.mycompany.myshop.testkit.common.ResultAssert.assertThatResult;
 
-public class UseCaseResult<TSuccessResponse, TSuccessVerification> {
-    private final Result<TSuccessResponse, SystemError> result;
+public class UseCaseResult<R, V> {
+    private final Result<R, SystemError> result;
     private final UseCaseContext context;
-    private final BiFunction<TSuccessResponse, UseCaseContext, TSuccessVerification> successVerificationFactory;
+    private final BiFunction<R, UseCaseContext, V> successVerificationFactory;
 
     public UseCaseResult(
-            Result<TSuccessResponse, SystemError> result,
+            Result<R, SystemError> result,
             UseCaseContext context,
-            BiFunction<TSuccessResponse, UseCaseContext, TSuccessVerification> successVerificationFactory) {
+            BiFunction<R, UseCaseContext, V> successVerificationFactory) {
         this.result = result;
         this.context = context;
         this.successVerificationFactory = successVerificationFactory;
     }
 
-    public TSuccessVerification shouldSucceed() {
+    public V shouldSucceed() {
         assertThatResult(result).isSuccess();
         return successVerificationFactory.apply(result.getValue(), context);
     }

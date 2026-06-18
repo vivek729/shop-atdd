@@ -17,7 +17,7 @@ set -euo pipefail
 export MSYS2_ARG_CONV_EXCL='*'
 
 TOKEN="${1:-${SONAR_TOKEN:-}}"
-if [ -z "$TOKEN" ]; then
+if [[ -z "$TOKEN" ]]; then
   echo "ERROR: Sonar token required. Set SONAR_TOKEN env var or pass as first arg." >&2
   echo "Get token: https://sonarcloud.io/account/security" >&2
   exit 1

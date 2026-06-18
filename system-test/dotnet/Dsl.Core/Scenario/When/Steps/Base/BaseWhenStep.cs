@@ -35,7 +35,7 @@ public abstract class BaseWhen<TSuccessResponse, TSuccessVerification>
 
     protected abstract Task<ExecutionResult<TSuccessResponse, TSuccessVerification>> Execute(UseCaseDsl app);
 
-    protected Channel Channel => _scenario.Channel;
+    protected Channel Channel => _scenario.Channel!;
 }
 
 

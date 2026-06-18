@@ -9,10 +9,10 @@ import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.error.ErpError
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.common.Result;
 
-public abstract class BaseErpDriver<TClient extends BaseErpClient> implements ErpDriver {
-    protected final TClient client;
+public abstract class BaseErpDriver<C extends BaseErpClient> implements ErpDriver {
+    protected final C client;
 
-    protected BaseErpDriver(TClient client) {
+    protected BaseErpDriver(C client) {
         this.client = client;
     }
 

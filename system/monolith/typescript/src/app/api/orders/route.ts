@@ -7,6 +7,36 @@ import { validatePlaceOrderRequest } from '@/lib/validation';
 import { validationErrorResponse, generalValidationErrorResponse, internalErrorResponse } from '@/lib/errors';
 import { jsonResponseWithDecimals } from '@/lib/decimal-format';
 
+type CouponResolution =
+  | { ok: true; discountRate: number; appliedCouponCode: string | null }
+  | { ok: false; response: NextResponse };
+
+async function resolveCoupon(couponCode: string | null, now: Date): Promise<CouponResolution> {
+  if (!couponCode) {
+    return { ok: true, discountRate: 0, appliedCouponCode: null };
+  }
+
+  const coupon = await findCouponByCode(couponCode);
+  if (!coupon) {
+    return couponError(`Coupon code ${couponCode} does not exist`);
+  }
+  if (coupon.valid_from && now < new Date(coupon.valid_from)) {
+    return couponError(`Coupon code ${couponCode} is not yet valid`);
+  }
+  if (coupon.valid_to && now > new Date(coupon.valid_to)) {
+    return couponError(`Coupon code ${couponCode} has expired`);
+  }
+  if (coupon.usage_limit !== null && coupon.used_count >= coupon.usage_limit) {
+    return couponError(`Coupon code ${couponCode} has exceeded its usage limit`);
+  }
+
+  return { ok: true, discountRate: Number(coupon.discount_rate), appliedCouponCode: couponCode };
+}
+
+function couponError(message: string): CouponResolution {
+  return { ok: false, response: validationErrorResponse([{ field: 'couponCode', message }]) };
+}
+
 export async function POST(request: NextRequest) {
   try {
     let body: Record<string, unknown>;
@@ -58,37 +88,11 @@ export async function POST(request: NextRequest) {
     const basePrice = new Decimal(unitPrice).mul(quantity).toNumber();
     const promotedPrice = new Decimal(basePrice).mul(promotionFactor).toNumber();
 
-    let discountRate = 0;
-    let appliedCouponCode: string | null = null;
-    if (couponCode) {
-      const coupon = await findCouponByCode(couponCode);
-      if (!coupon) {
-        return validationErrorResponse([
-          { field: 'couponCode', message: `Coupon code ${couponCode} does not exist` },
-        ]);
-      }
-
-      if (coupon.valid_from && now < new Date(coupon.valid_from)) {
-        return validationErrorResponse([
-          { field: 'couponCode', message: `Coupon code ${couponCode} is not yet valid` },
-        ]);
-      }
-
-      if (coupon.valid_to && now > new Date(coupon.valid_to)) {
-        return validationErrorResponse([
-          { field: 'couponCode', message: `Coupon code ${couponCode} has expired` },
-        ]);
-      }
-
-      if (coupon.usage_limit !== null && coupon.used_count >= coupon.usage_limit) {
-        return validationErrorResponse([
-          { field: 'couponCode', message: `Coupon code ${couponCode} has exceeded its usage limit` },
-        ]);
-      }
-
-      discountRate = Number(coupon.discount_rate);
-      appliedCouponCode = couponCode;
+    const couponResolution = await resolveCoupon(couponCode, now);
+    if (!couponResolution.ok) {
+      return couponResolution.response;
     }
+    const { discountRate, appliedCouponCode } = couponResolution;
     const discountAmount = new Decimal(promotedPrice).mul(discountRate).toNumber();
     const subtotalPrice = new Decimal(promotedPrice).sub(discountAmount).toNumber();
 

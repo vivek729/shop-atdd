@@ -10,7 +10,7 @@ namespace Driver.Adapter.Ui.Client.Pages;
 
 
 
-public class NewOrderPage : BasePage
+public partial class NewOrderPage : BasePage
 
 {
 
@@ -24,7 +24,8 @@ public class NewOrderPage : BasePage
 
     private const string PlaceOrderButtonSelector = "[aria-label=\"Place Order\"]";
 
-    private const string OrderNumberRegex = @"Success! Order has been created with Order Number ([\w-]+)";
+    [GeneratedRegex(@"Success! Order has been created with Order Number ([\w-]+)")]
+    private static partial Regex OrderNumberPattern();
 
     private const int OrderNumberMatcherGroup = 1;
 
@@ -94,9 +95,7 @@ public class NewOrderPage : BasePage
 
     {
 
-        var pattern = new Regex(OrderNumberRegex);
-
-        var match = pattern.Match(successMessageText);
+        var match = OrderNumberPattern().Match(successMessageText);
 
 
 

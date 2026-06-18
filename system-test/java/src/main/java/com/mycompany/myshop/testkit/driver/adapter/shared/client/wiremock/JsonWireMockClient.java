@@ -8,8 +8,6 @@ import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
 import wiremock.com.fasterxml.jackson.databind.SerializationFeature;
 import wiremock.com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import com.github.tomakehurst.wiremock.stubbing.StubMapping;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;

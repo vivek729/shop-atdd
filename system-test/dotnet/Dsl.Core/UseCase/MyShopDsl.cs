@@ -24,6 +24,7 @@ public class MyShopDsl : IAsyncDisposable
     {
         if (_driver != null)
             await _driver.DisposeAsync();
+        GC.SuppressFinalize(this);
     }
 
     public GoToMyShop GoToMyShop() => new(_driver, _context);

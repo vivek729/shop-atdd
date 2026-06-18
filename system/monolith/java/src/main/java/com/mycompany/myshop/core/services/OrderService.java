@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.MonthDay;
 import java.time.ZoneId;
 import java.util.List;
@@ -25,7 +26,7 @@ import java.util.UUID;
 @Service
 public class OrderService {
 
-    private static final MonthDay YEAR_END_RESTRICTED_MONTH_DAY = MonthDay.of(12, 31);
+    private static final MonthDay YEAR_END_RESTRICTED_MONTH_DAY = MonthDay.of(Month.DECEMBER, 31);
     private static final LocalTime YEAR_END_RESTRICTED_TIME_START = LocalTime.of(23, 59);
 
     private final OrderRepository orderRepository;

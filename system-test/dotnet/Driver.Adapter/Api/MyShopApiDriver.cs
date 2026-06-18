@@ -20,6 +20,7 @@ public class MyShopApiDriver : IMyShopDriver
     public ValueTask DisposeAsync()
     {
         _apiClient?.Dispose();
+        GC.SuppressFinalize(this);
         return ValueTask.CompletedTask;
     }
 
@@ -30,7 +31,7 @@ public class MyShopApiDriver : IMyShopDriver
     private static SystemError MapError(ProblemDetailResponse problemDetail)
     {
         var message = problemDetail.Detail ?? "Request failed";
-        if (problemDetail.Errors != null && problemDetail.Errors.Any())
+        if (problemDetail.Errors != null && problemDetail.Errors.Count > 0)
         {
             var fieldErrors = problemDetail.Errors
                 .Select(e => new SystemError.FieldError(e.Field ?? "unknown", e.Message ?? string.Empty, e.Code))

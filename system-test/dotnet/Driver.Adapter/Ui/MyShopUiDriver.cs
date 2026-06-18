@@ -31,6 +31,7 @@ public class MyShopUiDriver : IMyShopDriver
     {
         if (_client != null)
             await _client.DisposeAsync();
+        GC.SuppressFinalize(this);
     }
 
     public static async Task<MyShopUiDriver> CreateAsync(string baseUrl)

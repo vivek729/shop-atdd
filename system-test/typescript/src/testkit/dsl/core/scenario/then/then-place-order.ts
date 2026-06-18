@@ -63,36 +63,37 @@ export class ThenResultStage implements PromiseLike<void> {
     return this._executionPromise;
   }
 
-  private async _doExecute(): Promise<void> {
+  private async _arrangeClock(): Promise<void> {
     if (this.ctx.clockConfig) {
       await this.app.clockDriver.returnsTime({ time: this.ctx.clockConfig.time });
     }
+  }
 
+  private async _arrangeTax(): Promise<void> {
     if (this.ctx.countryConfigs.length > 0) {
       for (const countryConfig of this.ctx.countryConfigs) {
         const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(countryConfig.country) as string;
         await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: countryConfig.taxRate });
       }
-    } else {
-      const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(DEFAULTS.COUNTRY) as string;
-      await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: DEFAULTS.TAX_RATE });
+      return;
     }
+    const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(DEFAULTS.COUNTRY) as string;
+    await this.app.taxDriver.returnsTaxRate({ country: resolvedCountry, taxRate: DEFAULTS.TAX_RATE });
+  }
 
-    await this.app.erpDriver.returnsPromotion({
-      promotionActive: this.ctx.promotionConfig.promotionActive,
-      discount: this.ctx.promotionConfig.discount,
-    });
-
+  private async _arrangeProducts(): Promise<void> {
     if (this.ctx.hasExplicitProduct) {
       for (const pc of this.ctx.productConfigs) {
         const resolvedSku = this.useCaseContext.getParamValue(pc.sku) as string;
         await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: pc.price });
       }
-    } else {
-      const resolvedSku = this.useCaseContext.getParamValue(DEFAULTS.SKU) as string;
-      await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: DEFAULTS.UNIT_PRICE });
+      return;
     }
+    const resolvedSku = this.useCaseContext.getParamValue(DEFAULTS.SKU) as string;
+    await this.app.erpDriver.returnsProduct({ sku: resolvedSku, price: DEFAULTS.UNIT_PRICE });
+  }
 
+  private async _arrangeCoupons(): Promise<void> {
     for (const cc of this.ctx.couponConfigs) {
       const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
       await this.app.myShop().publishCoupon({
@@ -103,7 +104,9 @@ export class ThenResultStage implements PromiseLike<void> {
         usageLimit: cc.usageLimit,
       });
     }
+  }
 
+  private async _placeGivenOrders(): Promise<void> {
     // Execute given orders (e.g., to exhaust coupon usage limits)
     for (const oc of this.ctx.orderConfigs) {
       const orderSku = this.useCaseContext.getParamValue(oc.sku) as string;
@@ -117,6 +120,52 @@ export class ThenResultStage implements PromiseLike<void> {
       });
       expect(orderResult.success).toBe(true);
     }
+  }
+
+  private async _runOrderAssertions(orderNumber: string): Promise<void> {
+    if (this._orderAssertions.length === 0) return;
+    const orderResult = await this.app.myShop().viewOrder(orderNumber);
+    expect(orderResult.success).toBe(true);
+    if (orderResult.success) {
+      for (const fn of this._orderAssertions) fn(orderResult.value);
+    }
+  }
+
+  private async _runCouponAssertions(): Promise<void> {
+    for (const couponEntry of this._couponAssertions) {
+      const resolvedCouponCode = this.useCaseContext.getParamValue(couponEntry.code) as string;
+      const browseResult = await this.app.myShop().browseCoupons();
+      expect(browseResult.success).toBe(true);
+      if (!browseResult.success) continue;
+      const coupon = browseResult.value.coupons.find((c) => c.code === resolvedCouponCode);
+      expect(coupon, `Coupon '${resolvedCouponCode}' not found in browse results`).toBeDefined();
+      if (coupon) {
+        for (const fn of couponEntry.fns) fn(coupon);
+      }
+    }
+  }
+
+  private async _runClockAssertions(): Promise<void> {
+    if (this._clockAssertions.length === 0) return;
+    const timeResult = await this.app.clockDriver.getTime();
+    expect(timeResult.success).toBe(true);
+    if (timeResult.success) {
+      for (const fn of this._clockAssertions) fn(timeResult.value);
+    }
+  }
+
+  private async _doExecute(): Promise<void> {
+    await this._arrangeClock();
+    await this._arrangeTax();
+
+    await this.app.erpDriver.returnsPromotion({
+      promotionActive: this.ctx.promotionConfig.promotionActive,
+      discount: this.ctx.promotionConfig.discount,
+    });
+
+    await this._arrangeProducts();
+    await this._arrangeCoupons();
+    await this._placeGivenOrders();
 
     const resolvedSku = this.useCaseContext.getParamValue(this.sku) as string;
     const resolvedCountry = this.useCaseContext.getParamValueOrLiteral(this.country) as string;
@@ -132,35 +181,9 @@ export class ThenResultStage implements PromiseLike<void> {
     if (this._expectSuccess) {
       expect(result.success).toBe(true);
       if (!result.success) return;
-
-      if (this._orderAssertions.length > 0) {
-        const orderResult = await this.app.myShop().viewOrder(result.value.orderNumber);
-        expect(orderResult.success).toBe(true);
-        if (orderResult.success) {
-          for (const fn of this._orderAssertions) fn(orderResult.value);
-        }
-      }
-
-      for (const couponEntry of this._couponAssertions) {
-        const resolvedCouponCode = this.useCaseContext.getParamValue(couponEntry.code) as string;
-        const browseResult = await this.app.myShop().browseCoupons();
-        expect(browseResult.success).toBe(true);
-        if (browseResult.success) {
-          const coupon = browseResult.value.coupons.find((c) => c.code === resolvedCouponCode);
-          expect(coupon, `Coupon '${resolvedCouponCode}' not found in browse results`).toBeDefined();
-          if (coupon) {
-            for (const fn of couponEntry.fns) fn(coupon);
-          }
-        }
-      }
-
-      if (this._clockAssertions.length > 0) {
-        const timeResult = await this.app.clockDriver.getTime();
-        expect(timeResult.success).toBe(true);
-        if (timeResult.success) {
-          for (const fn of this._clockAssertions) fn(timeResult.value);
-        }
-      }
+      await this._runOrderAssertions(result.value.orderNumber);
+      await this._runCouponAssertions();
+      await this._runClockAssertions();
     } else {
       expect(result.success).toBe(false);
       if (result.success) return;

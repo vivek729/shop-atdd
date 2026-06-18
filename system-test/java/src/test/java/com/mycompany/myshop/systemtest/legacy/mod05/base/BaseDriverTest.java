@@ -12,7 +12,7 @@ import com.mycompany.myshop.testkit.common.Closer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-public class BaseDriverTest extends BaseConfigurableTest {
+public abstract class BaseDriverTest extends BaseConfigurableTest {
     protected Configuration configuration;
 
     protected MyShopDriver myShopDriver;

@@ -41,7 +41,7 @@ export class OrderDetailsPage extends BasePage {
   async getQuantity(): Promise<number> {
     const text =
       (await this.page.locator("[aria-label='Display Quantity']").textContent({ timeout: PAGE_TIMEOUT_MS }))?.trim() || '0';
-    return parseInt(text, 10);
+    return Number.parseInt(text, 10);
   }
 
   async getUnitPrice(): Promise<number> {

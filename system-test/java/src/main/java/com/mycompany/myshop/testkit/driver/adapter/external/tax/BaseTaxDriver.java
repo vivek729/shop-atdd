@@ -8,10 +8,10 @@ import com.mycompany.myshop.testkit.driver.port.external.tax.dtos.error.TaxError
 import com.mycompany.myshop.testkit.common.Closer;
 import com.mycompany.myshop.testkit.common.Result;
 
-public abstract class BaseTaxDriver<TClient extends BaseTaxClient> implements TaxDriver {
-    protected final TClient client;
+public abstract class BaseTaxDriver<C extends BaseTaxClient> implements TaxDriver {
+    protected final C client;
 
-    protected BaseTaxDriver(TClient client) {
+    protected BaseTaxDriver(C client) {
         this.client = client;
     }
 

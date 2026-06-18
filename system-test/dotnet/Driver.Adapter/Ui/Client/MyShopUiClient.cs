@@ -152,7 +152,7 @@ public class MyShopUiClient : IAsyncDisposable
 
 
 
-        var contentType = _response.Headers.ContainsKey(ContentType) ? _response.Headers[ContentType] : null;
+        var contentType = _response.Headers.TryGetValue(ContentType, out var contentTypeValue) ? contentTypeValue : null;
 
         if (contentType == null || !contentType.StartsWith(TextHtml))
 
@@ -195,6 +195,8 @@ public class MyShopUiClient : IAsyncDisposable
 
 
         _playwright?.Dispose();
+
+        GC.SuppressFinalize(this);
 
     }
 

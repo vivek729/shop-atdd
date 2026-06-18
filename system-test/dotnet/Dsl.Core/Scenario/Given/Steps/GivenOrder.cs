@@ -82,7 +82,7 @@ public class GivenOrder : BaseGiven, IGivenOrder
 
     internal override async Task Execute(UseCaseDsl app)
     {
-        var shop = await app.MyShop(Channel);
+        var shop = await app.MyShop(Channel!);
 
         (await shop.PlaceOrder()
             .OrderNumber(_orderNumber)

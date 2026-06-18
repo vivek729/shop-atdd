@@ -19,7 +19,7 @@ public class AssumeStage : IAssumeStage
     {
         return new AssumeRunningAction(async () =>
         {
-            (await (await _app.MyShop(_channel)).GoToMyShop().Execute()).ShouldSucceed();
+            (await (await _app.MyShop(_channel!)).GoToMyShop().Execute()).ShouldSucceed();
         }, this);
     }
 

@@ -13,7 +13,7 @@ export function validatePlaceOrderRequest(body: Record<string, unknown>): FieldE
     errors.push({ field: 'quantity', message: 'Quantity must not be empty' });
   } else {
     const quantity = typeof rawQuantity === 'string' ? Number(rawQuantity) : rawQuantity;
-    if (typeof rawQuantity === 'boolean' || Number.isNaN(quantity as number) || !Number.isInteger(quantity as number)) {
+    if (typeof rawQuantity === 'boolean' || Number.isNaN(quantity) || !Number.isInteger(quantity)) {
       errors.push({ field: 'quantity', message: 'Quantity must be an integer', code: 'TYPE_MISMATCH' });
     } else if ((quantity as number) <= 0) {
       errors.push({ field: 'quantity', message: 'Quantity must be positive' });
@@ -28,6 +28,20 @@ export function validatePlaceOrderRequest(body: Record<string, unknown>): FieldE
   return errors;
 }
 
+function validateDiscountRate(rawDiscountRate: unknown): FieldError | undefined {
+  if (rawDiscountRate === undefined || rawDiscountRate === null) {
+    return { field: 'discountRate', message: 'Discount rate must not be null' };
+  }
+  const dr = typeof rawDiscountRate === 'string' ? Number(rawDiscountRate) : rawDiscountRate as number;
+  if (Number.isNaN(dr) || dr <= 0) {
+    return { field: 'discountRate', message: 'Discount rate must be greater than 0.00' };
+  }
+  if (dr > 1) {
+    return { field: 'discountRate', message: 'Discount rate must be at most 1.00' };
+  }
+  return undefined;
+}
+
 export function validatePublishCouponRequest(body: Record<string, unknown>): FieldError[] {
   const errors: FieldError[] = [];
 
@@ -36,16 +50,9 @@ export function validatePublishCouponRequest(body: Record<string, unknown>): Fie
     errors.push({ field: 'code', message: 'Coupon code must not be blank' });
   }
 
-  const rawDiscountRate = body.discountRate;
-  if (rawDiscountRate === undefined || rawDiscountRate === null) {
-    errors.push({ field: 'discountRate', message: 'Discount rate must not be null' });
-  } else {
-    const dr = typeof rawDiscountRate === 'string' ? Number(rawDiscountRate) : rawDiscountRate as number;
-    if (Number.isNaN(dr) || dr <= 0) {
-      errors.push({ field: 'discountRate', message: 'Discount rate must be greater than 0.00' });
-    } else if (dr > 1) {
-      errors.push({ field: 'discountRate', message: 'Discount rate must be at most 1.00' });
-    }
+  const discountRateError = validateDiscountRate(body.discountRate);
+  if (discountRateError) {
+    errors.push(discountRateError);
   }
 
   const rawUsageLimit = body.usageLimit;

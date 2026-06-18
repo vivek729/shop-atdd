@@ -51,7 +51,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
     return this._executionPromise;
   }
 
-  private async _doExecute(): Promise<void> {
+  private async _arrangeCoupons(): Promise<void> {
     // Set up given coupons first (for duplicate tests)
     for (const cc of this.ctx.couponConfigs) {
       const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
@@ -63,6 +63,24 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
         usageLimit: cc.usageLimit,
       });
     }
+  }
+
+  private async _runCouponAssertions(): Promise<void> {
+    for (const couponEntry of this._couponAssertions) {
+      const resolvedCouponCode = this.useCaseContext.getParamValue(couponEntry.code) as string;
+      const browseResult = await this.app.myShop().browseCoupons();
+      expect(browseResult.success).toBe(true);
+      if (!browseResult.success) continue;
+      const coupon = browseResult.value.coupons.find((c) => c.code === resolvedCouponCode);
+      expect(coupon, `Coupon '${resolvedCouponCode}' not found in browse results`).toBeDefined();
+      if (coupon) {
+        for (const fn of couponEntry.fns) fn(coupon);
+      }
+    }
+  }
+
+  private async _doExecute(): Promise<void> {
+    await this._arrangeCoupons();
 
     const resolvedCode = this.useCaseContext.getParamValue(this.code) as string;
     const result = await this.app.myShop('static').publishCoupon({
@@ -75,19 +93,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
 
     if (this._expectSuccess) {
       expect(result.success).toBe(true);
-
-      for (const couponEntry of this._couponAssertions) {
-        const resolvedCouponCode = this.useCaseContext.getParamValue(couponEntry.code) as string;
-        const browseResult = await this.app.myShop().browseCoupons();
-        expect(browseResult.success).toBe(true);
-        if (browseResult.success) {
-          const coupon = browseResult.value.coupons.find((c) => c.code === resolvedCouponCode);
-          expect(coupon, `Coupon '${resolvedCouponCode}' not found in browse results`).toBeDefined();
-          if (coupon) {
-            for (const fn of couponEntry.fns) fn(coupon);
-          }
-        }
-      }
+      await this._runCouponAssertions();
     } else {
       expect(result.success).toBe(false);
       if (!result.success) {

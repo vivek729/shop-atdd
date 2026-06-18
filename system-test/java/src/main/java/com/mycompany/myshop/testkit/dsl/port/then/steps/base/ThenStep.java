@@ -6,8 +6,8 @@ import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenCoupon;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenOrder;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.ThenProduct;
 
-public interface ThenStep<TThen> {
-    TThen and();
+public interface ThenStep<T> {
+    T and();
 
     ThenOrder order();
 

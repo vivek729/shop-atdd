@@ -5,6 +5,8 @@ import com.mycompany.myshop.systemtest.legacy.mod11.contract.base.BaseExternalSy
 import com.optivem.testing.Isolated;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 @Isolated
 class ClockStubContractIsolatedTest extends BaseExternalSystemContractTest {
     @Override
@@ -14,8 +16,8 @@ class ClockStubContractIsolatedTest extends BaseExternalSystemContractTest {
 
     @Test
     void shouldBeAbleToGetConfiguredTime() {
-        scenario
+        assertDoesNotThrow(() -> scenario
                 .given().clock().withTime("2024-01-02T09:00:00Z")
-                .then().clock().hasTime("2024-01-02T09:00:00Z");
+                .then().clock().hasTime("2024-01-02T09:00:00Z"));
     }
 }

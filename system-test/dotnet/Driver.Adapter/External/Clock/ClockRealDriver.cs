@@ -9,13 +9,7 @@ namespace Driver.Adapter.External.Clock;
 
 public class ClockRealDriver : IClockDriver
 {
-    private readonly ClockRealClient _client;
     private bool _disposed;
-
-    public ClockRealDriver()
-    {
-        _client = new ClockRealClient();
-    }
 
     public void Dispose()
     {
@@ -40,7 +34,7 @@ public class ClockRealDriver : IClockDriver
         => ClockRealClient.CheckHealthAsync().MapErrorAsync(MapError);
 
     public Task<Result<GetTimeResponse, ClockErrorResponse>> GetTimeAsync()
-        => _client.GetTimeAsync().MapAsync(MapResponse).MapErrorAsync(MapError);
+        => ClockRealClient.GetTimeAsync().MapAsync(MapResponse).MapErrorAsync(MapError);
 
     public Task<Result<VoidValue, ClockErrorResponse>> ReturnsTimeAsync(ReturnsTimeRequest request)
     {

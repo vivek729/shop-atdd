@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ChannelExtension.class)
-public class BaseUseCaseDslTest extends BaseConfigurableTest {
+public abstract class BaseUseCaseDslTest extends BaseConfigurableTest {
     protected UseCaseDsl app;
 
     @BeforeEach

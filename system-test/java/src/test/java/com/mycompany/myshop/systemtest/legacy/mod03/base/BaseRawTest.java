@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import java.net.http.HttpClient;
 
-public class BaseRawTest extends BaseConfigurableTest {
+public abstract class BaseRawTest extends BaseConfigurableTest {
     protected Configuration configuration;
 
     protected Playwright myShopUiPlaywright;

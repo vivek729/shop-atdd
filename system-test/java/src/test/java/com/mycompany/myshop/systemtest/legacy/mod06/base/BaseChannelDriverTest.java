@@ -17,7 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ChannelExtension.class)
-public class BaseChannelDriverTest extends BaseConfigurableTest {
+public abstract class BaseChannelDriverTest extends BaseConfigurableTest {
     protected MyShopDriver myShopDriver;
     protected ErpRealDriver erpDriver;
     protected TaxRealDriver taxDriver;

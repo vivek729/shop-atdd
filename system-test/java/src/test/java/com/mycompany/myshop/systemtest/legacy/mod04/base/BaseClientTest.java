@@ -11,7 +11,7 @@ import com.mycompany.myshop.testkit.common.Closer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-public class BaseClientTest extends BaseConfigurableTest {
+public abstract class BaseClientTest extends BaseConfigurableTest {
     protected Configuration configuration;
 
     protected MyShopUiClient myShopUiClient;

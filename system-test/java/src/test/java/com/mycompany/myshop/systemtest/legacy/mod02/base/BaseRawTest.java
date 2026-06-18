@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import java.net.http.HttpClient;
 import java.util.UUID;
 
-public class BaseRawTest extends BaseConfigurableTest {
+public abstract class BaseRawTest extends BaseConfigurableTest {
     protected Configuration configuration;
 
     protected Playwright myShopUiPlaywright;

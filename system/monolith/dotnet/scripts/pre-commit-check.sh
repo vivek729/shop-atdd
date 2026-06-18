@@ -7,9 +7,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-SLN_FILE=$(ls *.slnx 2>/dev/null || ls *.sln 2>/dev/null || true)
-if [ -z "$SLN_FILE" ]; then
-    echo "  [dotnet monolith] ERROR: no .slnx or .sln file found"
+SLN_FILE=$(ls ./*.slnx 2>/dev/null || ls ./*.sln 2>/dev/null || true)
+if [[ -z "$SLN_FILE" ]]; then
+    echo "  [dotnet monolith] ERROR: no .slnx or .sln file found" >&2
     exit 1
 fi
 

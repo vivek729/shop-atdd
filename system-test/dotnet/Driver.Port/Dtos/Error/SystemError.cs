@@ -39,10 +39,10 @@ public class SystemError
                 if (i > 0) sb.Append(", ");
                 sb.Append(Fields[i]);
             }
-            sb.Append("]");
+            sb.Append(']');
         }
 
-        sb.Append("}");
+        sb.Append('}');
         return sb.ToString();
     }
 
@@ -68,7 +68,7 @@ public class SystemError
             {
                 sb.Append($", code='{Code}'");
             }
-            sb.Append("}");
+            sb.Append('}');
             return sb.ToString();
         }
     }

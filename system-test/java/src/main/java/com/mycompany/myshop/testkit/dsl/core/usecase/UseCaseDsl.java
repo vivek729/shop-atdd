@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.clock.ClockDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.erp.ErpDsl;
 import com.mycompany.myshop.testkit.dsl.core.usecase.external.tax.TaxDsl;
-import com.mycompany.myshop.testkit.dsl.core.usecase.MyShopDsl;
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.mycompany.myshop.testkit.driver.port.external.clock.ClockDriver;
 import com.mycompany.myshop.testkit.driver.port.external.erp.ErpDriver;
@@ -95,14 +94,11 @@ public class UseCaseDsl implements Closeable {
     }
 
     private String resolveMyShopChannel(ChannelMode mode) {
-        String channel;
-        if (mode == ChannelMode.STATIC) {
-            channel = STATIC_CHANNEL;
-        } else if (mode == ChannelMode.DYNAMIC) {
-            channel = ChannelContext.get();
-        } else {
-            throw new IllegalStateException("Unknown channel mode: " + mode);
-        }
+        String channel = switch (mode) {
+            case STATIC -> STATIC_CHANNEL;
+            case DYNAMIC -> ChannelContext.get();
+            default -> throw new IllegalStateException("Unknown channel mode: " + mode);
+        };
         log.info("[ChannelMode] mode={} → channel={}", mode, channel);
         return channel;
     }

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith({ChannelExtension.class, BrowserLifecycleExtension.class})
-public class BaseScenarioDslTest extends BaseConfigurableTest {
+public abstract class BaseScenarioDslTest extends BaseConfigurableTest {
     private UseCaseDsl app;
     protected ScenarioDsl scenario;
 
