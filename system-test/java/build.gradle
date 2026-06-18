@@ -10,6 +10,7 @@ sonar {
 		property 'sonar.projectKey', 'optivem_shop-tests-java'
 		property 'sonar.projectName', 'shop-tests-java'
 		property 'sonar.organization', 'optivem'
+		property 'sonar.exclusions', '**/legacy/**'
 	}
 }
 

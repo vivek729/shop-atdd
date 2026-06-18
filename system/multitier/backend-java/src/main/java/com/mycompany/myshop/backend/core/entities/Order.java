@@ -78,6 +78,8 @@ public class Order {
     @Column(name = "applied_coupon_code", nullable = true)
     private String appliedCouponCode;
 
+    // one arg per persisted orders column — wide list is intrinsic to the entity mapping
+    @SuppressWarnings("java:S107")
     public Order(String orderNumber, Instant orderTimestamp, String country,
                  String sku, int quantity, BigDecimal unitPrice, BigDecimal basePrice,
                  BigDecimal discountRate, BigDecimal discountAmount, BigDecimal subtotalPrice,

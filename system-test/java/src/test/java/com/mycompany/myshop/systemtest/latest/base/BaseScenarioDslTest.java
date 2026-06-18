@@ -11,6 +11,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+// abstract base extended by concrete tests in sibling packages — public required
+@SuppressWarnings("java:S5786")
 @ExtendWith({ChannelExtension.class, BrowserLifecycleExtension.class})
 public abstract class BaseScenarioDslTest extends BaseConfigurableTest {
     private UseCaseDsl app;

@@ -23,9 +23,10 @@ export class MyShopUiClient {
         this.context = await this.browser.newContext({ viewport: { width: 1920, height: 1080 } });
         this.currentPage = await this.context.newPage();
       }
-      const response = await this.currentPage!.goto(this.baseUrl);
+      const page = this.requirePage();
+      const response = await page.goto(this.baseUrl);
       if (response?.status() === 200) {
-        return success(new HomePage(this.currentPage!));
+        return success(new HomePage(page));
       }
       return failure({ message: `MyShop UI not available: ${response?.status()}`, fieldErrors: [] });
     } catch (e) {

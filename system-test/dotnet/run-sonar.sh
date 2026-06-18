@@ -31,6 +31,7 @@ dotnet sonarscanner begin \
     /k:"optivem_shop-tests-dotnet" \
     /n:"shop-tests-dotnet" \
     /o:"optivem" \
+    /d:sonar.exclusions="**/Legacy/**" \
     /d:sonar.host.url="https://sonarcloud.io" \
     /d:sonar.token="$TOKEN"
 
