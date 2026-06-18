@@ -6,9 +6,8 @@ import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
 import com.optivem.testing.*;
 import org.junit.jupiter.api.TestTemplate;
 
-@Isolated
+@Isolated("mutates the shared wall clock into the Dec 31 cancellation blackout window; parallel runs would clash on the clock")
 class CancelOrderNegativeIsolatedTest extends BaseAcceptanceTest {
-    @TimeDependent
     @TestTemplate
     @Channel(value = {ChannelType.API}, alsoForFirstRow = ChannelType.UI)
     @DataSource({"2024-12-31T22:00:00Z"})   // Start of blackout period

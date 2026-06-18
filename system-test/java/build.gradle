@@ -32,7 +32,7 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'org.yaml:snakeyaml:2.2'
-	implementation 'com.optivem:optivem-testing:1.1.8'
+	implementation 'com.optivem:optivem-testing:1.1.9'
 
 	// JSON serialization
 	implementation 'com.fasterxml.jackson.core:jackson-databind'

@@ -3,7 +3,7 @@ import { test, forChannels, ChannelType } from './base/fixtures.js';
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
     forChannels(ChannelType.UI, ChannelType.API)(() => {
-        test('cannotPlaceOrderWithExpiredCoupon @time-dependent', async ({ scenario }) => {
+        test('cannotPlaceOrderWithExpiredCoupon', async ({ scenario }) => {
             await scenario
                 .given()
                 .clock()

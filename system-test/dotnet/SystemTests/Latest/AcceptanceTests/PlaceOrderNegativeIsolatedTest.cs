@@ -10,7 +10,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 public class PlaceOrderNegativeIsolatedTest : BaseAcceptanceTest
 {
     [Theory]
-    [Time]
+    [Isolated("mutates the shared wall clock to a coupon-expiry time; parallel runs would clash on the clock")]
     [ChannelData(ChannelType.UI, ChannelType.API)]
     public async Task CannotPlaceOrderWithExpiredCoupon(Channel channel)
     {

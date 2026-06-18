@@ -4,10 +4,9 @@ import com.mycompany.myshop.systemtest.latest.acceptance.base.BaseAcceptanceTest
 import com.mycompany.myshop.testkit.channel.ChannelType;
 import com.optivem.testing.Channel;
 import com.optivem.testing.Isolated;
-import com.optivem.testing.TimeDependent;
 import org.junit.jupiter.api.TestTemplate;
 
-@Isolated
+@Isolated("mutates the shared wall clock to year-end and coupon-expiry times; parallel runs would clash on the clock")
 class PlaceOrderNegativeIsolatedTest extends BaseAcceptanceTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
@@ -20,7 +19,6 @@ class PlaceOrderNegativeIsolatedTest extends BaseAcceptanceTest {
                     .errorMessage("Orders cannot be placed between 23:59 and 00:00 on December 31st");
     }
 
-    @TimeDependent
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void cannotPlaceOrderWithExpiredCoupon() {

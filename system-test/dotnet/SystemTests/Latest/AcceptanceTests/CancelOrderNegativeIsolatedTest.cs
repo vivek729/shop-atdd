@@ -11,7 +11,7 @@ namespace SystemTests.Latest.AcceptanceTests;
 public class CancelOrderNegativeIsolatedTest : BaseAcceptanceTest
 {
     [Theory]
-    [Time]
+    [Isolated("mutates the shared wall clock into the Dec 31 cancellation blackout window; parallel runs would clash on the clock")]
     [ChannelData(ChannelType.API, AlsoForFirstRow = new[] { ChannelType.UI })]
     [ChannelInlineData("2024-12-31T22:00:00Z")]
     [ChannelInlineData("2026-12-31T22:00:01Z")]

@@ -11,7 +11,7 @@ const timesOutsideBlackout = [
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
     test.eachAlsoFirstRow(timesOutsideBlackout)(
-        'shouldBeAbleToCancelOrderOutsideOfBlackoutPeriod31stDecBetween2200And2230_$time @time-dependent',
+        'shouldBeAbleToCancelOrderOutsideOfBlackoutPeriod31stDecBetween2200And2230_$time',
         async ({ scenario, time }) => {
             await scenario
                 .given()

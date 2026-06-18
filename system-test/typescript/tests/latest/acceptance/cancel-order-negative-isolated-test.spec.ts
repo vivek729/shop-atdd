@@ -14,7 +14,7 @@ const BLACKOUT_ERROR = 'Order cancellation is not allowed on December 31st betwe
 test.describe('@isolated', () => {
     test.describe.configure({ mode: 'serial' });
     test.eachAlsoFirstRow(timesInsideBlackout)(
-        'cannotCancelAnOrderOn31stDecBetween2200And2230_$time @time-dependent',
+        'cannotCancelAnOrderOn31stDecBetween2200And2230_$time',
         async ({ scenario, time }) => {
             await scenario
                 .given()
