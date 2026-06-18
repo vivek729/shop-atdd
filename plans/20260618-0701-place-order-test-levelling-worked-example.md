@@ -13,8 +13,11 @@ plan**: its code blocks are placeholders until the example below exists and is
 labelled for quoting.
 
 **Article (the consumer of this plan):** `optivem/substack` →
-`articles/drafts/PAID-ATDD-acceptance-tests-arent-duplicated.md` — it carries a
-matching `BLOCKED ON:` marker pointing back at this plan file.
+`articles/deferred/PAID-ATDD-acceptance-tests-arent-duplicated.md` — it carries a
+matching `BLOCKED ON:` marker pointing back at this plan file. Note: that
+shop-anchored article is currently **deferred** (the active answer to Vivek is
+the no-shop companion `articles/drafts/PAID-ATDD-which-tests-at-which-layer.md`),
+so this plan is lower-priority until the deferred article is picked back up.
 
 **End result:** For the `PlaceOrder` feature, every claim the article makes is
 backed by a real, labelled test at the layer the article says it lives at —
