@@ -1,6 +1,8 @@
+# 2026-06-18 07:33:00 UTC — Sonar deferred: Java tests
+
 **Run started:** 2026-06-18 07:33 UTC
 
-# Deferred SonarCloud issues — optivem_shop-tests-java
+Deferred SonarCloud issues — optivem_shop-tests-java
 
 ## java:S5786 (15) — Remove this 'public'/'protected' modifier
 

@@ -1,3 +1,5 @@
+# 2026-06-18 07:33:00 UTC — Sonar deferred: Java backend
+
 **Run started:** 2026-06-18 07:33 UTC
 
 ## java:S107 — Order constructor has 15 parameters

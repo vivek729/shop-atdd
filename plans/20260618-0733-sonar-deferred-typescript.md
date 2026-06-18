@@ -1,3 +1,5 @@
+# 2026-06-18 07:33:00 UTC — Sonar deferred: TypeScript
+
 **Run started:** 2026-06-18 07:33 UTC
 
 ## typescript:S4325 — system-test/typescript/src/testkit/driver/adapter/ui/client/MyShopUiClient.ts:28
