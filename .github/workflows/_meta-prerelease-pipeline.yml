@@ -174,6 +174,15 @@ jobs:
         if: ${{ steps.decide.outputs.should_run == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # config preflight presence-checks every credential the downstream
+          # pipeline needs (DOCKERHUB_*/GHCR/WORKFLOW/REPO/SONAR). Wire them all
+          # here so a missing secret fails fast at the gate instead of deep in a
+          # Phase 1/2 image build.
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: bash ./validate-all-gh-optivem-config.sh
 
