@@ -281,12 +281,12 @@ jobs:
       - name: smoke-real
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite smoke-real
-      - name: acceptance-api
+      - name: acceptance-parallel-api
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite acceptance-api
-      - name: acceptance-ui
+        run: gh optivem test run --suite acceptance-parallel-api
+      - name: acceptance-parallel-ui
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite acceptance-ui
+        run: gh optivem test run --suite acceptance-parallel-ui
       - name: acceptance-isolated-api
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite acceptance-isolated-api

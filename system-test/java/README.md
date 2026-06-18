@@ -49,7 +49,7 @@ gh optivem test run --sample
 Run a specific suite by ID:
 
 ```bash
-gh optivem test run --suite acceptance-api
+gh optivem test run --suite acceptance-parallel-api
 ```
 
 Rebuild container images before bringing the system up:
@@ -72,12 +72,14 @@ Substitute `gh-optivem-multitier-java.yaml` for the multitier architecture.
 |----|-------------|
 | `smoke-stub` | Smoke tests (stub) |
 | `smoke-real` | Smoke tests (real) |
-| `acceptance-api` | Acceptance tests - API channel |
-| `acceptance-ui` | Acceptance tests - UI channel |
-| `acceptance-isolated-api` | Isolated acceptance tests - API channel |
-| `acceptance-isolated-ui` | Isolated acceptance tests - UI channel |
+| `acceptance-parallel-api` | Acceptance tests (parallel) - API channel |
+| `acceptance-parallel-ui` | Acceptance tests (parallel) - UI channel |
+| `acceptance-isolated-api` | Acceptance tests (isolated) - API channel |
+| `acceptance-isolated-ui` | Acceptance tests (isolated) - UI channel |
 | `contract-stub` | Contract tests (stub) |
 | `contract-stub-isolated` | Isolated contract tests (stub) |
 | `contract-real` | Contract tests (real) |
 | `e2e-api` | E2E tests (real) - API channel |
 | `e2e-ui` | E2E tests (real) - UI channel |
+
+You can also pass a **group alias** to `--suite`: `acceptance` runs every acceptance partition, while `acceptance-api` / `acceptance-ui` each run that channel's parallel + isolated partitions together.

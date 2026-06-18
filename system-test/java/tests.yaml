@@ -24,11 +24,13 @@
 #
 # `suiteGroups` (optional) maps an alias name to a list of suite ids —
 # `gh optivem test run --suite <alias>` substitutes the alias with its
-# constituent ids before the runner sees them. Per-project entries here
-# override the Go-side default registry (today only `acceptance:
-# [acceptance-api, acceptance-ui, acceptance-isolated-api, acceptance-isolated-ui]`);
-# omit the block to fall back to the default. The BPMN runtime emits
-# `--suite=acceptance` from
+# constituent ids before the runner sees them. Each acceptance channel has TWO
+# concrete partition suites — acceptance-parallel-<ch> (runs in parallel) and
+# acceptance-isolated-<ch> (runs serially) — and a per-channel group alias
+# `acceptance-<ch>` that fans out to both, plus the top-level `acceptance`
+# covering every channel's partitions. Per-project entries here override the
+# Go-side default registry (which provides the same groups); omit the block to
+# fall back to the default. The BPMN runtime emits `--suite=acceptance` from
 # the verify-tests-pass / verify-tests-fail call-activities.
 #
 # `setupCommands` runs once when invoked via `gh optivem test setup` —
@@ -44,7 +46,9 @@ setupCommands:
 testFilter: --tests '*.<test>'
 testFilterJoin: repeat
 suiteGroups:
-  acceptance: [acceptance-api, acceptance-ui, acceptance-isolated-api, acceptance-isolated-ui]
+  acceptance: [acceptance-parallel-api, acceptance-isolated-api, acceptance-parallel-ui, acceptance-isolated-ui]
+  acceptance-api: [acceptance-parallel-api, acceptance-isolated-api]
+  acceptance-ui: [acceptance-parallel-ui, acceptance-isolated-ui]
 suites:
   - id: smoke-stub
     name: latest - Smoke (stub)
@@ -58,15 +62,15 @@ suites:
     path: .
     testReportPath: build/reports/tests/test/index.html
     sampleTest: shouldBeAbleToGoToClock
-  - id: acceptance-api
-    name: latest - Acceptance (stub) - API
+  - id: acceptance-parallel-api
+    name: latest - Acceptance Parallel (stub) - API
     command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API
     path: .
     testReportPath: build/reports/tests/test/index.html
     testCountPath: build/test-results/test
     sampleTest: shouldBeAbleToPlaceOrderForValidInput
-  - id: acceptance-ui
-    name: latest - Acceptance (stub) - UI
+  - id: acceptance-parallel-ui
+    name: latest - Acceptance Parallel (stub) - UI
     command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static
     path: .
     testReportPath: build/reports/tests/test/index.html
