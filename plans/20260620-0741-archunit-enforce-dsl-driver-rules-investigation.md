@@ -1,12 +1,19 @@
 # 2026-06-20 07:41 UTC — Investigation: can ArchUnit enforce the DSL/driver rules we currently hand to Claude?
 
-> 🤖 **Picked up by agent (refine)** — `ValentinaLaptop` at `2026-06-20T06:30:08Z`
-
 ## TL;DR
 
 **Why:** Today the `system-test` architecture rules (DSL-core, DSL-port, driver-port, driver-adapter, test-file conventions) live as **prose guidance for Claude** — in the archived reference docs and the runtime agent prompts. Nothing fails the build when a rule is broken; we rely on the LLM remembering and on review. We want to know **which of these rules are mechanically enforceable in CI** (so a violation goes red on its own) and which genuinely need an LLM or a different tool. The user's two motivating examples: *(1)* requests and responses across DSL and drivers should be identical, and *(2)* every DSL/driver method should have a request and a response.
 
 **End result of this investigation:** A **feasibility matrix** classifying every documented DSL/driver rule into `ArchUnit-native` / `ArchUnit custom-condition` / `partial (body inspection)` / `not-ArchUnit (needs AST / string-literal / LLM)`, **backed by a runnable proof-of-concept** `ArchitectureRulesTest` in `system-test/java` that implements ~4 representative rules across that spectrum and is shown going red against a deliberate violation. Plus a recommendation on rollout (which rules to adopt as ArchUnit tests, which to keep as Claude/`CLAUDE.md` guidance) and a note on the .NET/TypeScript equivalents. This is **Java-first**: investigation + the one `MyShopDriver` refactor that Q2(b) requires (Step 3b). No *production rule suite* is committed until the matrix is reviewed; the POC tests and the Q2(b) refactor live on a branch.
+
+**Target state (all four open questions resolved — see Resolved decisions):**
+
+- **Q1 → share (A7).** "Identical req/resp across DSL and drivers" is enforced as a *dependency* rule — DSL core must reuse `driver.port.dtos.*` and declare no own `*Request`/`*Response` — not a field-by-field equality check. Matches today's code.
+- **Q2 → enforce strictly + refactor (b).** Every `MyShopDriver` method must take a `*Request` and return a `*Response`; the 4 violating methods (`cancelOrder`/`deliverOrder`/`viewOrder`/`goToMyShop`) are refactored to comply (Step 3b). **This is the one code refactor the plan now owns** — it crosses from investigation-only into investigation + refactor. The sole loose thread: whether pure-navigation `goToMyShop()` gets an empty req/resp pair or a documented exception (settled in Step 1).
+- **Q3 → co-locate + `@Tag`, separate task (a).** ArchUnit tests live under `src/test/.../architecture/` with `@Tag("architecture")`; a dedicated `architectureTest` Gradle task runs *only* the structural checks, while the normal `test` task still runs them too (CI unchanged). Lets structural checks be run independently of the behavioral unit/component tests.
+- **Q4 → Java POC + written note (a).** Mechanism proved in Java only; .NET (`NetArchTest`/`ArchUnitNET`) and TS (`ts-arch`/`dependency-cruiser`/ESLint) are surveyed in writing (Step 7), no POC this round.
+
+**What a reader will observe when this lands:** a green `./gradlew :system-test:java:architectureTest` that runs the structural rules alone; a refactored `MyShopDriver` where every operation carries a typed request and response; a filled-in feasibility matrix + rollout recommendation in this plan; and a captured red-then-green failure log proving each POC rule bites. **Unchanged:** no production rule *suite* is committed (only the ~4 POC rules), no .NET/TS code, and no LLM review is replaced for the genuinely semantic (C-tier) rules. The per-operation handler decomposition (`PlaceOrderUseCase` triads) is explicitly deferred to its own follow-up plan.
 
 > ArchUnit is already an accepted tool in this repo — the `backend-clean-java` exemplar plan (`20260616-0734-...`) adds an `ArchitectureRulesTest` for the Dependency Rule. This investigation reuses the same dependency and pattern, applied to the **test-kit** (`system-test/java`) rather than the system.
 
@@ -37,7 +44,7 @@ What we get out of this:
 - A **runnable POC** `ArchitectureRulesTest` (JUnit 5 + ArchUnit) under `system-test/java/src/test/...` implementing ~4 representative rules spanning the feasibility spectrum, each demonstrated red-then-green.
 - A **rollout recommendation**: which rules graduate to committed ArchUnit tests, which stay as Claude/`CLAUDE.md` prose, which need a separate AST/lint tool.
 - A short **multi-language note**: the Java→.NET→TypeScript enforcement story (ArchUnit is JVM-only; .NET and TS need different tools).
-- **No committed production rules** and **no code refactors** until the matrix + Q1/Q2 are reviewed. Investigation output is this plan (filled in) + the POC test, kept on a branch.
+- **No committed production rule *suite*** (only the ~4 POC rules) until the matrix is reviewed. The one exception is the Q2(b) `MyShopDriver` refactor, now in scope (Step 3b). Investigation output is this plan (filled in) + the POC test + the refactor, kept on a branch.
 
 ## Rule inventory & first-pass ArchUnit feasibility
 
@@ -77,13 +84,9 @@ Drawn from the archived reference docs (`gh-optivem/archive/references/atdd/arch
 
 **Cross-cutting caveat for the POC:** ArchUnit analyses **compiled bytecode**, so Lombok-generated getters/setters/builders **are present** in the class model. Conditions over "public methods" (A2) and "fields" (A1, A9) must explicitly exclude generated members (builder classes, `$`-named synthetics, getters) or they will produce false positives. Confirming the right exclusion predicate is part of Step 3.
 
-## Open questions (resolve before/within the POC)
-
-- **Q4 — scope of this investigation:** Java only, or also scope the .NET/TS enforcement story now? **Recommendation:** Java POC + a *written* note on .NET (`NetArchTest` / `ArchUnitNET`) and TS (`ts-arch`, `dependency-cruiser`, custom ESLint) — no POC in those languages this round.
-
 ## Steps
 
-- [ ] **Step 1 — Confirm the rule inventory & resolve Q1/Q2.** Re-read the five reference docs + the runtime agent prompts that restate these rules; reconcile with the user on Q1 and Q2 (these change *what* the POC asserts). Lock the matrix's rule list.
+- [ ] **Step 1 — Confirm the rule inventory & settle the `goToMyShop` sub-point.** Re-read the five reference docs + the runtime agent prompts that restate these rules; lock the matrix's rule list. Q1–Q4 are resolved (see Resolved decisions); the one item still open is the Q2(b) sub-point: does the pure-navigation `goToMyShop()` get a (likely empty) `GoToMyShopRequest`/`Response` pair, or a single documented exception? Settle with the user before the Step 3b refactor.
 - [ ] **Step 2 — Add ArchUnit to `system-test/java` + wire the tag task (Q3(a)).** Add `com.tngtech.archunit:archunit-junit5` (test scope) to `system-test/java/build.gradle`. Confirm `./gradlew :system-test:java:test` still green. (Mirror the version the `backend-clean-java` plan settles on, to keep one ArchUnit version in the repo.) Add a dedicated Gradle task (e.g. `architectureTest`) that runs **only** JUnit-tagged `architecture` tests (`useJUnitPlatform { includeTags 'architecture' }`); the normal `test` task continues to run everything (tagged tests included), so CI is unchanged while the structural checks become separately runnable.
 - [ ] **Step 3 — Write the POC `ArchitectureRulesTest`** under `src/test/.../architecture/`, carrying `@Tag("architecture")` (Q3(a)), covering four representative rules, one per feasibility tier:
   - A1 (request DTOs String-only) — native-ish custom condition, with the Lombok-exclusion predicate worked out here.
@@ -99,6 +102,7 @@ Drawn from the archived reference docs (`gh-optivem/archive/references/atdd/arch
 
 ## Resolved decisions
 
+- **Q4 — cover .NET/TS now, or just note them? → (a) Java POC + written note.** Prove the mechanism in Java only (the POC + Q2(b) refactor); survey the non-JVM equivalents in writing (Step 7) — .NET (`NetArchTest`/`ArchUnitNET`) and TS (`ts-arch`/`dependency-cruiser`/custom ESLint). No POC in those languages this round, since each is a different tool with different reach and would be its own spike. Consistent with the repo's parallel-implementation rule: that applies when shipping a cross-language fix; per-language POCs follow once Java's rule set is decided.
 - **Q3 — where do the committed rules live / how do they run? → (a) Co-locate + `@Tag`, separate task.** ArchUnit tests sit under `src/test/.../architecture/` alongside the unit and component tests, each carrying `@Tag("architecture")`. A dedicated Gradle task runs only that tag, so the structural checks can be run on their own — the motivating distinction is that ArchUnit guards *structure* (fails on structural drift) while unit/component tests guard *behavior* (change when behavior changes), and the user wants to run the two independently. The tagged tests **still run inside the normal `test` task by default**, so CI's acceptance stage always catches them. No separate source set (b) and no all-in-one task (c).
 - **Q1 — "identical req/resp" = share or duplicate? → (a) Share.** The intended rule is that DSL core must reuse the driver-port DTOs and declare no own `*Request`/`*Response` — encoded as the clean ArchUnit dependency rule **A7**. Matches current code (the DSL use case already imports `driver.port.dtos.*`) and is simpler. The duplicate/parallel-sets variant (b) is only relevant if a deliberate DSL/driver DTO split is later wanted; it is out of scope here.
 - **Q2 — "every method has req+resp": enforce or relax? → (b) Enforce strictly + refactor.** Every `MyShopDriver` method must take a `*Request` and return a `*Response`. The 4 currently-violating methods get refactored to comply: `cancelOrder` → `CancelOrderRequest`/`CancelOrderResponse`, `deliverOrder` → `DeliverOrderRequest`/`DeliverOrderResponse`, `viewOrder` → `ViewOrderRequest` (keeps `ViewOrderResponse`), `goToMyShop` → `GoToMyShopRequest`/`GoToMyShopResponse`. **This expands the plan beyond investigation-only into investigation + refactor**: rule **A10** is asserted in its strict form, and the code is made to comply rather than the rule relaxed to fit the code. Open sub-point carried into Step 1: whether the pure-navigation `goToMyShop()` truly gets a (likely empty) request/response pair or a single documented exception — settle with the user before refactoring. The non-breaking conditional variant (a) was considered and rejected: the user wants the uniform req/resp contract enforced, not accommodated.
