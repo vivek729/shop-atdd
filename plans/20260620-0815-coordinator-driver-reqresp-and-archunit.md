@@ -5,7 +5,7 @@ This is an **orchestration plan**. Its items each drive one child plan to comple
 ## TL;DR
 
 **Why:** The MyShopDriver test-kit contract — "every operation takes a `*Request` and returns a `*Response`" — was made uniform in **Java** and we want (a) the same uniformity in **.NET** and **TypeScript** so the three parallel implementations don't drift, and (b) the original objective: an **ArchUnit POC** proving which of these structural rules CI can enforce mechanically.
-**End result:** All three languages share the uniform req/response driver shape, and a green `:system-test:java:architectureTest` demonstrates the ArchUnit rules (incl. strict A10) red-then-green, with a filled-in feasibility matrix.
+**End result:** All three languages share the uniform req/response driver shape **and enforce the same A1/A2/A7/A10 structural rules** — Java via ArchUnit (done), .NET via ArchUnitNET, TS via ts-arch/ts-morph (full parity; overrides parent-plan Q4). Java also has the filled-in feasibility matrix.
 
 ## Children & status
 
@@ -13,17 +13,17 @@ This is an **orchestration plan**. Its items each drive one child plan to comple
 |------------|-------|--------|---------------|
 | `20260620-0758-...refactor.md` | **Java** driver req/resp refactor | ✅ **DONE** — committed `ba409b5c`, sample suite green | — |
 | `20260620-0741-...investigation.md` | **ArchUnit POC** (the original goal) | ⬜ pending — Java refactor (its Step 3b) already satisfied by 0758 | **No** (static bytecode analysis) |
-| `20260620-0810-...refactor-dotnet.md` | **.NET** driver req/resp refactor | ⬜ pending | Yes (`--sample`) |
-| `20260620-0810-...refactor-typescript.md` | **TypeScript** driver req/resp refactor | ⬜ pending | Yes (`--sample`) |
+| `20260620-0810-...refactor-dotnet.md` | **.NET** refactor **+ ArchUnitNET A1/A2/A7/A10 rules** | ⬜ pending | Yes (`--sample`) |
+| `20260620-0810-...refactor-typescript.md` | **TypeScript** refactor **+ ts-arch/ts-morph A1/A2/A7/A10 rules** | ⬜ pending | Yes (`--sample`) |
 
 **Dependencies:** the three pending children are mutually independent. The ArchUnit POC depends only on the Java refactor (done), so it can run immediately and needs no containers — do it first while Docker is busy with concurrent work.
 
 ## Items (execute in this order)
 
 - [ ] **C1 — ArchUnit POC.** `plans/20260620-0741-...investigation.md` — **Steps 1–7 DONE & committed** (POC `ArchitectureRulesTest` for A1/A2/A7/A10 green + red-green demo; B1 spiked & demoted; feasibility matrix + rollout + multi-lang note filled in). **Only Step 8 (decision gate) remains — needs the user** (graduate to production rule suite? write next-batch rules A5/A8/A3/A4/A6/A9? move to C2/C3?).
-- [ ] **C2 — .NET refactor.** Execute `plans/20260620-0810-myshop-driver-uniform-request-response-refactor-dotnet.md`. **Coordinate Docker with the user before the D7 sample run** (concurrent container work). Commit `shop` scoped.
-- [ ] **C3 — TypeScript refactor.** Execute `plans/20260620-0810-myshop-driver-uniform-request-response-refactor-typescript.md`. **Coordinate Docker before the T7 sample run.** Commit `shop` scoped.
-- [ ] **C4 — Close-out.** Once C1–C3 are done, confirm all three languages share the uniform driver shape and the ArchUnit matrix is filled in; decide with the user whether to graduate any POC rules into a committed production rule suite (parent investigation Step 8 decision gate) and whether to port the rules to NetArchTest / ts-arch. Then delete this coordinator and its completed children.
+- [ ] **C2 — .NET refactor + rules.** Execute `plans/20260620-0810-...-dotnet.md` — driver req/resp refactor (D1–D7) **and** the ArchUnitNET A1/A2/A7/A10 tests (D8, parity with Java). **Coordinate Docker before the D7 sample run** (concurrent container work). Commit `shop` scoped.
+- [ ] **C3 — TypeScript refactor + rules.** Execute `plans/20260620-0810-...-typescript.md` — refactor (T1–T7) **and** the ts-arch/ts-morph A1/A2/A7/A10 checks (T8, parity with Java). **Coordinate Docker before the T7 sample run.** Commit `shop` scoped.
+- [ ] **C4 — Close-out.** Once C1–C3 are done, confirm all three languages share the uniform driver shape **and enforce A1/A2/A7/A10** (Java ArchUnit, .NET ArchUnitNET, TS ts-arch/ts-morph). Decide with the user whether to graduate beyond the 4 proven rules into a broader committed suite (parent investigation Step 8). Then delete this coordinator and its completed children.
 
 ## How each item is executed
 

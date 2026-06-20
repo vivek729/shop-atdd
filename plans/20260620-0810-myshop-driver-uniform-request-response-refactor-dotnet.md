@@ -6,7 +6,7 @@
 ## TL;DR
 
 **Why:** Java's `MyShopDriver` now gives every operation a `*Request` and `*Response`. .NET's `IMyShopDriver` still has the **identical 6-method violation** (verified), so the two languages have drifted. This plan applies the same refactor to .NET.
-**End result:** Every `IMyShopDriver` method has the shape `Task<Result<XResponse, SystemError>> XAsync(XRequest request)`. Payload-free operations carry **empty** `*Request`/`*Response` types (no rule exceptions, matching the Java Q2(b) decision). Both adapters, the 6 DSL use cases, and the legacy direct-caller tests compile and the .NET `--sample` suite stays green.
+**End result:** Every `IMyShopDriver` method has the shape `Task<Result<XResponse, SystemError>> XAsync(XRequest request)`. Payload-free operations carry **empty** `*Request`/`*Response` types (no rule exceptions, matching the Java Q2(b) decision). Both adapters, the 6 DSL use cases, and the legacy direct-caller tests compile and the .NET `--sample` suite stays green. **Then ArchUnitNET tests enforce the A1/A2/A7/A10 structural rules — full parity with Java's `ArchitectureRulesTest`** (this overrides parent-plan Q4, which had scoped .NET to a written note only).
 
 ## Resolved decisions (inherited from the Java plan — keep all three languages identical)
 
@@ -44,7 +44,13 @@
 - [ ] **D5 — Update the 6 DSL use cases.**
 - [ ] **D6 — Re-grep `\.(GoToMyShop|CancelOrder|DeliverOrder|ViewOrder|PublishCoupon|BrowseCoupons)Async\(` under `SystemTests/` and fix every direct caller** (expected: Mod04/05/06 listed above).
 - [ ] **D7 — `dotnet build` green**, then the .NET `--sample` suite (`GH_OPTIVEM_CONFIG=gh-optivem-monolith-dotnet.yaml`, the same start/setup/run --sample/stop flow) — **coordinate container usage with the user first** (they flagged concurrent Docker work).
-- [ ] **D8 — Commit `shop` repo, scoped** (`gh optivem commit --yes --include-untracked --repo shop "..."`).
+- [ ] **D8 — Architecture-rule tests (ArchUnitNET) — parity with Java (overrides Q4).** Add an xUnit test (`[Trait("Category","Architecture")]`) using **ArchUnitNET** (IL-based, closest ArchUnit parity, supports custom conditions) asserting the A1/A2/A7/A10 equivalents, mirroring `system-test/java/.../architecture/ArchitectureRulesTest.java`:
+  - **A1** — `*Request` types in `Driver.Port.Dtos` expose only `string` members.
+  - **A2** — public methods of `*Verification` types return their own type (fluent) or `void` (terminal).
+  - **A7** — no type in `Dsl.Core` is named `*Request`/`*Response` (it shares `Driver.Port.Dtos`).
+  - **A10** — every `IMyShopDriver` method takes a single `*Request` and returns `Task<Result<*Response, …>>` (read the generic args via ArchUnitNET's type model).
+  Demonstrate one red-then-green per rule (as Java did). Same IL constant-inlining caveat applies to B1 → out of scope. Add a `dotnet`-side "architecture-only" run if a category filter is easy; otherwise the rules run in the normal test pass.
+- [ ] **D9 — Commit `shop` repo, scoped** (`gh optivem commit --yes --include-untracked --repo shop "..."`).
 
 ## ▶ Next executable step (resume here)
 
@@ -52,5 +58,6 @@ Execute **D1**: read `system-test/dotnet/Driver.Port/Dtos/PlaceOrderRequest.*` t
 
 ## Non-goals
 
-- The ArchUnit/NetArchTest rule POC itself (parent plan; this only makes the code compliant).
+- ~~The architecture-rule tests~~ — **now in scope** (D8, full A1/A2/A7/A10 parity with Java via ArchUnitNET; overrides parent Q4).
+- Rules beyond the 4 proven in Java (A3/A4/A5/A6/A8/A9, B-tier, C-tier) — match Java's committed set only.
 - Java or TypeScript changes (Java already done; TS is the sibling plan `...-typescript.md`).

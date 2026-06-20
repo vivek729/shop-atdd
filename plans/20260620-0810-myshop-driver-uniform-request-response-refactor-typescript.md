@@ -6,7 +6,7 @@
 ## TL;DR
 
 **Why:** Java's `MyShopDriver` now gives every operation a `*Request` and `*Response`. TypeScript's `my-shop-driver.ts` still has the **identical 6-method violation** (verified), so the two languages have drifted. This plan applies the same refactor to TS.
-**End result:** Every `MyShopDriver` method has the shape `x(request: XRequest): Promise<Result<XResponse, SystemError>>`. Payload-free operations carry **empty** `*Request`/`*Response` types (no rule exceptions, matching the Java Q2(b) decision). Both adapters, the 6 DSL use cases, and any legacy direct-caller tests compile (`npx tsc --noEmit`) and the TS `--sample` suite stays green.
+**End result:** Every `MyShopDriver` method has the shape `x(request: XRequest): Promise<Result<XResponse, SystemError>>`. Payload-free operations carry **empty** `*Request`/`*Response` types (no rule exceptions, matching the Java Q2(b) decision). Both adapters, the 6 DSL use cases, and any legacy direct-caller tests compile (`npx tsc --noEmit`) and the TS `--sample` suite stays green. **Then ts-arch/ESLint+ts-morph checks enforce the A1/A2/A7/A10 structural rules — parity with Java's `ArchitectureRulesTest`** (overrides parent-plan Q4, which had scoped TS to a written note only).
 
 ## Resolved decisions (inherited from the Java plan — keep all three languages identical)
 
@@ -44,7 +44,11 @@
 - [ ] **T5 — Update the 6 DSL use cases.**
 - [ ] **T6 — Grep `tests/` for direct driver callers and fix every one** (expected: legacy smoke/e2e specs).
 - [ ] **T7 — `npx tsc --noEmit` green** (in `system-test/typescript`), then the TS `--sample` suite (`GH_OPTIVEM_CONFIG=gh-optivem-monolith-typescript.yaml`) — **coordinate container usage with the user first** (they flagged concurrent Docker work).
-- [ ] **T8 — Commit `shop` repo, scoped** (`gh optivem commit --yes --include-untracked --repo shop "..."`).
+- [ ] **T8 — Architecture-rule checks — parity with Java (overrides Q4).** TS has no bytecode, so the toolchain splits by rule type (the rules live as `jest`/`vitest` tests or a lint step, tagged so they can run alone):
+  - **A7** — **dependency-cruiser** (optionally via **ts-arch**): no module under `dsl/core` declares a `*Request`/`*Response`; dsl-core imports `driver/port/dtos`.
+  - **A1 / A2 / A10** — **ts-morph** (AST) custom checks: A1 = `*Request` types in `driver/port/dtos` have only `string` members; A2 = public methods of `*Verification` classes return their own type or `void`; A10 = every `MyShopDriver` method takes a single `*Request` param and returns `Promise<Result<*Response, …>>`.
+  Demonstrate one red-then-green per rule (as Java did). Note: TS/AST reaches *further* than the JVM (it can also see the source-level rules ArchUnit can't — B1/C2/C3 — but those stay out of scope to match Java's set).
+- [ ] **T9 — Commit `shop` repo, scoped** (`gh optivem commit --yes --include-untracked --repo shop "..."`).
 
 ## ▶ Next executable step (resume here)
 
@@ -52,5 +56,6 @@ Execute **T1**: read `system-test/typescript/src/testkit/driver/port/dtos/PlaceO
 
 ## Non-goals
 
-- The ArchUnit-equivalent (`ts-arch`/`dependency-cruiser`/ESLint) rule POC itself (parent plan; this only makes the code compliant).
+- ~~The architecture-rule checks~~ — **now in scope** (T8, full A1/A2/A7/A10 parity with Java via ts-arch/ts-morph; overrides parent Q4).
+- Rules beyond the 4 proven in Java (A3/A4/A5/A6/A8/A9, B-tier, C-tier) — match Java's committed set only.
 - Java or .NET changes (Java already done; .NET is the sibling plan `...-dotnet.md`).
