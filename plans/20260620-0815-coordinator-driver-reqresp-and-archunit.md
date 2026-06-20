@@ -20,7 +20,7 @@ This is an **orchestration plan**. Its items each drive one child plan to comple
 
 ## Items (execute in this order)
 
-- [ ] **C1 — ArchUnit POC.** Execute `plans/20260620-0741-archunit-enforce-dsl-driver-rules-investigation.md` to completion (its Steps 2,3,4,5,6,7,8 — **skip Step 3b, already done by 0758**). No Docker. Delivers the ArchUnit dependency + `architectureTest` task + 4-rule POC + red-green evidence + feasibility matrix. Commit `shop` scoped.
+- [ ] **C1 — ArchUnit POC.** Execute `plans/20260620-0741-archunit-enforce-dsl-driver-rules-investigation.md` to completion. **In progress:** Steps 1, 2 (ArchUnit `1.3.0` dep + `architectureTest` task, green), 3b (done by 0758) complete and committed. **Resume at Step 3** (write the 4-rule `ArchitectureRulesTest` — see that plan's `▶ Next executable step` for the worked-out rule designs), then Steps 4–8. No Docker.
 - [ ] **C2 — .NET refactor.** Execute `plans/20260620-0810-myshop-driver-uniform-request-response-refactor-dotnet.md`. **Coordinate Docker with the user before the D7 sample run** (concurrent container work). Commit `shop` scoped.
 - [ ] **C3 — TypeScript refactor.** Execute `plans/20260620-0810-myshop-driver-uniform-request-response-refactor-typescript.md`. **Coordinate Docker before the T7 sample run.** Commit `shop` scoped.
 - [ ] **C4 — Close-out.** Once C1–C3 are done, confirm all three languages share the uniform driver shape and the ArchUnit matrix is filled in; decide with the user whether to graduate any POC rules into a committed production rule suite (parent investigation Step 8 decision gate) and whether to port the rules to NetArchTest / ts-arch. Then delete this coordinator and its completed children.
@@ -31,7 +31,7 @@ For each `C*` item, the executor opens the named child plan and runs **its** ste
 
 ## ▶ Next executable step (resume here)
 
-Execute **C1**: `/execute-plan plans/20260620-0741-archunit-enforce-dsl-driver-rules-investigation.md` — the ArchUnit POC (no Docker). Skip its Step 3b (the Java refactor it describes is already committed as `ba409b5c`); assert strict A10 directly against the now-compliant `MyShopDriver`.
+**C1 in progress** — ArchUnit dependency + `architectureTest` task are in (Step 2 done, committed). Resume by executing `plans/20260620-0741-...investigation.md` from its **Step 3** (write the 4-rule `ArchitectureRulesTest`); that plan's `▶ Next executable step` block carries the worked-out rule designs (A1/A2/A7/A10) and the plain-`@Test`+`@Tag` approach. No Docker. After C1 reaches its Step 8 gate, proceed to C2/C3 (Docker — coordinate first).
 
 ## Non-goals
 

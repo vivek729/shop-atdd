@@ -46,6 +46,16 @@ What we get out of this:
 - A short **multi-language note**: the Java→.NET→TypeScript enforcement story (ArchUnit is JVM-only; .NET and TS need different tools).
 - **No committed production rule *suite*** (only the ~4 POC rules) until the matrix is reviewed. The one exception is the Q2(b) `MyShopDriver` refactor, now in scope (Step 3b). Investigation output is this plan (filled in) + the POC test + the refactor, kept on a branch.
 
+## ▶ Next executable step (resume here)
+
+Steps 1, 2, 3b are done. **Next: Step 3** — write `ArchitectureRulesTest` under `system-test/java/src/test/java/com/mycompany/myshop/systemtest/architecture/`, as **plain JUnit `@Test` methods** with `@Tag("architecture")` on the class and a shared `JavaClasses` imported from `com.mycompany.myshop.testkit` (`new ClassFileImporter().importPackages(...)`). Four rules, each `rule.check(CLASSES)`:
+- **A1** — `fields().that().areDeclaredInClassesThat().resideInAPackage("..driver.port.dtos..").and()...haveSimpleNameEndingWith("Request").and().areNotStatic().should().haveRawType(String.class)`. `areNotStatic` is the Lombok/jacoco exclusion (no Lombok *instance* fields are added, so this is enough). Empty request DTOs pass vacuously.
+- **A2** — custom `ArchCondition<JavaMethod>`: public methods of `*Verification` in `..dsl.core..` must have raw return type == owning class **or `void`** (void = terminal assertion like `orderNumberHasPrefix`; the own-type-or-void shape is the corrected rule). Watch the base `ResponseVerification`/`VoidVerification` — if their getters are `public` they'll violate; scope to concrete classes or confirm the getters are `protected`.
+- **A7** — `noClasses().that().resideInAPackage("..dsl.core..").should().haveSimpleNameEndingWith("Request")` (+ same for `Response`), encoding "DSL core declares no own req/resp, it shares `driver.port.dtos`".
+- **A10** — custom `ArchCondition<JavaMethod>` over methods declared in the `MyShopDriver` interface (exclude inherited `close()`): exactly one param whose simple name ends with `Request`, and return type `Result<X,…>` whose first generic arg (`method.getReturnType()` → `JavaParameterizedType.getActualTypeArguments().get(0).toErasure()`) ends with `Response`. Now green (all 6 refactored).
+
+Then **Step 4** (red-green demo), **Step 5** (Tier-B B1 spike), **Step 6** (fill matrix + rollout rec), **Step 7** (multi-lang note), **Step 8** (decision gate with user). Run with `./gradlew :system-test:java:architectureTest`.
+
 ## Rule inventory & first-pass ArchUnit feasibility
 
 Drawn from the archived reference docs (`gh-optivem/archive/references/atdd/architecture/*.md`) and the user's two examples. Feasibility is a hypothesis to be confirmed by the POC.
@@ -87,7 +97,7 @@ Drawn from the archived reference docs (`gh-optivem/archive/references/atdd/arch
 ## Steps
 
 - [ ] **Step 1 — Confirm the rule inventory & settle the `goToMyShop` sub-point.** Re-read the five reference docs + the runtime agent prompts that restate these rules; lock the matrix's rule list. Q1–Q4 are resolved (see Resolved decisions); the one item still open is the Q2(b) sub-point: does the pure-navigation `goToMyShop()` get a (likely empty) `GoToMyShopRequest`/`Response` pair, or a single documented exception? Settle with the user before the Step 3b refactor.
-- [ ] **Step 2 — Add ArchUnit to `system-test/java` + wire the tag task (Q3(a)).** Add `com.tngtech.archunit:archunit-junit5` (test scope) to `system-test/java/build.gradle`. Confirm `./gradlew :system-test:java:test` still green. (Mirror the version the `backend-clean-java` plan settles on, to keep one ArchUnit version in the repo.) Add a dedicated Gradle task (e.g. `architectureTest`) that runs **only** JUnit-tagged `architecture` tests (`useJUnitPlatform { includeTags 'architecture' }`); the normal `test` task continues to run everything (tagged tests included), so CI is unchanged while the structural checks become separately runnable.
+- [x] **Step 2 — Add ArchUnit + wire the tag task (Q3(a)). ✅ DONE** — added `com.tngtech.archunit:archunit-junit5:1.3.0` (test scope; the `backend-clean-java` plan named no version, so 1.3.0 is the repo's pin) and registered an `architectureTest` Test task with `useJUnitPlatform { includeTags 'architecture' }`. `./gradlew :system-test:java:architectureTest` runs green (trivially — no arch tests yet). Normal `test` still runs everything. **Decision for Step 3:** use **plain JUnit `@Test` methods + `@Tag("architecture")` on the class**, calling `rule.check(importedClasses)` — NOT the `@AnalyzeClasses`/`@ArchTest` engine — so the standard Jupiter `@Tag` filter drives `includeTags` cleanly.
 - [ ] **Step 3 — Write the POC `ArchitectureRulesTest`** under `src/test/.../architecture/`, carrying `@Tag("architecture")` (Q3(a)), covering four representative rules, one per feasibility tier:
   - A1 (request DTOs String-only) — native-ish custom condition, with the Lombok-exclusion predicate worked out here.
   - A2 (verification methods return own type) — custom condition over public methods.
