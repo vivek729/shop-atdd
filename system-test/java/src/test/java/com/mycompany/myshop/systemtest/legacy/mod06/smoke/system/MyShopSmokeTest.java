@@ -2,6 +2,7 @@ package com.mycompany.myshop.systemtest.legacy.mod06.smoke.system;
 
 import com.mycompany.myshop.systemtest.legacy.mod06.base.BaseChannelDriverTest;
 import com.mycompany.myshop.testkit.channel.ChannelType;
+import com.mycompany.myshop.testkit.driver.port.dtos.GoToMyShopRequest;
 import com.optivem.testing.Channel;
 import org.junit.jupiter.api.TestTemplate;
 
@@ -11,7 +12,7 @@ class MyShopSmokeTest extends BaseChannelDriverTest {
     @TestTemplate
     @Channel({ChannelType.UI, ChannelType.API})
     void shouldBeAbleToGoToMyShop() {
-        var result = myShopDriver.goToMyShop();
+        var result = myShopDriver.goToMyShop(GoToMyShopRequest.builder().build());
         assertThatResult(result).isSuccess();
     }
 }

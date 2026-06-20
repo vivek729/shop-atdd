@@ -55,7 +55,7 @@ public class PublishCoupon extends BaseMyShopUseCase<Void, VoidVerification> {
                 .usageLimit(usageLimit)
                 .build();
 
-        var result = driver.publishCoupon(request);
+        var result = driver.publishCoupon(request).mapVoid();
         return new UseCaseResult<>(result, context, VoidVerification::new);
     }
 }

@@ -3,6 +3,7 @@ package com.mycompany.myshop.systemtest.legacy.mod05.e2e;
 import com.mycompany.myshop.testkit.driver.port.external.erp.dtos.ReturnsProductRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.systemtest.legacy.mod05.e2e.base.BaseE2eTest;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,7 @@ abstract class PlaceOrderPositiveBaseTest extends BaseE2eTest {
         assertThat(orderNumber).startsWith("ORD-");
 
         // ThenStage
-        var viewOrderResult = myShopDriver.viewOrder(orderNumber);
+        var viewOrderResult = myShopDriver.viewOrder(ViewOrderRequest.builder().orderNumber(orderNumber).build());
         assertThatResult(viewOrderResult).isSuccess();
 
         var order = viewOrderResult.getValue();

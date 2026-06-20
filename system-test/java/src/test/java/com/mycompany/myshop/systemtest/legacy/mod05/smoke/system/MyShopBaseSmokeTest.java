@@ -1,6 +1,7 @@
 package com.mycompany.myshop.systemtest.legacy.mod05.smoke.system;
 
 import com.mycompany.myshop.systemtest.legacy.mod05.base.BaseDriverTest;
+import com.mycompany.myshop.testkit.driver.port.dtos.GoToMyShopRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,7 @@ public abstract class MyShopBaseSmokeTest extends BaseDriverTest {
 
     @Test
     void shouldBeAbleToGoToMyShop() {
-        var result = myShopDriver.goToMyShop();
+        var result = myShopDriver.goToMyShop(GoToMyShopRequest.builder().build());
         assertThatResult(result).isSuccess();
     }
 }

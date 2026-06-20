@@ -1,5 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.usecase.usecases;
 
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.base.BaseMyShopUseCase;
@@ -22,7 +23,8 @@ public class ViewOrder extends BaseMyShopUseCase<ViewOrderResponse, ViewOrderVer
     public UseCaseResult<ViewOrderResponse, ViewOrderVerification> execute() {
         var orderNumber = context.getResultValue(orderNumberResultAlias);
 
-        var result = driver.viewOrder(orderNumber);
+        var request = ViewOrderRequest.builder().orderNumber(orderNumber).build();
+        var result = driver.viewOrder(request);
 
         return new UseCaseResult<>(result, context, ViewOrderVerification::new);
     }

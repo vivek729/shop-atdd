@@ -1,6 +1,7 @@
 package com.mycompany.myshop.testkit.dsl.core.usecase.usecases;
 
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
+import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderRequest;
 import com.mycompany.myshop.testkit.dsl.core.usecase.usecases.base.BaseMyShopUseCase;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseResult;
 import com.mycompany.myshop.testkit.dsl.core.shared.UseCaseContext;
@@ -21,7 +22,8 @@ public class DeliverOrder extends BaseMyShopUseCase<Void, VoidVerification> {
     @Override
     public UseCaseResult<Void, VoidVerification> execute() {
         var orderNumber = context.getResultValue(orderNumberResultAlias);
-        var result = driver.deliverOrder(orderNumber);
+        var request = DeliverOrderRequest.builder().orderNumber(orderNumber).build();
+        var result = driver.deliverOrder(request).mapVoid();
         return new UseCaseResult<>(result, context, VoidVerification::new);
     }
 }

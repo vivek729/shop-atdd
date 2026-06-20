@@ -7,10 +7,19 @@ import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.HomePage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.NewOrderPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderDetailsPage;
 import com.mycompany.myshop.testkit.driver.adapter.ui.client.pages.OrderHistoryPage;
+import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.BrowseCouponsResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.CancelOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.DeliverOrderResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.GoToMyShopRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.GoToMyShopResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.PlaceOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponRequest;
+import com.mycompany.myshop.testkit.driver.port.dtos.PublishCouponResponse;
+import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderRequest;
 import com.mycompany.myshop.testkit.driver.port.dtos.ViewOrderResponse;
 import com.mycompany.myshop.testkit.driver.port.MyShopDriver;
 import com.mycompany.myshop.testkit.driver.port.dtos.error.SystemError;
@@ -39,7 +48,7 @@ public class MyShopUiDriver implements MyShopDriver {
     }
 
     @Override
-    public Result<Void, SystemError> goToMyShop() {
+    public Result<GoToMyShopResponse, SystemError> goToMyShop(GoToMyShopRequest request) {
         homePage = client.openHomePage();
 
         if (!client.isStatusOk() || !client.isPageLoaded()) {
@@ -47,7 +56,7 @@ public class MyShopUiDriver implements MyShopDriver {
         }
 
         currentPage = Page.HOME;
-        return success();
+        return success(GoToMyShopResponse.builder().build());
     }
 
     @Override
@@ -79,11 +88,11 @@ public class MyShopUiDriver implements MyShopDriver {
     }
 
     @Override
-    public Result<Void, SystemError> cancelOrder(String orderNumber) {
-        var viewResult = viewOrder(orderNumber);
+    public Result<CancelOrderResponse, SystemError> cancelOrder(CancelOrderRequest request) {
+        var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
 
         if (viewResult.isFailure()) {
-            return viewResult.mapVoid();
+            return failure(viewResult.getError());
         }
 
         orderDetailsPage.clickCancelOrder();
@@ -91,18 +100,18 @@ public class MyShopUiDriver implements MyShopDriver {
         var result = orderDetailsPage.getResult();
 
         if (result.isFailure()) {
-            return result.mapVoid();
+            return failure(result.getError());
         }
 
-        return success();
+        return success(CancelOrderResponse.builder().build());
     }
 
     @Override
-    public Result<Void, SystemError> deliverOrder(String orderNumber) {
-        var viewResult = viewOrder(orderNumber);
+    public Result<DeliverOrderResponse, SystemError> deliverOrder(DeliverOrderRequest request) {
+        var viewResult = viewOrder(ViewOrderRequest.builder().orderNumber(request.getOrderNumber()).build());
 
         if (viewResult.isFailure()) {
-            return viewResult.mapVoid();
+            return failure(viewResult.getError());
         }
 
         orderDetailsPage.clickDeliverOrder();
@@ -110,14 +119,15 @@ public class MyShopUiDriver implements MyShopDriver {
         var result = orderDetailsPage.getResult();
 
         if (result.isFailure()) {
-            return result.mapVoid();
+            return failure(result.getError());
         }
 
-        return success();
+        return success(DeliverOrderResponse.builder().build());
     }
 
     @Override
-    public Result<ViewOrderResponse, SystemError> viewOrder(String orderNumber) {
+    public Result<ViewOrderResponse, SystemError> viewOrder(ViewOrderRequest request) {
+        var orderNumber = request.getOrderNumber();
         var result = ensureOnOrderDetailsPage(orderNumber);
         if (result.isFailure()) {
             return failure(result.getError());
@@ -167,7 +177,7 @@ public class MyShopUiDriver implements MyShopDriver {
     }
 
     @Override
-    public Result<Void, SystemError> publishCoupon(PublishCouponRequest request) {
+    public Result<PublishCouponResponse, SystemError> publishCoupon(PublishCouponRequest request) {
         ensureOnCouponManagementPage();
 
         couponManagementPage.inputCouponCode(request.getCode());
@@ -177,11 +187,12 @@ public class MyShopUiDriver implements MyShopDriver {
         couponManagementPage.inputUsageLimit(request.getUsageLimit());
         couponManagementPage.clickPublishCoupon();
 
-        return couponManagementPage.getResult().mapVoid();
+        return couponManagementPage.getResult()
+                .map(value -> PublishCouponResponse.builder().build());
     }
 
     @Override
-    public Result<BrowseCouponsResponse, SystemError> browseCoupons() {
+    public Result<BrowseCouponsResponse, SystemError> browseCoupons(BrowseCouponsRequest request) {
         navigateToCouponManagementPage();
 
         var coupons = couponManagementPage.readCoupons();
