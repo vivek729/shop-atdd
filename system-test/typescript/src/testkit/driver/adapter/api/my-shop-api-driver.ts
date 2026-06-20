@@ -1,9 +1,19 @@
 import type { Result } from '../../../common/result.js';
+import { success, failure } from '../../../common/result.js';
+import type { GoToMyShopRequest } from '../../port/dtos/GoToMyShopRequest.js';
+import type { GoToMyShopResponse } from '../../port/dtos/GoToMyShopResponse.js';
 import type { PlaceOrderRequest } from '../../port/dtos/PlaceOrderRequest.js';
 import type { PlaceOrderResponse } from '../../port/dtos/PlaceOrderResponse.js';
+import type { CancelOrderRequest } from '../../port/dtos/CancelOrderRequest.js';
+import type { CancelOrderResponse } from '../../port/dtos/CancelOrderResponse.js';
+import type { DeliverOrderRequest } from '../../port/dtos/DeliverOrderRequest.js';
+import type { DeliverOrderResponse } from '../../port/dtos/DeliverOrderResponse.js';
+import type { ViewOrderRequest } from '../../port/dtos/ViewOrderRequest.js';
 import type { ViewOrderResponse } from '../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../port/dtos/errors/SystemError.js';
 import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.js';
+import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
+import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import { MyShopApiClient } from './client/MyShopApiClient.js';
@@ -15,31 +25,39 @@ export class MyShopApiDriver implements MyShopDriver {
     this.client = new MyShopApiClient(baseUrl);
   }
 
-  async goToMyShop(): Promise<Result<void, SystemError>> {
-    return this.client.health().checkHealth();
+  async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {
+    const result = await this.client.health().checkHealth();
+    if (result.success) return success({});
+    return failure(result.error);
   }
 
   async placeOrder(request: PlaceOrderRequest): Promise<Result<PlaceOrderResponse, SystemError>> {
     return this.client.orders().placeOrder(request);
   }
 
-  async cancelOrder(orderNumber: string): Promise<Result<void, SystemError>> {
-    return this.client.orders().cancelOrder(orderNumber);
+  async cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>> {
+    const result = await this.client.orders().cancelOrder(request.orderNumber);
+    if (result.success) return success({});
+    return failure(result.error);
   }
 
-  async deliverOrder(orderNumber: string): Promise<Result<void, SystemError>> {
-    return this.client.orders().deliverOrder(orderNumber);
+  async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
+    const result = await this.client.orders().deliverOrder(request.orderNumber);
+    if (result.success) return success({});
+    return failure(result.error);
   }
 
-  async viewOrder(orderNumber: string): Promise<Result<ViewOrderResponse, SystemError>> {
-    return this.client.orders().viewOrder(orderNumber);
+  async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
+    return this.client.orders().viewOrder(request.orderNumber);
   }
 
-  async publishCoupon(request: PublishCouponRequest): Promise<Result<void, SystemError>> {
-    return this.client.coupons().publishCoupon(request);
+  async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
+    const result = await this.client.coupons().publishCoupon(request);
+    if (result.success) return success({});
+    return failure(result.error);
   }
 
-  async browseCoupons(): Promise<Result<BrowseCouponsResponse, SystemError>> {
+  async browseCoupons(_request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
     return this.client.coupons().browseCoupons();
   }
 

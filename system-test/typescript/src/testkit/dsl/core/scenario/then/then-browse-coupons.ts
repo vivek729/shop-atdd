@@ -39,10 +39,10 @@ export class ThenBrowseCouponsResultStage implements PromiseLike<void> {
   private async _doExecute(): Promise<void> {
     for (const cc of this.ctx.couponConfigs) {
       const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
-      await this.app.myShop().publishCoupon({ code: resolvedCode, discountRate: cc.discountRate });
+      await this.app.myShop().publishCoupon({ code: resolvedCode, discountRate: String(cc.discountRate) });
     }
 
-    const result = await this.app.myShop('static').browseCoupons();
+    const result = await this.app.myShop('static').browseCoupons({});
     expect(result.success).toBe(true);
     if (result.success) {
       this._browseResult = result.value;

@@ -78,10 +78,10 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
       const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
       await this.app.myShop().publishCoupon({
         code: resolvedCode,
-        discountRate: cc.discountRate,
+        discountRate: String(cc.discountRate),
         validFrom: cc.validFrom,
         validTo: cc.validTo,
-        usageLimit: cc.usageLimit,
+        usageLimit: cc.usageLimit !== undefined ? String(cc.usageLimit) : undefined,
       });
     }
   }
@@ -100,17 +100,17 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
       if (!placeResult.success) continue;
       oc.orderNumber = placeResult.value.orderNumber;
       if (oc.status === 'CANCELLED') {
-        await this.app.myShop().cancelOrder(placeResult.value.orderNumber);
+        await this.app.myShop().cancelOrder({ orderNumber: placeResult.value.orderNumber });
       }
       if (oc.status === 'DELIVERED') {
-        await this.app.myShop().deliverOrder(placeResult.value.orderNumber);
+        await this.app.myShop().deliverOrder({ orderNumber: placeResult.value.orderNumber });
       }
     }
   }
 
   private async _runOrderAssertions(targetOrderNumber: string): Promise<void> {
     if (this._orderAssertions.length === 0) return;
-    const orderResult = await this.app.myShop().viewOrder(targetOrderNumber);
+    const orderResult = await this.app.myShop().viewOrder({ orderNumber: targetOrderNumber });
     expect(orderResult.success).toBe(true);
     if (orderResult.success) {
       for (const fn of this._orderAssertions) fn(orderResult.value);
@@ -134,7 +134,7 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
       ? this.ctx.orderConfigs[0].orderNumber
       : this.orderNumber;
 
-    const result = await this.app.myShop('dynamic').cancelOrder(targetOrderNumber);
+    const result = await this.app.myShop('dynamic').cancelOrder({ orderNumber: targetOrderNumber });
 
     if (this._expectSuccess) {
       expect(result.success).toBe(true);

@@ -1,16 +1,17 @@
 import type { MyShopDriver } from '../../../../driver/port/my-shop-driver.js';
+import type { GoToMyShopResponse } from '../../../../driver/port/dtos/GoToMyShopResponse.js';
 import { UseCaseResult } from '../../shared/use-case-result.js';
 import { VoidVerification } from '../../shared/void-verification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import { BaseMyShopUseCase } from './base/BaseMyShopUseCase.js';
 
-export class GoToMyShop extends BaseMyShopUseCase<void, VoidVerification> {
+export class GoToMyShop extends BaseMyShopUseCase<GoToMyShopResponse, VoidVerification> {
   constructor(driver: MyShopDriver, context: UseCaseContext) {
     super(driver, context);
   }
 
-  async execute(): Promise<UseCaseResult<void, VoidVerification>> {
-    const result = await this.driver.goToMyShop();
+  async execute(): Promise<UseCaseResult<GoToMyShopResponse, VoidVerification>> {
+    const result = await this.driver.goToMyShop({});
 
     return new UseCaseResult(
       result,

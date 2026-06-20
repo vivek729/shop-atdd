@@ -13,6 +13,11 @@ export default defineConfig({
   },
   projects: [
     {
+      name: 'architecture-test',
+      testDir: './tests',
+      testMatch: '**/architecture/**/*.spec.ts',
+    },
+    {
       name: 'acceptance-test',
       testDir: './tests',
       testMatch: '**/acceptance/**/*.spec.ts',

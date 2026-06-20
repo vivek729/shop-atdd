@@ -1,11 +1,12 @@
 import type { MyShopDriver } from '../../../../driver/port/my-shop-driver.js';
 import type { PublishCouponRequest } from '../../../../driver/port/dtos/PublishCouponRequest.js';
+import type { PublishCouponResponse } from '../../../../driver/port/dtos/PublishCouponResponse.js';
 import { UseCaseResult } from '../../shared/use-case-result.js';
 import { VoidVerification } from '../../shared/void-verification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import { BaseMyShopUseCase } from './base/BaseMyShopUseCase.js';
 
-export class PublishCoupon extends BaseMyShopUseCase<void, VoidVerification> {
+export class PublishCoupon extends BaseMyShopUseCase<PublishCouponResponse, VoidVerification> {
   private _couponCodeParamAlias?: string;
   private _discountRate: number | string = '';
   private _validFrom?: string;
@@ -41,15 +42,15 @@ export class PublishCoupon extends BaseMyShopUseCase<void, VoidVerification> {
     return this;
   }
 
-  async execute(): Promise<UseCaseResult<void, VoidVerification>> {
+  async execute(): Promise<UseCaseResult<PublishCouponResponse, VoidVerification>> {
     const couponCode = this.context.getParamValue(this._couponCodeParamAlias);
 
     const request: PublishCouponRequest = {
       code: couponCode ?? '',
-      discountRate: this._discountRate,
+      discountRate: String(this._discountRate),
       validFrom: this._validFrom,
       validTo: this._validTo,
-      usageLimit: this._usageLimit,
+      usageLimit: this._usageLimit !== undefined ? String(this._usageLimit) : undefined,
     };
 
     const result = await this.driver.publishCoupon(request);

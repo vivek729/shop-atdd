@@ -8,7 +8,7 @@ export class AssumeStage implements IAssumeStage {
 
   myShop(): AssumeRunning {
     return new AssumeRunning(this, async () => {
-      const result = await this.app.myShop().goToMyShop();
+      const result = await this.app.myShop().goToMyShop({});
       expect(result.success).toBe(true);
     });
   }

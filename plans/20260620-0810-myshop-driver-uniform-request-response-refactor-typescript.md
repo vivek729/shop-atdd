@@ -37,22 +37,13 @@
 
 ## Steps
 
-- [ ] **T1 — Read one existing DTO** (`driver/port/dtos/PlaceOrderRequest.ts`) to lock the class/interface convention, then create the 9 new DTO types.
-- [ ] **T2 — Update `my-shop-driver.ts`** — 6 signatures + imports.
-- [ ] **T3 — Update `my-shop-api-driver.ts`** — unwrap/wrap; client unchanged.
-- [ ] **T4 — Update `my-shop-ui-driver.ts`** — same.
-- [ ] **T5 — Update the 6 DSL use cases.**
-- [ ] **T6 — Grep `tests/` for direct driver callers and fix every one** (expected: legacy smoke/e2e specs).
-- [ ] **T7 — `npx tsc --noEmit` green** (in `system-test/typescript`), then the TS `--sample` suite (`GH_OPTIVEM_CONFIG=gh-optivem-monolith-typescript.yaml`) — **coordinate container usage with the user first** (they flagged concurrent Docker work).
-- [ ] **T8 — Architecture-rule checks — parity with Java (overrides Q4).** TS has no bytecode, so the toolchain splits by rule type (the rules live as `jest`/`vitest` tests or a lint step, tagged so they can run alone):
-  - **A7** — **dependency-cruiser** (optionally via **ts-arch**): no module under `dsl/core` declares a `*Request`/`*Response`; dsl-core imports `driver/port/dtos`.
-  - **A1 / A2 / A10** — **ts-morph** (AST) custom checks: A1 = `*Request` types in `driver/port/dtos` have only `string` members; A2 = public methods of `*Verification` classes return their own type or `void`; A10 = every `MyShopDriver` method takes a single `*Request` param and returns `Promise<Result<*Response, …>>`.
-  Demonstrate one red-then-green per rule (as Java did). Note: TS/AST reaches *further* than the JVM (it can also see the source-level rules ArchUnit can't — B1/C2/C3 — but those stay out of scope to match Java's set).
-- [ ] **T9 — Commit `shop` repo, scoped** (`gh optivem commit --yes --include-untracked --repo shop "..."`).
+**T1–T6, T8 ✅ DONE (2026-06-20).** Refactor complete: 9 new DTOs created + `PublishCouponRequest` normalized to string-only (`discountRate`/`usageLimit`) for A1 parity; `close()` extracted into `AsyncCloseable` so A10 sees only the 7 business methods; both adapters + 6 use cases + 5 scenario `then-*.ts` + `assume-stage.ts` + legacy mod05/mod06 callers updated. The 4 empty-response use cases keep `VoidVerification` but parameterize `TResponse` to discard the empty response. `npx tsc --noEmit` green. **T8** implemented with **ts-morph** (single tool, all 4 rules — mirrors Java's one ArchUnit / .NET's one ArchUnitNET) as a standalone `architecture-test` Playwright project (`npm run test:architecture`); all 4 green + each demonstrated red-then-green.
+
+- [ ] **T7 (sample run only) — ⏳ Deferred** (2026-06-20, Docker busy). `tsc --noEmit` half is **done & green**. Remaining: TS `--sample` suite (`GH_OPTIVEM_CONFIG=gh-optivem-monolith-typescript.yaml`) — **coordinate container usage with the user first**.
 
 ## ▶ Next executable step (resume here)
 
-Execute **T1**: read `system-test/typescript/src/testkit/driver/port/dtos/PlaceOrderRequest.ts` to confirm the DTO convention, then create the 9 new DTO types under `driver/port/dtos/`.
+Only the **T7 `--sample` run** remains (deferred — needs Docker). When containers are free: `cd system-test/typescript`, set `GH_OPTIVEM_CONFIG=gh-optivem-monolith-typescript.yaml`, then `gh optivem system start` → `gh optivem test setup` → `gh optivem test run --sample` → `gh optivem system stop`. All else (T1–T6, T8, tsc) is done and committed.
 
 ## Non-goals
 

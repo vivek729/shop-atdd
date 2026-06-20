@@ -5,7 +5,7 @@ import { expect, type TestType } from '@playwright/test';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function runMyShopBaseSmokeTest(test: TestType<any, any>): void {
   test('shouldBeAbleToGoToMyShop', async ({ myShopDriver }) => {
-    const result = await myShopDriver.goToMyShop();
+    const result = await myShopDriver.goToMyShop({});
     expect(result.success).toBe(true);
   });
 }

@@ -57,10 +57,10 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
       const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
       await this.app.myShop().publishCoupon({
         code: resolvedCode,
-        discountRate: cc.discountRate,
+        discountRate: String(cc.discountRate),
         validFrom: cc.validFrom,
         validTo: cc.validTo,
-        usageLimit: cc.usageLimit,
+        usageLimit: cc.usageLimit !== undefined ? String(cc.usageLimit) : undefined,
       });
     }
   }
@@ -68,7 +68,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
   private async _runCouponAssertions(): Promise<void> {
     for (const couponEntry of this._couponAssertions) {
       const resolvedCouponCode = this.useCaseContext.getParamValue(couponEntry.code) as string;
-      const browseResult = await this.app.myShop().browseCoupons();
+      const browseResult = await this.app.myShop().browseCoupons({});
       expect(browseResult.success).toBe(true);
       if (!browseResult.success) continue;
       const coupon = browseResult.value.coupons.find((c) => c.code === resolvedCouponCode);
@@ -85,10 +85,10 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
     const resolvedCode = this.useCaseContext.getParamValue(this.code) as string;
     const result = await this.app.myShop('static').publishCoupon({
       code: resolvedCode,
-      discountRate: this.discountRate,
+      discountRate: String(this.discountRate),
       validFrom: this.validFrom,
       validTo: this.validTo,
-      usageLimit: this.usageLimit,
+      usageLimit: this.usageLimit !== undefined ? String(this.usageLimit) : undefined,
     });
 
     if (this._expectSuccess) {

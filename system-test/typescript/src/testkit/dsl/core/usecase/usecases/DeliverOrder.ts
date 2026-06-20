@@ -1,10 +1,11 @@
 import type { MyShopDriver } from '../../../../driver/port/my-shop-driver.js';
+import type { DeliverOrderResponse } from '../../../../driver/port/dtos/DeliverOrderResponse.js';
 import { UseCaseResult } from '../../shared/use-case-result.js';
 import { VoidVerification } from '../../shared/void-verification.js';
 import type { UseCaseContext } from '../../shared/use-case-context.js';
 import { BaseMyShopUseCase } from './base/BaseMyShopUseCase.js';
 
-export class DeliverOrder extends BaseMyShopUseCase<void, VoidVerification> {
+export class DeliverOrder extends BaseMyShopUseCase<DeliverOrderResponse, VoidVerification> {
   private _orderNumberResultAlias: string = '';
 
   constructor(driver: MyShopDriver, context: UseCaseContext) {
@@ -16,9 +17,9 @@ export class DeliverOrder extends BaseMyShopUseCase<void, VoidVerification> {
     return this;
   }
 
-  async execute(): Promise<UseCaseResult<void, VoidVerification>> {
+  async execute(): Promise<UseCaseResult<DeliverOrderResponse, VoidVerification>> {
     const orderNumber = this.context.getResultValue(this._orderNumberResultAlias) ?? this._orderNumberResultAlias;
-    const result = await this.driver.deliverOrder(orderNumber);
+    const result = await this.driver.deliverOrder({ orderNumber });
 
     return new UseCaseResult(
       result,

@@ -78,10 +78,10 @@ export class ThenViewOrderResultStage implements PromiseLike<void> {
       const resolvedCode = this.useCaseContext.getParamValue(cc.code) as string;
       await this.app.myShop().publishCoupon({
         code: resolvedCode,
-        discountRate: cc.discountRate,
+        discountRate: String(cc.discountRate),
         validFrom: cc.validFrom,
         validTo: cc.validTo,
-        usageLimit: cc.usageLimit,
+        usageLimit: cc.usageLimit !== undefined ? String(cc.usageLimit) : undefined,
       });
     }
   }
@@ -120,7 +120,7 @@ export class ThenViewOrderResultStage implements PromiseLike<void> {
       ? this.ctx.orderConfigs[0].orderNumber
       : this.orderNumber;
 
-    const result = await this.app.myShop('dynamic').viewOrder(targetOrderNumber);
+    const result = await this.app.myShop('dynamic').viewOrder({ orderNumber: targetOrderNumber });
 
     if (this._expectSuccess) {
       expect(result.success).toBe(true);

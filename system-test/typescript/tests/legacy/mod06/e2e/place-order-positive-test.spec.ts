@@ -17,7 +17,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         if (result.success) {
             expect(result.value.orderNumber).toMatch(/^ORD-/);
 
-            const viewResult = await myShopDriver.viewOrder(result.value.orderNumber);
+            const viewResult = await myShopDriver.viewOrder({ orderNumber: result.value.orderNumber });
             expect(viewResult.success).toBe(true);
             if (viewResult.success) {
                 expect(viewResult.value.sku).toBe(sku);

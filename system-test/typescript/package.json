@@ -5,6 +5,7 @@
   "description": "MyShop - System Tests",
   "scripts": {
     "test": "playwright test",
+    "test:architecture": "playwright test --project=architecture-test",
     "test:acceptance": "playwright test --project=acceptance-test",
     "test:smoke": "playwright test --project=smoke-test",
     "test:e2e": "playwright test --project=e2e-test",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@playwright/test": "^1.41.0",
     "@types/node": "^20.11.5",
+    "ts-morph": "^28.0.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {

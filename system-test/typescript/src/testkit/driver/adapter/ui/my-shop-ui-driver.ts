@@ -1,11 +1,20 @@
 import type { Browser } from 'playwright';
 import type { Result } from '../../../common/result.js';
 import { success, failure } from '../../../common/result.js';
+import type { GoToMyShopRequest } from '../../port/dtos/GoToMyShopRequest.js';
+import type { GoToMyShopResponse } from '../../port/dtos/GoToMyShopResponse.js';
 import type { PlaceOrderRequest } from '../../port/dtos/PlaceOrderRequest.js';
 import type { PlaceOrderResponse } from '../../port/dtos/PlaceOrderResponse.js';
+import type { CancelOrderRequest } from '../../port/dtos/CancelOrderRequest.js';
+import type { CancelOrderResponse } from '../../port/dtos/CancelOrderResponse.js';
+import type { DeliverOrderRequest } from '../../port/dtos/DeliverOrderRequest.js';
+import type { DeliverOrderResponse } from '../../port/dtos/DeliverOrderResponse.js';
+import type { ViewOrderRequest } from '../../port/dtos/ViewOrderRequest.js';
 import type { ViewOrderResponse } from '../../port/dtos/ViewOrderResponse.js';
 import type { SystemError } from '../../port/dtos/errors/SystemError.js';
 import type { PublishCouponRequest } from '../../port/dtos/PublishCouponRequest.js';
+import type { PublishCouponResponse } from '../../port/dtos/PublishCouponResponse.js';
+import type { BrowseCouponsRequest } from '../../port/dtos/BrowseCouponsRequest.js';
 import type { BrowseCouponsResponse } from '../../port/dtos/BrowseCouponsResponse.js';
 import type { MyShopDriver } from '../../port/my-shop-driver.js';
 import { MyShopUiClient } from './client/MyShopUiClient.js';
@@ -18,9 +27,9 @@ export class MyShopUiDriver implements MyShopDriver {
     this.client = new MyShopUiClient(baseUrl, browser);
   }
 
-  async goToMyShop(): Promise<Result<void, SystemError>> {
+  async goToMyShop(_request: GoToMyShopRequest): Promise<Result<GoToMyShopResponse, SystemError>> {
     const result = await this.client.openHomePage();
-    if (result.success) return success(undefined);
+    if (result.success) return success({});
     return failure(result.error);
   }
 
@@ -53,7 +62,8 @@ export class MyShopUiDriver implements MyShopDriver {
     return failure(notificationResult.error);
   }
 
-  async viewOrder(orderNumber: string): Promise<Result<ViewOrderResponse, SystemError>> {
+  async viewOrder(request: ViewOrderRequest): Promise<Result<ViewOrderResponse, SystemError>> {
+    const orderNumber = request.orderNumber;
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickOrderHistory();
@@ -90,7 +100,8 @@ export class MyShopUiDriver implements MyShopDriver {
     });
   }
 
-  async cancelOrder(orderNumber: string): Promise<Result<void, SystemError>> {
+  async cancelOrder(request: CancelOrderRequest): Promise<Result<CancelOrderResponse, SystemError>> {
+    const orderNumber = request.orderNumber;
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickOrderHistory();
@@ -110,11 +121,12 @@ export class MyShopUiDriver implements MyShopDriver {
     await detailsPage.clickCancelOrder();
 
     const notificationResult = await detailsPage.getResult();
-    if (notificationResult.success) return success(undefined);
+    if (notificationResult.success) return success({});
     return failure(notificationResult.error);
   }
 
-  async deliverOrder(orderNumber: string): Promise<Result<void, SystemError>> {
+  async deliverOrder(request: DeliverOrderRequest): Promise<Result<DeliverOrderResponse, SystemError>> {
+    const orderNumber = request.orderNumber;
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickOrderHistory();
@@ -134,11 +146,11 @@ export class MyShopUiDriver implements MyShopDriver {
     await detailsPage.clickDeliverOrder();
 
     const notificationResult = await detailsPage.getResult();
-    if (notificationResult.success) return success(undefined);
+    if (notificationResult.success) return success({});
     return failure(notificationResult.error);
   }
 
-  async publishCoupon(request: PublishCouponRequest): Promise<Result<void, SystemError>> {
+  async publishCoupon(request: PublishCouponRequest): Promise<Result<PublishCouponResponse, SystemError>> {
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickAdminCoupons();
@@ -158,11 +170,11 @@ export class MyShopUiDriver implements MyShopDriver {
     await couponPage.clickPublishCoupon();
 
     const notificationResult = await couponPage.getResult();
-    if (notificationResult.success) return success(undefined);
+    if (notificationResult.success) return success({});
     return failure(notificationResult.error);
   }
 
-  async browseCoupons(): Promise<Result<BrowseCouponsResponse, SystemError>> {
+  async browseCoupons(_request: BrowseCouponsRequest): Promise<Result<BrowseCouponsResponse, SystemError>> {
     const homeResult = await this.client.openHomePage();
     if (!homeResult.success) return failure(homeResult.error);
     await homeResult.value.clickAdminCoupons();

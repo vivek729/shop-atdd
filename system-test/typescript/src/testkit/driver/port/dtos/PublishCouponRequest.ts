@@ -1,7 +1,7 @@
 export interface PublishCouponRequest {
   code: string;
-  discountRate: number | string;
+  discountRate: string;
   validFrom?: string;
   validTo?: string;
-  usageLimit?: number | string;
+  usageLimit?: string;
 }
