@@ -48,7 +48,7 @@ What we get out of this:
 
 ## ▶ Next executable step (resume here)
 
-Steps 1–7 + 3b are done. **Only Step 8 remains — the decision gate, which needs the user.** Decide: (1) graduate A1/A2/A7/A10 from POC into a committed *production* rule suite? (2) write the feasible next-batch rules (A5, A8, then A3/A4/A6/A9)? (3) proceed to the .NET/TS refactors (coordinator C2/C3, Docker) and/or per-language rule ports? Nothing more is mechanically executable here without that input.
+**Done.** All steps (1–8 + 3b) resolved. Step 8 decided 2026-06-20: keep the 4 POC rules as-is, broader-suite decision deferred to coordinator C4. No further mechanical work in this plan — the cross-language parity work continues in the coordinator's C2 (.NET) / C3 (TS) children.
 
 ## Rule inventory & first-pass ArchUnit feasibility
 
@@ -103,7 +103,7 @@ Drawn from the archived reference docs (`gh-optivem/archive/references/atdd/arch
 - [x] **Step 5 — Tier-B (B1) spike. ✅ DONE** — see Findings below. Outcome: **B1 demoted** — bytecode constant-inlining hides the common case.
 - [x] **Step 6 — Feasibility matrix + rollout recommendation. ✅ DONE** — see Findings below.
 - [x] **Step 7 — Multi-language note. ✅ DONE** — see Findings below.
-- [ ] **Step 8 — Decision gate (review with user).** *Out of scope for this plan:* committing the full production rule set (the broader suite beyond the POC rules). **This is the only remaining step — it needs the user.**
+- [x] **Step 8 — Decision gate (review with user). ✅ RESOLVED 2026-06-20** — user chose **keep the 4 POC rules (A1/A2/A7/A10) as-is** (already committed, green, each red-then-green); **do not** write next-batch rules now; **proceed to C2/C3** for .NET + TS parity. The broader-production-suite decision (graduate beyond the 4, or write A5/A8/A3/A4/A6/A9) is **deferred to the coordinator's C4 close-out**.
 
 ## Findings & feasibility matrix (Steps 5–7)
 

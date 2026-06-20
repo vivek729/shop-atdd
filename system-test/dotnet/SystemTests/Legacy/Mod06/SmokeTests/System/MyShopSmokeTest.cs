@@ -1,4 +1,5 @@
 using Common;
+using Driver.Port.Dtos;
 using SystemTests.Legacy.Mod06.Base;
 using Dsl.Core.UseCase;
 using Optivem.Testing;
@@ -15,7 +16,7 @@ public class MyShopSmokeTest : BaseChannelDriverTest
     {
         await SetChannelAsync(channel);
 
-        var result = await _shopDriver!.GoToMyShopAsync();
+        var result = await _shopDriver!.GoToMyShopAsync(new GoToMyShopRequest());
         result.ShouldBeSuccess();
     }
 }

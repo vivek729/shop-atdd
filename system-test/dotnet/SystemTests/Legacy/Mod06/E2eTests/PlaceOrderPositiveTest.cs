@@ -41,7 +41,7 @@ public class PlaceOrderPositiveTest : BaseE2eTest
         orderNumber.ShouldStartWith("ORD-");
 
         // ThenStage
-        var viewOrderResult = await _shopDriver.ViewOrderAsync(orderNumber);
+        var viewOrderResult = await _shopDriver.ViewOrderAsync(new ViewOrderRequest { OrderNumber = orderNumber });
         viewOrderResult.ShouldBeSuccess();
 
         var order = viewOrderResult.Value!;

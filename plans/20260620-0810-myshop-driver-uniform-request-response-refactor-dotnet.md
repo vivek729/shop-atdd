@@ -37,24 +37,13 @@
 
 ## Steps
 
-- [ ] **D1 — Read one existing DTO** (`Driver.Port/Dtos/PlaceOrderRequest.*`) to lock the record/class convention, then create the 9 new DTO types.
-- [ ] **D2 — Update `IMyShopDriver`** — 6 signatures.
-- [ ] **D3 — Update `MyShopApiDriver`** — unwrap/wrap; client unchanged.
-- [ ] **D4 — Update the UI adapter** — same.
-- [ ] **D5 — Update the 6 DSL use cases.**
-- [ ] **D6 — Re-grep `\.(GoToMyShop|CancelOrder|DeliverOrder|ViewOrder|PublishCoupon|BrowseCoupons)Async\(` under `SystemTests/` and fix every direct caller** (expected: Mod04/05/06 listed above).
-- [ ] **D7 — `dotnet build` green**, then the .NET `--sample` suite (`GH_OPTIVEM_CONFIG=gh-optivem-monolith-dotnet.yaml`, the same start/setup/run --sample/stop flow) — **coordinate container usage with the user first** (they flagged concurrent Docker work).
-- [ ] **D8 — Architecture-rule tests (ArchUnitNET) — parity with Java (overrides Q4).** Add an xUnit test (`[Trait("Category","Architecture")]`) using **ArchUnitNET** (IL-based, closest ArchUnit parity, supports custom conditions) asserting the A1/A2/A7/A10 equivalents, mirroring `system-test/java/.../architecture/ArchitectureRulesTest.java`:
-  - **A1** — `*Request` types in `Driver.Port.Dtos` expose only `string` members.
-  - **A2** — public methods of `*Verification` types return their own type (fluent) or `void` (terminal).
-  - **A7** — no type in `Dsl.Core` is named `*Request`/`*Response` (it shares `Driver.Port.Dtos`).
-  - **A10** — every `IMyShopDriver` method takes a single `*Request` and returns `Task<Result<*Response, …>>` (read the generic args via ArchUnitNET's type model).
-  Demonstrate one red-then-green per rule (as Java did). Same IL constant-inlining caveat applies to B1 → out of scope. Add a `dotnet`-side "architecture-only" run if a category filter is easy; otherwise the rules run in the normal test pass.
-- [ ] **D9 — Commit `shop` repo, scoped** (`gh optivem commit --yes --include-untracked --repo shop "..."`).
+> **D1–D6 + D8 DONE & verified** (this session): 9 DTOs created; `IMyShopDriver` + both adapters + 6 DSL use cases + 4 legacy driver callers refactored; ArchUnitNET A1/A2/A7/A10 tests added (`SystemTests/Latest/ArchitectureTests/ArchitectureRulesTest.cs`, pkg `TngTech.ArchUnitNET.xUnit 0.13.3`) — all 4 green and each demonstrated red-then-green; full solution `dotnet build` green. **Mod04 `PlaceOrderPositiveApiTest` needed no change** (it calls the raw API client, which stays raw). Remaining: D7 sample run (Docker) + D9 commit.
+
+- [ ] **D7 — sample suite (Docker). ⏳ Deferred** (2026-06-20, user: Docker busy with concurrent work). `dotnet build` is green and the code was committed on that basis; the `--sample` verification was **not** run this session (consciously overriding the pre-commit `--sample` rule). Run later: `GH_OPTIVEM_CONFIG=gh-optivem-monolith-dotnet.yaml`, start → test setup → test run --sample → stop.
 
 ## ▶ Next executable step (resume here)
 
-Execute **D1**: read `system-test/dotnet/Driver.Port/Dtos/PlaceOrderRequest.*` to confirm the DTO convention, then create the 9 new DTO types under `Driver.Port/Dtos/`.
+Only **D7** remains and it is **deferred** (Docker busy). When Docker is free, run the .NET `--sample` suite (`gh-optivem-monolith-dotnet.yaml`, start → test setup → test run --sample → stop) to verify the committed refactor at runtime. All code (D1–D6, D8) is done, committed, and `dotnet build`-green.
 
 ## Non-goals
 

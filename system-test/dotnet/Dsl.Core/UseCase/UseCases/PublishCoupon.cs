@@ -69,7 +69,7 @@ public class PublishCoupon : BaseMyShopUseCase<VoidValue, VoidVerification>
             UsageLimit = string.IsNullOrWhiteSpace(_usageLimit) ? null : _usageLimit
         };
 
-        var result = await _driver.PublishCouponAsync(request);
+        var result = await _driver.PublishCouponAsync(request).MapVoidAsync();
 
         return new MyShopUseCaseResult<VoidValue, VoidVerification>(
             result,

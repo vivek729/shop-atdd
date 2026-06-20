@@ -1,5 +1,6 @@
 using Driver.Port;
 using Dsl.Core.UseCase.UseCases.Base;
+using Driver.Port.Dtos;
 using Driver.Port.Dtos.Error;
 using Common;
 using Dsl.Core.Shared;
@@ -24,7 +25,8 @@ public class CancelOrder : BaseMyShopUseCase<VoidValue, VoidVerification>
     public override async Task<MyShopUseCaseResult<VoidValue, VoidVerification>> Execute()
     {
         var orderNumber = _context.GetResultValue(_orderNumberResultAlias);
-        var result = await _driver.CancelOrderAsync(orderNumber);
+        var request = new CancelOrderRequest { OrderNumber = orderNumber };
+        var result = await _driver.CancelOrderAsync(request).MapVoidAsync();
 
         return new MyShopUseCaseResult<VoidValue, VoidVerification>(
             result,

@@ -40,18 +40,18 @@ public class MyShopUiDriver : IMyShopDriver
         return new MyShopUiDriver(client);
     }
 
-    public async Task<Result<VoidValue, SystemError>> GoToMyShopAsync()
+    public async Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request)
     {
         _homePage = await _client.OpenHomePageAsync();
 
         if (!_client.IsStatusOk() || !await _client.IsPageLoadedAsync())
         {
-            return Failure("Failed to load home page");
+            return Failure<GoToMyShopResponse>("Failed to load home page");
         }
 
         SetCurrentPage(Page.Home);
 
-        return Success();
+        return Success(new GoToMyShopResponse());
     }
 
     public async Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request)
@@ -84,12 +84,12 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(response);
     }
 
-    public async Task<Result<VoidValue, SystemError>> CancelOrderAsync(string? orderNumber)
+    public async Task<Result<CancelOrderResponse, SystemError>> CancelOrderAsync(CancelOrderRequest request)
     {
-        var viewResult = await ViewOrderAsync(orderNumber);
+        var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
         if (viewResult.IsFailure)
         {
-            return viewResult.MapVoid();
+            return Failure<CancelOrderResponse>(viewResult.Error);
         }
 
         await _orderDetailsPage!.ClickCancelOrderAsync();
@@ -97,35 +97,35 @@ public class MyShopUiDriver : IMyShopDriver
         var cancelResult = await _orderDetailsPage.GetResultAsync();
         if (cancelResult.IsFailure)
         {
-            return Failure(cancelResult.Error);
+            return Failure<CancelOrderResponse>(cancelResult.Error);
         }
 
         var successMessage = cancelResult.Value;
         if (!successMessage.Contains("cancelled successfully"))
         {
-            return Failure("Did not receive expected cancellation success message");
+            return Failure<CancelOrderResponse>("Did not receive expected cancellation success message");
         }
 
         var displayStatusAfterCancel = await _orderDetailsPage.GetStatusAsync();
         if (displayStatusAfterCancel != OrderStatus.Cancelled)
         {
-            return Failure("Order status not updated to CANCELLED");
+            return Failure<CancelOrderResponse>("Order status not updated to CANCELLED");
         }
 
         if (!await _orderDetailsPage.IsCancelButtonHiddenAsync())
         {
-            return Failure("Cancel button still visible");
+            return Failure<CancelOrderResponse>("Cancel button still visible");
         }
 
-        return Success();
+        return Success(new CancelOrderResponse());
     }
 
-    public async Task<Result<VoidValue, SystemError>> DeliverOrderAsync(string? orderNumber)
+    public async Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request)
     {
-        var viewResult = await ViewOrderAsync(orderNumber);
+        var viewResult = await ViewOrderAsync(new ViewOrderRequest { OrderNumber = request.OrderNumber });
         if (viewResult.IsFailure)
         {
-            return viewResult.MapVoid();
+            return Failure<DeliverOrderResponse>(viewResult.Error);
         }
 
         await _orderDetailsPage!.ClickDeliverOrderAsync();
@@ -133,27 +133,27 @@ public class MyShopUiDriver : IMyShopDriver
         var deliverResult = await _orderDetailsPage.GetResultAsync();
         if (deliverResult.IsFailure)
         {
-            return Failure(deliverResult.Error);
+            return Failure<DeliverOrderResponse>(deliverResult.Error);
         }
 
         var successMessage = deliverResult.Value;
         if (!successMessage.Contains("delivered successfully"))
         {
-            return Failure("Did not receive expected delivery success message");
+            return Failure<DeliverOrderResponse>("Did not receive expected delivery success message");
         }
 
         var displayStatusAfterDeliver = await _orderDetailsPage.GetStatusAsync();
         if (displayStatusAfterDeliver != OrderStatus.Delivered)
         {
-            return Failure("Order status not updated to DELIVERED");
+            return Failure<DeliverOrderResponse>("Order status not updated to DELIVERED");
         }
 
-        return Success();
+        return Success(new DeliverOrderResponse());
     }
 
-    public async Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(string? orderNumber)
+    public async Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request)
     {
-        var result = await EnsureOnOrderDetailsPageAsync(orderNumber);
+        var result = await EnsureOnOrderDetailsPageAsync(request.OrderNumber);
         if (result.IsFailure)
         {
             return Failure<ViewOrderResponse>(result.Error);
@@ -203,7 +203,7 @@ public class MyShopUiDriver : IMyShopDriver
         return Success(response);
     }
 
-    public async Task<Result<VoidValue, SystemError>> PublishCouponAsync(PublishCouponRequest request)
+    public async Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
     {
         await EnsureOnCouponManagementPageAsync();
 
@@ -215,10 +215,10 @@ public class MyShopUiDriver : IMyShopDriver
         await _couponManagementPage.ClickPublishCouponAsync();
 
         var result = await _couponManagementPage.GetResultAsync();
-        return result.MapVoid();
+        return result.Map(_ => new PublishCouponResponse());
     }
 
-    public async Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync()
+    public async Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
     {
         // Retry with fresh page navigations to handle UI eventual consistency —
         // after publishing a coupon or placing an order, the coupon table

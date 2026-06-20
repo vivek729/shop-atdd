@@ -24,8 +24,9 @@ public class ViewOrder : BaseMyShopUseCase<ViewOrderResponse, ViewOrderVerificat
     public override async Task<MyShopUseCaseResult<ViewOrderResponse, ViewOrderVerification>> Execute()
     {
         var orderNumber = _context.GetResultValue(_orderNumberResultAlias);
+        var request = new ViewOrderRequest { OrderNumber = orderNumber };
 
-        var result = await _driver.ViewOrderAsync(orderNumber);
+        var result = await _driver.ViewOrderAsync(request);
 
         return new MyShopUseCaseResult<ViewOrderResponse, ViewOrderVerification>(
             result,

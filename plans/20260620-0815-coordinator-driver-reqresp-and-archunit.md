@@ -1,5 +1,7 @@
 # 2026-06-20 08:15 UTC — Coordinator: uniform driver req/response across 3 languages + ArchUnit enforcement
 
+🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-20T16:07:18Z`
+
 This is an **orchestration plan**. Its items each drive one child plan to completion. Execute it with `/execute-plan` and work the items top-to-bottom; for token efficiency you may `/clear` and re-run `/execute-plan` on this file between items (the resume block always names the next child).
 
 ## TL;DR
@@ -12,16 +14,15 @@ This is an **orchestration plan**. Its items each drive one child plan to comple
 | Child plan | Scope | Status | Needs Docker? |
 |------------|-------|--------|---------------|
 | `20260620-0758-...refactor.md` | **Java** driver req/resp refactor | ✅ **DONE** — committed `ba409b5c`, sample suite green | — |
-| `20260620-0741-...investigation.md` | **ArchUnit POC** (the original goal) | ⬜ pending — Java refactor (its Step 3b) already satisfied by 0758 | **No** (static bytecode analysis) |
-| `20260620-0810-...refactor-dotnet.md` | **.NET** refactor **+ ArchUnitNET A1/A2/A7/A10 rules** | ⬜ pending | Yes (`--sample`) |
+| `20260620-0741-...investigation.md` | **ArchUnit POC** (the original goal) | ✅ **DONE** — Step 8 decided 2026-06-20: keep the 4 POC rules as-is; broader-suite decision deferred to C4 | **No** (static bytecode analysis) |
+| `20260620-0810-...refactor-dotnet.md` | **.NET** refactor **+ ArchUnitNET A1/A2/A7/A10 rules** | ✅ **code DONE & committed** 2026-06-20 (`dotnet build` green, 4 arch rules green + red-green) — only D7 `--sample` run ⏳ deferred (Docker busy) | Yes (`--sample`, deferred) |
 | `20260620-0810-...refactor-typescript.md` | **TypeScript** refactor **+ ts-arch/ts-morph A1/A2/A7/A10 rules** | ⬜ pending | Yes (`--sample`) |
 
 **Dependencies:** the three pending children are mutually independent. The ArchUnit POC depends only on the Java refactor (done), so it can run immediately and needs no containers — do it first while Docker is busy with concurrent work.
 
 ## Items (execute in this order)
 
-- [ ] **C1 — ArchUnit POC.** `plans/20260620-0741-...investigation.md` — **Steps 1–7 DONE & committed** (POC `ArchitectureRulesTest` for A1/A2/A7/A10 green + red-green demo; B1 spiked & demoted; feasibility matrix + rollout + multi-lang note filled in). **Only Step 8 (decision gate) remains — needs the user** (graduate to production rule suite? write next-batch rules A5/A8/A3/A4/A6/A9? move to C2/C3?).
-- [ ] **C2 — .NET refactor + rules.** Execute `plans/20260620-0810-...-dotnet.md` — driver req/resp refactor (D1–D7) **and** the ArchUnitNET A1/A2/A7/A10 tests (D8, parity with Java). **Coordinate Docker before the D7 sample run** (concurrent container work). Commit `shop` scoped.
+- [ ] **C2 — .NET `--sample` run only — ⏳ Deferred** (2026-06-20, Docker busy). The .NET refactor (D1–D6) **and** ArchUnitNET A1/A2/A7/A10 tests (D8) are **done & committed** (`dotnet build` green; 4 arch rules green + each red-green). Only the `--sample` runtime verification (child D7) remains — run it when Docker is free.
 - [ ] **C3 — TypeScript refactor + rules.** Execute `plans/20260620-0810-...-typescript.md` — refactor (T1–T7) **and** the ts-arch/ts-morph A1/A2/A7/A10 checks (T8, parity with Java). **Coordinate Docker before the T7 sample run.** Commit `shop` scoped.
 - [ ] **C4 — Close-out.** Once C1–C3 are done, confirm all three languages share the uniform driver shape **and enforce A1/A2/A7/A10** (Java ArchUnit, .NET ArchUnitNET, TS ts-arch/ts-morph). Decide with the user whether to graduate beyond the 4 proven rules into a broader committed suite (parent investigation Step 8). Then delete this coordinator and its completed children.
 
@@ -31,7 +32,7 @@ For each `C*` item, the executor opens the named child plan and runs **its** ste
 
 ## ▶ Next executable step (resume here)
 
-**C1 reached its Step 8 decision gate** (POC done, committed). Awaiting the user's call on: graduate A1/A2/A7/A10 to a production rule suite, and/or write the feasible next-batch rules (A5/A8 then A3/A4/A6/A9). Once decided, the next *mechanical* work is **C2** (.NET refactor, `...-dotnet.md`) then **C3** (TS refactor, `...-typescript.md`) — both need Docker for their sample runs, so **coordinate container usage with the user first**.
+**C1 resolved & C2 code committed** (2026-06-20). Next mechanical work is **C3** (TypeScript refactor + ts-arch/ts-morph A1/A2/A7/A10 rules, `...-typescript.md`, T1–T8): `/clear` then `/execute-plan plans/20260620-0815-coordinator-driver-reqresp-and-archunit.md`. Two deferred follow-ups need Docker when free: C2's `--sample` run (child D7) and C3's own T7 `--sample` run — **coordinate container usage with the user first**.
 
 ## Non-goals
 

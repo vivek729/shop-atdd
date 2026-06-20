@@ -1,4 +1,5 @@
 using Common;
+using Driver.Port.Dtos;
 using SystemTests.Legacy.Mod05.Base;
 using Shouldly;
 using Xunit;
@@ -18,7 +19,7 @@ public abstract class MyShopBaseSmokeTest : BaseDriverTest
     [Fact]
     public async Task ShouldBeAbleToGoToMyShop()
     {
-        var result = await _shopDriver!.GoToMyShopAsync();
+        var result = await _shopDriver!.GoToMyShopAsync(new GoToMyShopRequest());
         result.ShouldBeSuccess();
     }
 }

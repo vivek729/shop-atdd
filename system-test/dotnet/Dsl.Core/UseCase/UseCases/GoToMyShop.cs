@@ -1,5 +1,6 @@
 using Driver.Port;
 using Dsl.Core.UseCase.UseCases.Base;
+using Driver.Port.Dtos;
 using Driver.Port.Dtos.Error;
 using Common;
 using Dsl.Core.Shared;
@@ -15,7 +16,7 @@ public class GoToMyShop : BaseMyShopUseCase<VoidValue, VoidVerification>
 
     public override async Task<MyShopUseCaseResult<VoidValue, VoidVerification>> Execute()
     {
-        var result = await _driver.GoToMyShopAsync();
+        var result = await _driver.GoToMyShopAsync(new GoToMyShopRequest()).MapVoidAsync();
 
         return new MyShopUseCaseResult<VoidValue, VoidVerification>(
             result,

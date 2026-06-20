@@ -6,12 +6,12 @@ namespace Driver.Port;
 
 public interface IMyShopDriver : IAsyncDisposable
 {
-    Task<Result<VoidValue, SystemError>> GoToMyShopAsync();
+    Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request);
     Task<Result<PlaceOrderResponse, SystemError>> PlaceOrderAsync(PlaceOrderRequest request);
-    Task<Result<VoidValue, SystemError>> CancelOrderAsync(string? orderNumber);
-    Task<Result<VoidValue, SystemError>> DeliverOrderAsync(string? orderNumber);
-    Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(string? orderNumber);
-    Task<Result<VoidValue, SystemError>> PublishCouponAsync(PublishCouponRequest request);
-    Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync();
+    Task<Result<CancelOrderResponse, SystemError>> CancelOrderAsync(CancelOrderRequest request);
+    Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request);
+    Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request);
+    Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request);
+    Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request);
 }
 

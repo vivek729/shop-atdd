@@ -24,9 +24,10 @@ public class MyShopApiDriver : IMyShopDriver
         return ValueTask.CompletedTask;
     }
 
-    public Task<Result<VoidValue, SystemError>> GoToMyShopAsync()
+    public Task<Result<GoToMyShopResponse, SystemError>> GoToMyShopAsync(GoToMyShopRequest request)
         => _apiClient.Health().CheckHealthAsync()
-            .MapErrorAsync(MapError);
+            .MapErrorAsync(MapError)
+            .MapAsync(_ => new GoToMyShopResponse());
 
     private static SystemError MapError(ProblemDetailResponse problemDetail)
     {
@@ -45,23 +46,26 @@ public class MyShopApiDriver : IMyShopDriver
         => _apiClient.Orders().PlaceOrderAsync(request)
             .MapErrorAsync(MapError);
 
-    public Task<Result<VoidValue, SystemError>> CancelOrderAsync(string? orderNumber)
-        => _apiClient.Orders().CancelOrderAsync(orderNumber)
+    public Task<Result<CancelOrderResponse, SystemError>> CancelOrderAsync(CancelOrderRequest request)
+        => _apiClient.Orders().CancelOrderAsync(request.OrderNumber)
+            .MapErrorAsync(MapError)
+            .MapAsync(_ => new CancelOrderResponse());
+
+    public Task<Result<DeliverOrderResponse, SystemError>> DeliverOrderAsync(DeliverOrderRequest request)
+        => _apiClient.Orders().DeliverOrderAsync(request.OrderNumber)
+            .MapErrorAsync(MapError)
+            .MapAsync(_ => new DeliverOrderResponse());
+
+    public Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(ViewOrderRequest request)
+        => _apiClient.Orders().ViewOrderAsync(request.OrderNumber)
             .MapErrorAsync(MapError);
 
-    public Task<Result<VoidValue, SystemError>> DeliverOrderAsync(string? orderNumber)
-        => _apiClient.Orders().DeliverOrderAsync(orderNumber)
-            .MapErrorAsync(MapError);
-
-    public Task<Result<ViewOrderResponse, SystemError>> ViewOrderAsync(string? orderNumber)
-        => _apiClient.Orders().ViewOrderAsync(orderNumber)
-            .MapErrorAsync(MapError);
-
-    public Task<Result<VoidValue, SystemError>> PublishCouponAsync(PublishCouponRequest request)
+    public Task<Result<PublishCouponResponse, SystemError>> PublishCouponAsync(PublishCouponRequest request)
         => _apiClient.Coupons().PublishCouponAsync(request)
-            .MapErrorAsync(MapError);
+            .MapErrorAsync(MapError)
+            .MapAsync(_ => new PublishCouponResponse());
 
-    public Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync()
+    public Task<Result<BrowseCouponsResponse, SystemError>> BrowseCouponsAsync(BrowseCouponsRequest request)
         => _apiClient.Coupons().BrowseCouponsAsync()
             .MapErrorAsync(MapError);
 }
