@@ -48,7 +48,7 @@ What we get out of this:
 
 ## ▶ Next executable step (resume here)
 
-Steps 1–4 + 3b are done (POC `ArchitectureRulesTest` green for A1/A2/A7/A10, red-green demonstrated). **Next: Step 5** — spike the Tier-B rule **B1** (`execute()` must not read `static final` constants directly) via `getFieldAccessesFromSelf()`, record confidence. Then **Step 6** (fill the feasibility matrix + rollout recommendation), **Step 7** (multi-language note), **Step 8** (decision gate with user). Run the POC with `./gradlew :system-test:java:architectureTest`.
+Steps 1–7 + 3b are done. **Only Step 8 remains — the decision gate, which needs the user.** Decide: (1) graduate A1/A2/A7/A10 from POC into a committed *production* rule suite? (2) write the feasible next-batch rules (A5, A8, then A3/A4/A6/A9)? (3) proceed to the .NET/TS refactors (coordinator C2/C3, Docker) and/or per-language rule ports? Nothing more is mechanically executable here without that input.
 
 ## Rule inventory & first-pass ArchUnit feasibility
 
@@ -100,10 +100,49 @@ Drawn from the archived reference docs (`gh-optivem/archive/references/atdd/arch
   - **A10**: `…scratchViolatingOp(java.lang.String) must take exactly one *Request parameter` + `must return Result<*Response, …>` (2 events)
 - [x] **Step 3b — Refactor `MyShopDriver` to satisfy strict A10 (Q2(b)). ✅ DONE** — committed `ba409b5c` via child plan `20260620-0758-...refactor.md`. Reality was **6** violators (not 4): the coupon methods `publishCoupon` (no response) and `browseCoupons` (no request) also violated. All 6 now carry a `*Request`/`*Response`; `goToMyShop`/`browseCoupons` got empty pairs (no exception). 9 new DTOs; port + both adapters + 6 use cases + 4 legacy direct-caller tests updated; compile + Java `--sample` suite green. **When executing Step 3, skip 3b and assert strict A10 directly against the now-compliant `MyShopDriver`.**
 - [ ] **Step 4 — Demonstrate red-then-green.** For each POC rule, introduce a deliberate violation on a scratch class, show the test fails with a clear message, revert, show green. Capture the failure output in the plan (this is the evidence the mechanism works).
-- [ ] **Step 5 — Probe a Tier-B rule (B1).** Spike whether `execute()`-must-not-read-constants is reliably expressible via `getFieldAccessesFromSelf()`. Record confidence; this calibrates how far ArchUnit reaches into method bodies.
-- [ ] **Step 6 — Fill in the feasibility matrix** with confirmed results (promote/demote rows based on Steps 3–5), and write the **rollout recommendation**: which rules to commit as ArchUnit tests now, which to keep as `CLAUDE.md`/agent-prompt guidance, which need a separate AST/lint tool (C2 → JavaParser/PMD candidates).
-- [ ] **Step 7 — Multi-language note.** One paragraph each: .NET (`NetArchTest`/`ArchUnitNET`) and TypeScript (`ts-arch`/`dependency-cruiser`/ESLint) — feasibility of porting the committed Java rules, no implementation.
-- [ ] **Step 8 — Decision gate.** Review matrix + recommendation with the user. *Out of scope for this plan:* committing the full production rule set (the broader suite beyond the POC rules). The Q2(b) `MyShopDriver` refactor is now **in scope** (Step 3b), so it is no longer deferred.
+- [x] **Step 5 — Tier-B (B1) spike. ✅ DONE** — see Findings below. Outcome: **B1 demoted** — bytecode constant-inlining hides the common case.
+- [x] **Step 6 — Feasibility matrix + rollout recommendation. ✅ DONE** — see Findings below.
+- [x] **Step 7 — Multi-language note. ✅ DONE** — see Findings below.
+- [ ] **Step 8 — Decision gate (review with user).** *Out of scope for this plan:* committing the full production rule set (the broader suite beyond the POC rules). **This is the only remaining step — it needs the user.**
+
+## Findings & feasibility matrix (Steps 5–7)
+
+### Step 5 — B1 Tier-B spike result (confidence: LOW for the intended rule)
+
+Mechanism is real: `JavaMethod.getFieldAccessesFromSelf()` → `JavaFieldAccess.getTarget().resolveMember()` → check `JavaModifier.STATIC`+`FINAL`. **But** `static final` String/primitive constants with constant initializers are **compile-time constants** that javac inlines at every read site (JLS §13.1) — the reading method's bytecode contains the literal, not a field access — so ArchUnit (bytecode-based) cannot see the read. `ScenarioDefaults` is almost entirely such constants (`DEFAULT_SKU`, `DEFAULT_QUANTITY`, `DEFAULT_TAX_RATE`, …), so a B1 rule "`execute()` must not reference these defaults" has nothing to detect. Only non-inlined constants stay visible (`DEFAULT_ORDER_STATUS = OrderStatus.PLACED` enum ref; `EMPTY = null`). **Verdict: B1 → not reliably ArchUnit-enforceable; needs source-level AST (JavaParser/PMD).** This calibrates ArchUnit's method-body reach generally: it sees *calls* and *non-constant field accesses*, but not inlined constants or literal values.
+
+### Step 6 — Confirmed feasibility matrix
+
+| Rule | Tier (confirmed) | Mechanism | POC'd? | Recommendation |
+|------|------------------|-----------|--------|----------------|
+| **A1** request DTOs String-only | ✅ ArchUnit-native | `fields()...haveRawType(String)` + `areNotStatic` | ✅ green+red | **Commit as ArchUnit test** |
+| **A2** verification fluent-or-void | ✅ ArchUnit custom-condition | own-type-**or-void** condition over public methods | ✅ green+red | **Commit** (note the corrected "or void") |
+| **A7** DSL-core declares no own req/resp | ✅ ArchUnit-native | `noClasses()...haveSimpleNameEndingWith` | ✅ green+red | **Commit** (this is the "identical req/resp" answer) |
+| **A10** every driver op takes Request/returns Response | ✅ ArchUnit custom-condition | generic-return inspection on `MyShopDriver` methods | ✅ green+red | **Commit** (strict, Q2(b)) |
+| A3 fluent `with*` returns same interface | ArchUnit custom-condition | return type == declaring interface | not yet | Feasible — next batch |
+| A4 field ↔ `withX` correlation | ArchUnit custom-condition | correlate fields ↔ methods | not yet | Feasible — next batch |
+| A5 adapter `Ext*` prefix | ArchUnit-native | naming rule | not yet | Feasible — low-risk |
+| A6 `Ext*Request` String-only | ArchUnit custom-condition | per-suffix field-type | not yet | Feasible |
+| A8 driver `external/`vs`shop/` packages | ArchUnit-native | package-location | not yet | Feasible — low-risk |
+| A9 response ≠ request field set | ArchUnit custom-condition | cross-class field compare | not yet | Feasible (medium effort) |
+| **B1** `execute()` no constant reads | ❌ **demoted → AST** | constant inlining invisible to bytecode | spiked | Keep as `CLAUDE.md` guidance; AST tool if ever enforced |
+| B2 `getX(id)` takes own id only | Partial | signature checkable; "own id" is naming | not yet | Partial — naming-only |
+| C1 response ID field declared first | ❌ not ArchUnit | declaration order not in bytecode | — | AST (JavaParser) |
+| C2 UI never deep-link navigates | ❌ not ArchUnit | argument *value* invisible | — | AST/PMD |
+| C3 endpoint URLs / `aria-label` literals | ❌ not ArchUnit | string-literal values invisible | — | AST/lint |
+| C4 positive/negative `Then` semantics | ❌ not ArchUnit | semantic/control-flow | — | LLM / naming-only |
+| C5 "start from home, click through" | ❌ not ArchUnit | control-flow intent | — | LLM |
+
+**Rollout recommendation:**
+- **Commit now (proven):** A1, A2, A7, A10 — already in `ArchitectureRulesTest`, green, each demonstrated red.
+- **Next batch (feasible, low-risk, not yet written):** A5, A8 (pure naming/package), then A3, A4, A6, A9 (custom conditions).
+- **Keep as `CLAUDE.md` / agent-prompt guidance (ArchUnit can't reach):** B1, C1–C5 — semantic, literal-value, declaration-order, or control-flow rules.
+- **Candidate for a separate AST/lint tool (JavaParser/PMD) if ever mechanized:** B1, C1, C2, C3.
+
+### Step 7 — Multi-language note (no implementation; see sibling refactor plans for the code parity)
+
+- **.NET:** **ArchUnitNET** (a close port — reads compiled IL via Mono.Cecil, supports custom conditions) can express the A1/A2/A7/A10 analogues with the **same bytecode-level reach and the same constant-inlining caveat for B1**; prefer it over the lighter **NetArchTest** (fluent but no custom conditions) for parity with this POC. Lives naturally as an xUnit `[Trait("Category","Architecture")]` test.
+- **TypeScript:** no bytecode, so the toolchain splits by rule type. **dependency-cruiser** (optionally via **ts-arch**) handles the dependency/naming rules (A5, A7, A8). The shape rules (A1/A2/A10) and even the *source-level* rules ArchUnit can't reach (B1, C1, C2, C3) are best done with **ts-morph / custom ESLint rules** (AST-based — TS gives more reach than the JVM here, since it inspects source, not erased bytecode). Recommend ESLint+ts-morph for shape/source rules, dependency-cruiser for dependency rules.
 
 ## Resolved decisions
 
