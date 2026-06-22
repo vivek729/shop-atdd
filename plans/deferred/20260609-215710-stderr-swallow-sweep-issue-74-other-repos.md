@@ -1,5 +1,18 @@
 # Stderr-swallow sweep — issue #74 (deferred: actions, gh-optivem, hub)
 
+> **STATUS (2026-06-22): GENUINE FIXES DONE — defensibles + `?` rows deferred.**
+> Fix bar = HYBRID. Hard-fixed all genuine `G` silent-failure sites and pushed one commit per repo:
+> `hub` `9bf2dfc` (4: clone/commit/push in `pipeline-setup.sh`, token scrubbed),
+> `gh-optivem` `2e2e664` (1: `gh extension remove` in `install.sh`),
+> `actions` `c489e4a` (9: 6 `retry_run` delete/post sites just needed the call-site `2>&1`
+> dropped — `retry_run` already logs stderr; plus `git push --delete`, `gh api …/commits`, and
+> `gh extension remove` capture-and-surface).
+> **Deferred (not yet done):** the ~26 defensible `D` lines were NOT annotated (the `# stderr-ok(#74)`
+> marker isn't honored by the sweep tooling yet — annotating buys nothing until that lands), and the
+> **4 `?` paginate rows** in `actions/cleanup-*` await a decision (drop `2>/dev/null` to surface the
+> *why* on failure vs. leave — non-destructive reads whose `if !` guard already aborts).
+> Findings drifted vs. the 2026-06-09 line numbers, esp. in `gh-optivem` — re-locate by content.
+
 ## TL;DR
 
 **Why:** The recurring stderr-swallow sweep (issue #74) found 51 findings across the sibling repos `actions`, `gh-optivem`, and `hub` — and unlike the shop scope, these include the genuinely dangerous cases (the `gh repo delete` incident class: destructive `gh api --method DELETE`, `git push --delete`, credentialed `git clone`, all discarding stderr).
@@ -56,16 +69,25 @@ explanatory message, rather than redirecting to `/dev/null`.
   `git rev-parse "${tag}^{}" 2>/dev/null || git rev-parse "${tag}"` (deref fallback),
   `gh api rate_limit ... 2>/dev/null || echo "999"` (rate-limit read with safe default).
 
-## OPEN DECISION — fix bar (blocking)
+## DECISION — fix bar = HYBRID (2026-06-22)
 
-Pick before applying edits:
+Same call as the shop plan (executed there, commit `c118e3bf`): hard-fix where a real
+(auth/network/permission/destructive-op) failure genuinely vanishes; allowlist the lines where
+non-zero exit *is* the control-flow signal, annotating each with `# stderr-ok(#74)` + rationale so
+the recurring sweep drops to zero and stays there. Silence only the named expected error; never an
+unexpected one.
 
-1. **Genuine risks only** — fix the lines where a real failure would silently vanish; leave
-   probe/fallback patterns as-is but list them with rationale. Fewer, higher-value edits.
-2. **Resolve every finding** — apply capture-and-surface to all 51, including existence probes and
-   deref fallbacks (surfacing only the unexpected error class). Literal "resolve each finding"
-   reading; more churn, more helper functions.
-3. **Triage first, then decide** — produce a full per-line triage table, approve the set, then apply.
+Unlike shop (which was all-defensible), this scope has **~13 genuine `G` fixes** — the real value
+of #74 lives here. The `?` paginate rows must be triaged per-line during execution (the
+`if ! var=$(...)` guards detect failure but discard *why* — lean toward fixing the destructive/
+unexpected ones, allowlisting pure existence reads).
+
+Allowlist mechanism: the in-repo `# stderr-ok(#74): <reason>` annotation (no tracked sweep-config
+file exists), identical to shop. Original options, for the record:
+
+1. **Genuine risks only** — fix real-vanish lines; list probes/fallbacks with rationale.
+2. **Resolve every finding** — capture-and-surface all 51; most churn.
+3. **Triage first** — full per-line table then decide. ← HYBRID does this per repo at execution.
 
 ---
 
