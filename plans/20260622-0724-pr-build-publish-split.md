@@ -1,5 +1,7 @@
 # 2026-06-22 07:24:00 UTC — PR build behavior for commit-stage workflows
 
+🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-22T07:41:49Z`
+
 ## TL;DR
 
 **Why:** Today PRs skip everything from Sonar onward — including the Docker image build — because a single `on-branch` gate doubles as both "is this a promotable main commit" and "do the expensive work". That means Dockerfile/image breakage isn't caught until after merge, and PRs get no Sonar analysis.
@@ -19,27 +21,12 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-Start with workstream **(a)** in `monolith-java-commit-stage.yml`:
-- Remove the `if: steps.verify-main.outputs.on-branch == 'true'` gate from the Docker **build** steps: "Set up Docker Buildx", the two "Pre-pull base image" steps, "Extract Docker Metadata", and "Build and Push Docker Image".
-- In "Build and Push Docker Image", change `push: true` → `push: ${{ steps.verify-main.outputs.on-branch == 'true' }}`.
-- Keep the gate on "Log in to GHCR", "Compose Dev Version", and "Compose Digest URL" (these only matter when publishing).
-- Note: `docker/metadata-action` tags reference `steps.dev-version.outputs.version`, which is produced by the gated "Compose Dev Version" step — confirm the metadata step still works on PRs when that output is empty (see Open questions).
+Workstream **(a)** is complete and committed across all 7 commit-stage workflows (build-on-PR, publish-on-main; `dev-version` tag guarded with `enable=`). All remaining workstreams are **design/planning work**, not mechanical edits:
 
-Then replicate the same edits in the .NET and TypeScript monolith commit-stage workflows. Verify consistency across the three. Workstream (b) is deferred and should be planned separately before executing.
+- **Next move: draft the workstream (b) plan** (Sonar on PRs with PR decoration, accounting for `SKIP_SONAR`). Use `/create-plan` — this is the keystone, since workstream (d) (co-locate publish steps) is blocked until (b) ungates Sonar from the `on-branch` gate.
+- Workstreams **(c)** (rename `verify-main` → `check-on-main`) and **(e)** (remove dead `component-version` job output + dead `check`-job checkout) are mechanical and marked "plan separately"; they can be picked up directly in a future session if you'd rather not draft a plan for them first.
 
 ## Steps
-
-### Workstream (a) — build on PR, publish on main
-
-**Scope (decided): all 7 commit-stage workflows** — `monolith-{java,dotnet,typescript}`, `multitier-backend-{java,dotnet,typescript}`, `multitier-frontend-react`.
-
-- [ ] Step 1: In `monolith-java-commit-stage.yml`, ungate the Docker build steps (buildx, pre-pulls, metadata, build) and set `push: ${{ steps.<check>.outputs.on-branch == 'true' }}`; keep GHCR login, Compose Dev Version, and digest-URL gated.
-- [ ] Step 2: **dev-version tag (decided: drop on PRs).** Keep `Compose Dev Version` gated on `on-branch`; the `type=raw,value=${{ steps.dev-version.outputs.version }}` metadata tag is not applied on PR builds (PRs don't push, so the tag is moot). Confirm the metadata step tolerates the empty output on PRs (omit/guard that tag line if needed).
-- [ ] Step 3: Apply the equivalent edits to the other 6 workflows: `monolith-{dotnet,typescript}`, `multitier-backend-{java,dotnet,typescript}`, `multitier-frontend-react`. Note `multitier-frontend-react` may differ from the backend build shape — adapt rather than copy blindly.
-- [ ] Step 4: Verify all 7 workflows are consistent (diff the relevant blocks); validate YAML.
-- [ ] Step 5: Commit via `/commit` after verification.
-
-**Run cost (decided): build on all PRs** — no draft/path restriction beyond the existing workflow `paths:` filters.
 
 ### Workstream (b) — Sonar on PRs (deferred, plan separately)
 
@@ -58,6 +45,7 @@ After (a), the *build* steps (buildx, pre-pulls, metadata, `docker build`) are u
 
 - [ ] Step 14: Confirm `component-version` (job output, line 62 in each commit-stage workflow) has no consumer. Evidence: the only downstream job `summary` reads only `image-digest-url`; no `needs.run.outputs.component-version` reference exists in any workflow; job outputs can't cross workflow runs, and the prod-stages read versions independently via their own `read-component-versions` step. None of these workflows is `workflow_call`, so there's no reusable-workflow caller either.
 - [ ] Step 15: If confirmed dead, remove the `component-version:` job-output line from all 7 commit-stage workflows. **Keep the `read-version` step** — it still feeds `dev-version` (the Docker tag). Only the job-output declaration is removed.
+- [ ] Step 16: Remove the dead `Checkout Repository` step from the `check` job in all 7 commit-stage workflows. The `check` job's only real step is `Ensure Environment Variables Defined` (a credentials-presence gate that reads only `env:` values); the subsequent `actions/checkout` checks out the tree but no later step in the job reads it (it's the last step). The `run` job does its own checkout (`fetch-depth: 0`) for the actual build. Likely scaffolding leftover. Confirm no consumer before removing.
 
 ### Workstream (c) — Step/id naming review (deferred, plan separately)
 
