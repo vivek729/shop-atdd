@@ -151,7 +151,7 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-monolith-dotnet.yaml
-      # PropertyLoader.GetEnvironment defaults to Local when ENVIRONMENT is unset.
+      # The test suites pass no environment override, so this selects Environment.Acceptance.
       ENVIRONMENT: acceptance
     outputs:
       version: ${{ steps.rc-version.outputs.version }}

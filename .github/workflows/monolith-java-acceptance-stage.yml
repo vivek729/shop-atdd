@@ -151,7 +151,7 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-monolith-java.yaml
-      # PropertyLoader falls back to ENVIRONMENT to select Environment.ACCEPTANCE.
+      # The test suites run without -Denvironment, so this selects Environment.ACCEPTANCE.
       ENVIRONMENT: acceptance
     outputs:
       version: ${{ steps.rc-version.outputs.version }}

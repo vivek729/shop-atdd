@@ -153,6 +153,7 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
+      # The test suites run without -Denvironment, so this selects Environment.ACCEPTANCE.
       ENVIRONMENT: acceptance
     outputs:
       version: ${{ steps.rc-version.outputs.version }}

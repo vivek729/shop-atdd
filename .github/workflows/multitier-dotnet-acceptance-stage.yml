@@ -153,6 +153,7 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-multitier-dotnet.yaml
+      # The test suites pass no environment override, so this selects Environment.Acceptance.
       ENVIRONMENT: acceptance
     outputs:
       version: ${{ steps.rc-version.outputs.version }}

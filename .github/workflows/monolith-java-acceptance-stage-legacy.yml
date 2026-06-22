@@ -126,6 +126,7 @@ jobs:
       packages: read
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-monolith-java-legacy.yaml
+      # The test suites run without -Denvironment, so this selects Environment.ACCEPTANCE.
       ENVIRONMENT: acceptance
     steps:
       - name: Checkout Repository

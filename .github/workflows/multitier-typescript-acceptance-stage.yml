@@ -153,6 +153,7 @@ jobs:
       packages: write
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-multitier-typescript.yaml
+      # configuration-loader.ts uses ENVIRONMENT to pick test-config-acceptance-{stub,real}.json.
       ENVIRONMENT: acceptance
     outputs:
       version: ${{ steps.rc-version.outputs.version }}

@@ -126,6 +126,7 @@ jobs:
       packages: read
     env:
       GH_OPTIVEM_CONFIG: gh-optivem-monolith-typescript-legacy.yaml
+      # configuration-loader.ts uses ENVIRONMENT to pick test-config-acceptance-{stub,real}.json.
       ENVIRONMENT: acceptance
     steps:
       - name: Checkout Repository
