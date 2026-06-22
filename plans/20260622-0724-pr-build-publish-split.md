@@ -1,64 +1,54 @@
-# 2026-06-22 07:24:00 UTC — PR build behavior for commit-stage workflows
+# 2026-06-22 07:24:00 UTC — Commit-stage PR build/publish initiative (coordinator)
 
-🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-22T07:41:49Z`
+> **Coordinator plan.** This is the parent that sequences the child plans for the commit-stage PR-build initiative. Call this plan with `/execute-plan` and it drives the children in order. Each "step" below is a child plan — execute it via its own `/execute-plan`, then return here.
 
 ## TL;DR
 
-**Why:** Today PRs skip everything from Sonar onward — including the Docker image build — because a single `on-branch` gate doubles as both "is this a promotable main commit" and "do the expensive work". That means Dockerfile/image breakage isn't caught until after merge, and PRs get no Sonar analysis.
-**End result:** PRs build the Docker image (validating the Dockerfile and image build) but never publish it; only `main` commits publish. Separately, Sonar analysis runs on PRs with PR decoration.
+**Why:** A single `on-branch` gate in the 7 commit-stage workflows doubled as both "is this a promotable main commit" and "do the expensive work", so PRs skipped the Docker build *and* Sonar, and the workflows accumulated naming cruft and dead steps.
+**End result:** PRs build the image (catching Dockerfile/image breakage) but only `main` publishes (done); Sonar runs on PRs with decoration; the SHA-check is co-located with the publish cluster; and the workflows are cleaned of misleading names and dead outputs.
 
 ## Outcomes
 
-What we get out of this — the goals and deliverables:
-
-- **(a) Build-on-PR, publish-on-main:** On a PR, the Docker image is built but not pushed; on `main`, it is built and pushed. Image/Dockerfile breakage is caught at PR time.
-- **(a)** Registry stays clean — no PR-scoped throwaway images/tags are published.
-- **(a)** GHCR login and digest-URL recording remain gated on `on-branch` (only run when actually publishing).
-- **(a)** Change applied consistently across **all 7 commit-stage workflows** (monolith Java/.NET/TS, multitier-backend Java/.NET/TS, multitier-frontend-react) per the repo's parallel-implementation rule.
-- **(b) Sonar on PRs (separate workstream):** Sonar analysis runs on PR builds with PR decoration, not just on `main`.
-- **(c) Step/id naming (separate workstream):** The SHA-ancestry step is renamed `Check commit is on main` / `id: check-on-main` (was `Verify Built SHA Is On Main` / `verify-main`) and all `if:` gates that read its output are updated, across affected workflows/languages.
-- **(e) Dead output removed (separate workstream):** The unused `component-version` job output (line 62) is removed from all 7 commit-stage workflows; the `read-version` step stays (it feeds the Docker tag).
+- **(a) Build-on-PR, publish-on-main** — ✅ shipped (commit `ba04682c`), all 7 commit-stage workflows.
+- **(b) Sonar on PRs** with PR decoration — pending (child plan 1).
+- **(d) Co-locate publish steps** once the SHA-check is a pure publish gate — pending (child plan 1, blocked until (b)).
+- **(c) Rename** `verify-main` → `check-on-main` — pending (child plan 2).
+- **(e) Remove dead** `component-version` job output + dead `check`-job checkout — pending (child plan 2).
 
 ## ▶ Next executable step (resume here)
 
-Workstream **(a)** is complete and committed across all 7 commit-stage workflows (build-on-PR, publish-on-main; `dev-version` tag guarded with `enable=`). All remaining workstreams are **design/planning work**, not mechanical edits:
+Execute **child plan 1** (Sonar on PRs + co-locate) — it has open design questions to resolve first, so start there:
 
-- **Next move: draft the workstream (b) plan** (Sonar on PRs with PR decoration, accounting for `SKIP_SONAR`). Use `/create-plan` — this is the keystone, since workstream (d) (co-locate publish steps) is blocked until (b) ungates Sonar from the `on-branch` gate.
-- Workstreams **(c)** (rename `verify-main` → `check-on-main`) and **(e)** (remove dead `component-version` job output + dead `check`-job checkout) are mechanical and marked "plan separately"; they can be picked up directly in a future session if you'd rather not draft a plan for them first.
+```
+/execute-plan plans/20260622-0748-sonar-on-prs-and-colocate-publish.md
+```
 
-## Steps
+Then execute **child plan 2** (cleanup) — fully decided, mechanical:
 
-### Workstream (b) — Sonar on PRs (deferred, plan separately)
+```
+/execute-plan plans/20260622-0748-commit-stage-cleanup.md
+```
 
-- [ ] Step 7: Draft a separate plan for enabling Sonar PR analysis (PR decoration), accounting for the `SKIP_SONAR` flag and Sonar's PR config. Not part of this plan's execution.
+Child plan 2 has no dependency on child plan 1; the two can run in either order or in parallel sessions (see each plan's cross-plan note). Child plan 1 is listed first only because (b) is the higher-value, decision-bearing work.
 
-### Workstream (d) — Co-locate the publish-related steps (follow-on to (a)+(b))
+## Child plans
 
-After (a), the *build* steps (buildx, pre-pulls, metadata, `docker build`) are ungated and run on PRs; only the publish-only steps stay gated. The goal here is to gather the publish-only steps into one contiguous block near the publish point.
+- [ ] **Plan 1 — Sonar on PRs + co-locate publish steps** (workstreams b + d): `plans/20260622-0748-sonar-on-prs-and-colocate-publish.md`
+  - Has **open questions** (PR-decoration mechanism, quality-gate behavior, scope, and whether to delete `SKIP_SONAR`) — resolve via `/refine-plan` before executing.
+  - (d) is blocked until (b) ungates Sonar from the `on-branch` gate.
+- [ ] **Plan 2 — Commit-stage workflow cleanup** (workstreams c + e): `plans/20260622-0748-commit-stage-cleanup.md`
+  - No open questions; mechanical. Renames the SHA-check step and removes two dead bits across all 7 workflows.
 
-- [ ] Step 10: **Blocked until (b).** A step's outputs are only visible to later steps, so the SHA-check (`check-on-main`) must precede its *first* consumer. Today/after (a) the first consumers are the Sonar block, Compose Dev Version, and GHCR login — so it cannot move below them. Only after (b) ungates Sonar from `on-branch` does the check become a pure publish gate.
-- [ ] Step 11: Once it is a pure publish gate, move `check-on-main` to sit immediately before the publish-only cluster (Compose Dev Version → GHCR login → push expression → Digest URL) for locality. Trade-off accepted: loses fail-fast on a bad/indeterminate SHA, but publish is late in the job anyway.
-- [ ] Step 12: Consider relocating `Read Base Component Version` (`read-version`) down next to `Compose Dev Version` too — both its outputs ultimately serve publishing (the `dev-version` tag and the `component-version` job output, which only matters when an image is published/promoted). Constraint: it must stay above `Compose Dev Version`; the job output is position-independent. Trade-off: loses early PR-time `VERSION` validation (minor — `VERSION` is automation-bumped). `dev-version` is already adjacent to the cluster — leave it.
-- [ ] Step 13: Apply the chosen ordering across all affected languages.
+When a child plan is fully executed, its file is deleted (per `/execute-plan`); mark its checkbox here done (or delete the line). When both children are gone, delete this coordinator.
 
-### Workstream (e) — Remove the dead `component-version` job output (deferred, plan separately)
+## History
 
-- [ ] Step 14: Confirm `component-version` (job output, line 62 in each commit-stage workflow) has no consumer. Evidence: the only downstream job `summary` reads only `image-digest-url`; no `needs.run.outputs.component-version` reference exists in any workflow; job outputs can't cross workflow runs, and the prod-stages read versions independently via their own `read-component-versions` step. None of these workflows is `workflow_call`, so there's no reusable-workflow caller either.
-- [ ] Step 15: If confirmed dead, remove the `component-version:` job-output line from all 7 commit-stage workflows. **Keep the `read-version` step** — it still feeds `dev-version` (the Docker tag). Only the job-output declaration is removed.
-- [ ] Step 16: Remove the dead `Checkout Repository` step from the `check` job in all 7 commit-stage workflows. The `check` job's only real step is `Ensure Environment Variables Defined` (a credentials-presence gate that reads only `env:` values); the subsequent `actions/checkout` checks out the tree but no later step in the job reads it (it's the last step). The `run` job does its own checkout (`fetch-depth: 0`) for the actual build. Likely scaffolding leftover. Confirm no consumer before removing.
+- **(a) shipped** — commit `ba04682c`: ungated the Docker build steps and switched `push: true` → `push: ${{ steps.verify-main.outputs.on-branch == 'true' }}` across all 7 commit-stage workflows; guarded the `dev-version` metadata tag with `enable=`; kept GHCR login / Compose Dev Version / Compose Digest URL gated.
 
-### Workstream (c) — Step/id naming review (deferred, plan separately)
+## Resolved decisions (apply to all child plans)
 
-- [ ] Step 8: Rename the step to `name: Check commit is on main` / `id: check-on-main`. Rationale: the step is non-enforcing (it emits `on-branch=true/false`, it doesn't fail when false), so "Check" is accurate where "Verify" implies failure; "commit" is the correct noun (not "branch" — this is a `merge-base --is-ancestor` ancestry test, not a ref-name check); matches the action verb `check-sha-on-branch`.
-- [ ] Step 9: Update all `steps.verify-main.outputs.on-branch` references to `steps.check-on-main.outputs.on-branch` across every `if:` gate in the affected workflow(s) and languages.
-
-## Open questions
-
-_None — all resolved._
-
-Resolved decisions:
-- **Scope:** all 7 commit-stage workflows.
-- **dev-version tag on PRs:** dropped (Compose Dev Version stays gated).
-- **Run cost:** build on all PRs.
-- **Fork PRs:** N/A — this repo receives only same-repo branch PRs, so secrets are always available; no fork-credential handling needed.
-- **(c) Naming:** `Check commit is on main` / `id: check-on-main`.
+- **Scope:** all 7 commit-stage workflows (monolith Java/.NET/TS, multitier-backend Java/.NET/TS, multitier-frontend-react).
+- **Fork PRs:** N/A — same-repo branch PRs only, so secrets (`SONAR_TOKEN`, `GHCR_TOKEN`) are always available.
+- **(a) dev-version tag on PRs:** dropped (Compose Dev Version stays gated).
+- **(a) run cost:** build on all PRs.
+- **(c) naming:** `Check commit is on main` / `id: check-on-main`.
