@@ -9,7 +9,7 @@
 
 What we get out of this — the goals and deliverables:
 
-- A 10-box conceptual commit-stage diagram (Checkout → Compile → Unit → Narrow Integration → Component → Contract → Linter → Static Analysis → Build → Publish) that stays stable as YAML plumbing churns.
+- A single **language-independent** 10-box conceptual commit-stage diagram (Checkout → Compile → Unit → Narrow Integration → Component → Contract → Linter → Static Analysis → Build → Publish) covering all 7 workflows — no per-language diagrams. Stays stable as YAML plumbing churns.
 - The two missing test stages (Unit Tests, Narrow Integration Tests) are represented, completing the test pyramid.
 - Each diagram box is traceable to its YAML steps via `# === <Stage> ===` header comments, so diagram ↔ YAML can be diffed mechanically.
 - TODO stub test steps no longer report false green — they are visibly skipped/pending rather than `echo`-and-pass.
@@ -18,13 +18,13 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-Apply Steps 3–5 to **`monolith-java-commit-stage.yml` only** as the pilot: (3) add `# === <Stage> ===` grouping comments per the mapping table, (4) skip the stub test steps with `if: false` + a one-line "pending" comment, (5) resolve the redundant `./gradlew build`. Then **stop at the approval gate** and show the user the Java diff — do not propagate to the other 6 workflows until approved (Step 6). The diagram already exists at `docs/pipeline/commit-stage.md`; Step 2b (tailored React diagram) is still open.
+Apply Steps 3–5 to **`monolith-java-commit-stage.yml` only** as the pilot: (3) add `# === <Stage> ===` grouping comments per the mapping table, (4) skip the stub test steps with `if: false` + a one-line "pending" comment, (5) resolve the redundant `./gradlew build`. Then **stop at the approval gate** and show the user the Java diff — do not propagate to the other 6 workflows until approved (Step 6). The diagram (including the opt-in branch, Step 2b) is complete at `docs/pipeline/commit-stage.md`. All doc work done; only the YAML pilot (Steps 3–5) and propagation (Step 6) remain.
 
 ## Steps
 
 - [x] Step 1: Locate or create the diagram source. Created at `docs/pipeline/commit-stage.md` as a Mermaid `flowchart` (renders natively on GitHub).
 - [x] Step 2: Author the 10-box conceptual diagram, adding the missing **Run Unit Tests** and **Run Narrow Integration Tests** stages between Compile and Component. Includes gate/summary notes and the conditional-publish annotation.
-- [ ] Step 2b: Author a **tailored React diagram** — the 10-box main line plus a parallel branch off Checkout for the opt-in `component-contract-tests` job (real component + Pact contract tests). Either a second Mermaid block in `docs/pipeline/commit-stage.md` or a sibling section.
+- [x] Step 2b: Keep **one language-independent diagram** (no per-language diagrams — the conceptual stages are the same across Java/.NET/TS/React; the committed diagram is already toolchain-agnostic). Fold React's only structural difference — the opt-in `component-contract-tests` job — into the single diagram as an **optional dashed parallel branch** off Checkout, annotated "optional opt-in, where wired up", rather than a separate React diagram.
 - [ ] Step 3: Add `# === <Stage> ===` grouping comments to `monolith-java-commit-stage.yml`, mapping every real step to its conceptual box (see mapping table below). Verify with `grep '# ==='`.
 - [ ] Step 4: Fix the false-green stubs via **skip** (`if: false`) so the stub test steps show as skipped ⊘ rather than a green pass, each with a **one-line comment** explaining why it's pending (per the terse-comment rule — one short line, no multi-line blocks). Applies to all backends (Narrow Integration, Component, Contract) and React (Unit, Narrow Integration, Component, Contract — React's real component/contract tests live in its separate opt-in job). Example:
 
@@ -67,6 +67,6 @@ Deliberately left out of the linear diagram: the `check` gate job, the `summary`
 - ~~**Where does the diagram live?**~~ Resolved: checked-in Mermaid at `docs/pipeline/commit-stage.md`.
 - ~~**How to fix the stubs (Step 4)?**~~ Resolved: **skip** via `if: false` + a one-line "pending" comment (option a).
 - **Redundant build (Step 5):** not a user decision — to be **verified during execution**: can `./gradlew sonar` reuse line-88's build output, or does it need its own (e.g. for `jacocoTestReport`)? Confirm before deleting the line-112 build.
-- ~~**Frontend-react scope?**~~ Resolved: **tailored diagram.** React shares the 10-box main line (it is containerized → nginx image, so Build/Publish applies, and it has the same 4 inline stub test steps), but differs in two ways: (1) a second **parallel opt-in `component-contract-tests` job** runs the *real* component (`npm run test:component`) and Pact contract (`npm run test:pact`) tests off Checkout, not gating build/push — the backends have nothing equivalent; (2) **no redundant build** (Sonar runs `run-sonar.sh`, no second `npm run build`). The React diagram should add a parallel branch for the opt-in job.
+- ~~**Frontend-react scope?**~~ Resolved: **tailored diagram.** React shares the 10-box main line (it is containerized → nginx image, so Build/Publish applies, and it has the same 4 inline stub test steps), but differs in two ways: (1) a second **parallel opt-in `component-contract-tests` job** runs the *real* component (`npm run test:component`) and Pact contract (`npm run test:pact`) tests off Checkout, not gating build/push — the backends have nothing equivalent; (2) **no redundant build** (Sonar runs `run-sonar.sh`, no second `npm run build`). **Per user: the diagram stays language-independent — no separate React diagram.** The opt-in job is folded into the single diagram as an optional dashed parallel branch (Step 2b).
 
 - **Note:** the redundant-build issue (Step 5) is **Java-specific** — React is clean. Still need to confirm .NET.

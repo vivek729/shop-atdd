@@ -27,12 +27,16 @@ flowchart TD
 
     publish --> summary([Summary]):::gate
 
+    checkout -.-> optin["Component + Contract Tests<br/>opt-in · does not gate build"]:::optional
+
     classDef gate fill:#eee,stroke:#999,stroke-dasharray:3 3,color:#333;
     classDef conditional fill:#e8f0ff,stroke:#4070c0,color:#1a3a6a;
+    classDef optional fill:#fff5e6,stroke:#cc8800,stroke-dasharray:4 3,color:#7a4d00;
 ```
 
 - **Gate** and **Summary** are orchestration jobs, not pipeline stages.
 - **Publish Docker Image** runs only on `main`; pull requests build the image but do not push it.
+- The dashed **opt-in branch** runs the real component + contract tests in a separate parallel job that does not gate the image build/push. It exists only where wired up (e.g. `multitier-frontend-react`); on the main line, Component/Contract are skipped placeholders until implemented.
 
 ## Diagram ↔ YAML mapping
 
@@ -52,6 +56,7 @@ their steps under `# === <Stage> ===` headers so the diagram can be diffed again
 | Run Static Code Analysis | Build for analysis, Run Code Analysis |
 | Build Docker Image | Setup Buildx, pre-pull base images, read/compose version, extract metadata |
 | Publish Docker Image | Registry login, Build and Push (gated on `main`), Compose Digest URL |
+| *(Opt-in branch — where wired up)* | `component-contract-tests` job: Run Component Tests (opt-in), Run Contract (Pact) Tests (opt-in) |
 | *(Summary — not a box)* | Summarize Stage |
 
 Workflows: `monolith-{dotnet,java,typescript}-commit-stage.yml`,
