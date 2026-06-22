@@ -84,7 +84,7 @@ runs:
               fi
               if ! git rev-parse --verify --quiet "refs/tags/${rc}" >/dev/null; then
                 # stderr-ok(#74): best-effort fetch — if it fails the very next line re-verifies the
-                # tag and exits 1 with an explanatory ::error::, so a real failure can't vanish.
+                # tag and exits 1 with an explanatory ::error::, so a real failure cannot vanish.
                 git fetch origin "refs/tags/${rc}:refs/tags/${rc}" 2>/dev/null || true
                 if ! git rev-parse --verify --quiet "refs/tags/${rc}" >/dev/null; then
                   echo "::error::Manifest references ${rc} but that tag no longer exists in origin. Was it cleaned up? Bump cleanup retention or re-run prerelease."
