@@ -1,5 +1,7 @@
 # 2026-06-22 10:51:00 UTC — Reconcile acceptance-stage diagram with real YAML
 
+> 🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-22T11:32:07Z`
+
 ## TL;DR
 
 **Why:** The acceptance-stage diagram (`docs/pipeline/acceptance-stage.md`) and its
@@ -53,23 +55,23 @@ greppable anchor, which is what the acceptance doc already promises.
 
 ## ▶ Next executable step (resume here)
 
-Resolve the **convention open question** (Option A run-job-only vs Option B all-jobs —
-recommend B), then apply it to **`monolith-java-acceptance-stage.yml` only** as the pilot:
-add the headers per the mapping table below, `grep '# ==='` to verify count, then **stop at
-the approval gate** and show the Java diff. Do not touch the other 5 workflows until approved.
+Convention resolved: **Option B** (job-level `# === <Box> ===` headers + `# ===` step-groups
+inside `run`). Java pilot (Step 4) applied to `monolith-java-acceptance-stage.yml` and
+**awaiting user approval at the gate below** before propagating (Step 6) to the other 5
+acceptance workflows.
 
 ## Steps
 
 - [x] Step 1: Diagram + mapping table exist and are content-accurate (`docs/pipeline/acceptance-stage.md`, committed `1a52e9b9`). Verified box-by-box against `monolith-java-acceptance-stage.yml`.
 - [x] Step 2: Confirm no false-green stubs / redundant builds to fix (none — all tests real, sonar setup non-redundant). This reconcile is anchoring-only.
-- [ ] Step 3: **Decide convention** (Open Question 1). Recommended: Option B — job-level `# === <Box> ===` headers for whole-job boxes + step-group `# ===` headers inside `run`.
+- [x] Step 3: Convention decided — **Option B** (job-level `# === <Box> ===` headers for whole-job boxes + step-group `# ===` headers inside `run`). `debug-skip-tests` stays prose-only (Open Question 2).
 - [ ] Step 4: Apply chosen convention to `monolith-java-acceptance-stage.yml` only (pilot):
   - `preflight` job → `# === Gate: Artifacts Exist? ===`
   - `check` job → `# === Should Run? ===`
   - inside `run`: `# === Checkout Code ===`, `# === Deploy: Real External Systems ===`, `# === Deploy: Stub External Systems ===`, `# === Setup Test Harness ===`, `# === Run Smoke Tests ===`, `# === Run Acceptance Tests ===`, `# === Run Contract Tests ===`, `# === Run E2E Tests ===`, `# === Tag Release Candidate ===`
   - `publish-tag` job → `# === Publish Git Tag ===`
   - `sonar` job → `# === Run Static Code Analysis ===`
-  - Verify: `grep -c '# ===' ` equals 12 (one per diagram box).
+  - Verify: `grep -c '# ===' ` equals 13 (one per diagram box). ✅ done — actionlint clean, YAML valid.
 - [ ] Step 5: Sync the doc mapping table if anchoring surfaces any small wording drift (e.g. add the `check`-job `Checkout Repository` step and the `sonar`-job toolchain-setup steps, currently omitted from the table). Doc-only.
 
 ### ⛔ Approval gate — Java pilot first, then propagate
@@ -111,16 +113,8 @@ the doc).
 
 ## Open questions
 
-1. **Anchor scope / convention?**
-   - **Option A (commit-stage parity):** anchor the `run` job only with `# ===`; leave
-     `preflight`/`check`/`publish-tag`/`sonar` as self-evident whole jobs. Most consistent
-     with the commit-stage precedent.
-   - **Option B (recommended):** also add a job-level `# === <Box> ===` header to each
-     whole-job box, so every mapping-table row resolves to a greppable anchor. Most
-     consistent with the acceptance doc, which already claims all 5 jobs are in alignment.
-   - Recommendation: **B**.
-
-2. **Surface `debug-skip-tests` in the diagram?** Currently prose-only. Option: add a dashed
-   annotation (like commit-stage's opt-in branch) showing it bypasses Deploy→Tests→Sonar.
-   Recommendation: **leave prose-only** for now — it is a debug-only path, and adding a
-   branch clutters the happy-path diagram. Revisit only if it confuses readers.
+1. ~~**Anchor scope / convention?**~~ Resolved: **Option B** — job-level `# === <Box> ===`
+   headers for the whole-job boxes (`preflight`/`check`/`publish-tag`/`sonar`) plus step-group
+   `# ===` headers inside `run`, so every mapping-table row resolves to a greppable anchor.
+2. ~~**Surface `debug-skip-tests` in the diagram?**~~ Resolved: **leave prose-only** — it is a
+   debug-only path and a dashed branch would clutter the happy-path diagram.
