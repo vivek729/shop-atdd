@@ -50,12 +50,6 @@ jobs:
         with:
           ref: ${{ env.COMMIT_SHA }}
 
-      - name: Log in to Docker Hub
-        uses: optivem/actions/docker-login@v1
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
   run:
     needs: check
     runs-on: ubuntu-latest

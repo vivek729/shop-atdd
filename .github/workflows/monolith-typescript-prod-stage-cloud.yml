@@ -214,12 +214,6 @@ jobs:
         with:
           ref: ${{ needs.check.outputs.version }}
 
-      - name: Log in to Docker Hub
-        uses: optivem/actions/docker-login@v1
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Generate Release Version
         id: promote
         uses: optivem/actions/compose-release-version@v1
