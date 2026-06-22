@@ -12,7 +12,7 @@ conceptual box it supports — see [Diagram ↔ YAML mapping](#diagram--yaml-map
 
 ```mermaid
 flowchart TD
-    gate([Gate: env vars + commit-on-main]):::gate
+    gate([Gate: env vars]):::gate
 
     gate --> checkout[Checkout Code]
     checkout --> compile[Compile Code]
@@ -23,9 +23,12 @@ flowchart TD
     contract --> linter[Run Linter]
     linter --> analysis[Run Static Code Analysis]
     analysis --> build[Build Docker Image]
-    build --> publish[Publish Docker Image]:::conditional
+    build --> shouldpublish{Should Publish Docker Image?}:::conditional
+    shouldpublish -->|on main| publish[Publish Docker Image]
+    shouldpublish -->|pull request| done([No publish])
 
     publish --> summary([Summary]):::gate
+    done --> summary
 
     checkout -.-> optin["Component + Contract Tests<br/>opt-in · does not gate build"]:::optional
 
@@ -40,12 +43,14 @@ flowchart TD
 
 ## Diagram ↔ YAML mapping
 
-Each conceptual box absorbs the supporting YAML steps below it. Workflow files group
-their steps under `# === <Stage> ===` headers so the diagram can be diffed against the YAML.
+Alignment covers the **`run` job only** — each conceptual box absorbs the supporting
+YAML steps below it so the diagram can be diffed against the YAML. Two marker styles:
+stage boxes use `# === <Stage> ===` headers; decision diamonds (gates) use
+`# <> <Decision?> <>`. The `check` (env-vars) and `summary` jobs are orchestration and
+are not part of the alignment.
 
-| Diagram box | YAML steps |
+| Diagram box | YAML steps (in the `run` job) |
 |---|---|
-| *(Gate — not a box)* | Ensure Environment Variables Defined; Check Commit on Main |
 | Checkout Code | Checkout Repository |
 | Compile Code | Setup toolchain, pre-warm, Compile Code |
 | Run Unit Tests | Run Unit Tests |
@@ -53,11 +58,10 @@ their steps under `# === <Stage> ===` headers so the diagram can be diffed again
 | Run Component Tests | Run Component Tests |
 | Run Contract Tests | Run Contract Tests |
 | Run Linter | Run Linter |
-| Run Static Code Analysis | Build for analysis, Run Code Analysis |
+| Run Static Code Analysis | Run Code Analysis (reuses Compile Code's build output; a separate build step only where the analyzer needs one) |
 | Build Docker Image | Setup Buildx, pre-pull base images, read/compose version, extract metadata |
-| Publish Docker Image | Registry login, Build and Push (gated on `main`), Compose Digest URL |
+| Publish Docker Image | Registry login, Build and Push (gated on `main` via Check Commit on Main), Compose Digest URL |
 | *(Opt-in branch — where wired up)* | `component-contract-tests` job: Run Component Tests (opt-in), Run Contract (Pact) Tests (opt-in) |
-| *(Summary — not a box)* | Summarize Stage |
 
 Workflows: `monolith-{dotnet,java,typescript}-commit-stage.yml`,
 `multitier-backend-{dotnet,java,typescript}-commit-stage.yml`,
