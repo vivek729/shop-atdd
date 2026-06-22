@@ -88,7 +88,7 @@ jobs:
           command: cd system/monolith/java && ./gradlew --version
 
       - name: Compile Code
-        run: ./gradlew build
+        run: ./gradlew compileJava compileTestJava
         working-directory: system/monolith/java
 
       # === Run Unit Tests ===
@@ -120,7 +120,7 @@ jobs:
         working-directory: system/monolith/java
 
       # === Run Static Code Analysis ===
-      # Reuses classes + jacoco report from "Compile Code" (./gradlew build runs test, finalizedBy jacocoTestReport)
+      # Reuses main classes from "Compile Code" + jacoco report from "Run Unit Tests" (./gradlew test, finalizedBy jacocoTestReport)
       - name: Run Code Analysis
         uses: optivem/actions/retry@v1
         with:

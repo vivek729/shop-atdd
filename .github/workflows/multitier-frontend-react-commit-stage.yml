@@ -56,18 +56,21 @@ jobs:
     outputs:
       image-digest-url: ${{ steps.digest-url.outputs.digest-url }}
     steps:
+      # === Checkout Code ===
       - name: Checkout Repository
         uses: actions/checkout@v6
         with:
           ref: ${{ env.COMMIT_SHA }}
           fetch-depth: 0
 
+      # <> Should Publish Docker Image? <>
       - name: Check Commit on Main
         id: check-on-main
         uses: optivem/actions/check-sha-on-branch@v1
         with:
           commit-sha: ${{ env.COMMIT_SHA }}
 
+      # === Compile Code ===
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
@@ -83,27 +86,36 @@ jobs:
         run: npm run build
         working-directory: system/multitier/frontend-react
 
-      # TODO: No frontend test suite is wired up yet (no `test` script in package.json).
-      # Add jest/vitest + components tests, then replace this with `npm test`.
+      # === Run Unit Tests ===
+      # Skipped: no frontend test suite wired up yet (no test script in package.json)
       - name: Run Unit Tests
-        run: echo "TODO - not yet implemented"
+        if: false
+        run: echo "not yet implemented"
 
-      # TODO: Implement
+      # === Run Narrow Integration Tests ===
+      # Skipped: not implemented yet
       - name: Run Narrow Integration Tests
-        run: echo "TODO - not yet implemented"
+        if: false
+        run: echo "not yet implemented"
 
-      # TODO: Implement
+      # === Run Component Tests ===
+      # Skipped: not implemented yet
       - name: Run Component Tests
-        run: echo "TODO - not yet implemented"
+        if: false
+        run: echo "not yet implemented"
 
-      # TODO: Implement
+      # === Run Contract Tests ===
+      # Skipped: not implemented yet
       - name: Run Contract Tests
-        run: echo "TODO - not yet implemented"
+        if: false
+        run: echo "not yet implemented"
 
+      # === Run Linter ===
       - name: Run Linter
         run: npm run lint
         working-directory: system/multitier/frontend-react
 
+      # === Run Static Code Analysis ===
       - name: Run Code Analysis
         uses: optivem/actions/retry@v1
         env:
@@ -112,6 +124,7 @@ jobs:
           working-directory: system/multitier/frontend-react
           command: bash ./run-sonar.sh
 
+      # === Build Docker Image ===
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -141,14 +154,6 @@ jobs:
           build-number: ${{ github.run_number }}
           prefix: multitier-frontend-react
 
-      - name: Log in to GHCR
-        if: steps.check-on-main.outputs.on-branch == 'true'
-        uses: optivem/actions/docker-login@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
       - name: Extract Docker Metadata
         id: meta
         uses: docker/metadata-action@v6
@@ -160,6 +165,15 @@ jobs:
             type=raw,value=sha-${{ env.COMMIT_SHA }}
             type=raw,value=latest
             type=raw,value=${{ steps.dev-version.outputs.version }},enable=${{ steps.check-on-main.outputs.on-branch == 'true' }}
+
+      # === Publish Docker Image ===
+      - name: Log in to GHCR
+        if: steps.check-on-main.outputs.on-branch == 'true'
+        uses: optivem/actions/docker-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Build and Push Docker Image
         id: push
