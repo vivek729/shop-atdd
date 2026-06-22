@@ -1,7 +1,7 @@
 package com.mycompany.myshop.testkit.dsl.port.given.steps;
 
 import com.mycompany.myshop.testkit.dsl.port.given.steps.base.GivenStep;
-import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
+import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
 
 public interface GivenOrder extends GivenStep {
     GivenOrder withOrderNumber(String orderNumber);

@@ -1,4 +1,4 @@
-namespace Driver.Port.Dtos;
+namespace DomainValueTypes;
 
 public enum OrderStatus
 {
@@ -6,4 +6,3 @@ public enum OrderStatus
     Cancelled,
     Delivered
 }
-

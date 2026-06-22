@@ -1,6 +1,7 @@
 using SystemTests.Latest.AcceptanceTests.Base;
 using Dsl.Core.UseCase;
 using Driver.Port.Dtos;
+using DomainValueTypes;
 using Optivem.Testing;
 
 namespace SystemTests.Latest.AcceptanceTests;

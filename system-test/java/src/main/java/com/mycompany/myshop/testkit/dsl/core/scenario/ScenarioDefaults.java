@@ -1,6 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.core.scenario;
 
-import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
+import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
 
 /**
  * Default values for Gherkin test steps.

@@ -1,6 +1,6 @@
 package com.mycompany.myshop.testkit.dsl.port.then.steps;
 
-import com.mycompany.myshop.testkit.driver.port.dtos.OrderStatus;
+import com.mycompany.myshop.testkit.domainvaluetypes.OrderStatus;
 import com.mycompany.myshop.testkit.dsl.port.then.steps.base.ThenStep;
 
 public interface ThenOrder extends ThenStep<ThenOrder> {

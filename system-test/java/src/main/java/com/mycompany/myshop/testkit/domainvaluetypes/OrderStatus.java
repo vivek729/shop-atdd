@@ -1,4 +1,4 @@
-package com.mycompany.myshop.testkit.driver.port.dtos;
+package com.mycompany.myshop.testkit.domainvaluetypes;
 
 public enum OrderStatus {
     PLACED,

@@ -22,6 +22,7 @@
     <ProjectReference Include="..\Dsl.Port\Dsl.Port.csproj" />
     <ProjectReference Include="..\Driver.Adapter\Driver.Adapter.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\DomainValueTypes\DomainValueTypes.csproj" />
     <ProjectReference Include="..\Driver.Port\Driver.Port.csproj" />
   </ItemGroup>
 
