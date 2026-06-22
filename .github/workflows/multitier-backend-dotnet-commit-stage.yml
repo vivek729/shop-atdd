@@ -62,7 +62,7 @@ jobs:
           ref: ${{ env.COMMIT_SHA }}
           fetch-depth: 0
 
-      - name: Check commit is on main
+      - name: Check Commit on Main
         id: check-on-main
         uses: optivem/actions/check-sha-on-branch@v1
         with:
