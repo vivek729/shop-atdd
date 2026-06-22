@@ -48,13 +48,15 @@ flowchart TD
 
 Alignment covers the **`run` job** plus the two gate jobs (`preflight`, `check`) and the
 sibling `publish-tag` / `sonar` jobs that hang off it. Each conceptual box absorbs the
-supporting YAML steps below it so the diagram can be diffed against the YAML. The
-`summary` job is orchestration and is not part of the alignment.
+supporting YAML steps below it so the diagram can be diffed against the YAML. Every box
+carries a `# === <Box> ===` anchor in the YAML: whole-job boxes (`preflight`, `check`,
+`publish-tag`, `sonar`) anchor at the job key; the in-`run` boxes anchor at the first step
+of their group. The `summary` job is orchestration and is not part of the alignment.
 
 | Diagram box | YAML steps / job |
 |---|---|
 | Gate: artifacts exist? | `preflight` job: Check Container Packages Exist |
-| Should Run? | `check` job: validate env vars, read base version, check tag exists, GHCR login, resolve image digests, get last run, check artifacts changed, detect test changes, Evaluate Run Gate |
+| Should Run? | `check` job: validate env vars, checkout, read base version, check tag exists, GHCR login, resolve image digests, get last run, check artifacts changed, detect test changes, Evaluate Run Gate |
 | Checkout Code | Checkout Repository, Docker Hub login, GHCR login |
 | Deploy: Real External Systems | Simulate Deployment (Real External Systems), Wait for Systems |
 | Deploy: Stub External Systems | Simulate Deployment (Stub External Systems), Wait for Systems |
@@ -65,7 +67,7 @@ supporting YAML steps below it so the diagram can be diffed against the YAML. Th
 | Run E2E Tests | `e2e-api`, `e2e-ui` |
 | Tag Release Candidate | Read Base System Version, Compose Prerelease Version, Tag Docker Images for Prerelease |
 | Publish Git Tag | `publish-tag` job: Publish Git Tag |
-| Run Static Code Analysis | `sonar` job: Run Sonar Analysis |
+| Run Static Code Analysis | `sonar` job: checkout, toolchain setup (per language), Run Sonar Analysis |
 
 Workflows: `monolith-{dotnet,java,typescript}-acceptance-stage.yml`,
 `multitier-{dotnet,java,typescript}-acceptance-stage.yml`.

@@ -34,6 +34,7 @@ env:
   COMMIT_SHA: ${{ inputs.commit-sha || github.sha }}
 
 jobs:
+  # === Gate: Artifacts Exist? ===
   preflight:
     runs-on: ubuntu-latest
     permissions:
@@ -51,6 +52,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/multitier-backend-dotnet
           token: ${{ secrets.GHCR_TOKEN }}
 
+  # === Should Run? ===
   check:
     needs: preflight
     if: needs.preflight.outputs.artifacts-exist == 'true'
@@ -159,6 +161,7 @@ jobs:
       version: ${{ steps.rc-version.outputs.version }}
       image-urls: ${{ steps.tag-images.outputs.tagged-image-urls }}
     steps:
+      # === Checkout Code ===
       - name: Checkout Repository
         uses: actions/checkout@v6
         with:
@@ -179,6 +182,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_TOKEN }}
 
+      # === Deploy: Real External Systems ===
       - name: Simulate Deployment (Real External Systems)
         if: ${{ !inputs.debug-skip-tests }}
         uses: optivem/actions/deploy-docker-compose@v1
@@ -206,6 +210,7 @@ jobs:
           compose-file: docker-compose.pipeline.real.yml
           working-directory: docker/dotnet/multitier
 
+      # === Deploy: Stub External Systems ===
       - name: Simulate Deployment (Stub External Systems)
         if: ${{ !inputs.debug-skip-tests }}
         uses: optivem/actions/deploy-docker-compose@v1
@@ -233,6 +238,7 @@ jobs:
           compose-file: docker-compose.pipeline.stub.yml
           working-directory: docker/dotnet/multitier
 
+      # === Setup Test Harness ===
       - name: Setup .NET
         if: ${{ !inputs.debug-skip-tests }}
         uses: actions/setup-dotnet@v5
@@ -278,12 +284,14 @@ jobs:
       - name: Setup Test Harness
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test setup
+      # === Run Smoke Tests ===
       - name: smoke-stub
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite smoke-stub
       - name: smoke-real
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite smoke-real
+      # === Run Acceptance Tests ===
       - name: acceptance-parallel-api
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite acceptance-parallel-api
@@ -296,6 +304,7 @@ jobs:
       - name: acceptance-isolated-ui
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite acceptance-isolated-ui
+      # === Run Contract Tests ===
       - name: contract-stub
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite contract-stub
@@ -305,12 +314,14 @@ jobs:
       - name: contract-real
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite contract-real
+      # === Run E2E Tests ===
       - name: e2e-api
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite e2e-api
       - name: e2e-ui
         if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem test run --suite e2e-ui
+      # === Tag Release Candidate ===
       - name: Read Base System Version
         id: read-version
         uses: optivem/actions/read-base-version@v1
@@ -335,6 +346,7 @@ jobs:
           registry-username: ${{ github.repository_owner }}
           token: ${{ secrets.GHCR_TOKEN }}
 
+  # === Publish Git Tag ===
   publish-tag:
     needs: run
     runs-on: ubuntu-latest
@@ -352,6 +364,7 @@ jobs:
           tag: ${{ needs.run.outputs.version }}
           token: ${{ secrets.WORKFLOW_TOKEN }}
 
+  # === Run Static Code Analysis ===
   sonar:
     needs: run
     if: ${{ !inputs.debug-skip-tests }}
