@@ -1,6 +1,6 @@
 # 2026-06-22 07:24:00 UTC — Commit-stage PR build/publish initiative (coordinator)
 
-> **Coordinator plan.** This is the parent that sequences the child plans for the commit-stage PR-build initiative. Call this plan with `/execute-plan` and it drives the children in order. Each "step" below is a child plan — execute it via its own `/execute-plan`, then return here.
+> **Coordinator plan.** This is the parent that sequences the child plans for the commit-stage PR-build initiative. Run `/execute-plan plans/20260622-0724-pr-build-publish-split.md` and it drives the children in order. Each step below is "run a child plan via its own `/execute-plan`, then return here and mark it done". **Executor instructions:** treat this as a delegating plan — do **not** edit any workflow files directly from this plan; for each step, invoke `/execute-plan <child path>` (which runs that child's own gates/commits), then check the step off here. Honor the dependency notes (resolve a child's open questions with `/refine-plan` first if it has any).
 
 ## TL;DR
 
@@ -17,29 +17,20 @@
 
 ## ▶ Next executable step (resume here)
 
-Execute **child plan 1** (Sonar on PRs + co-locate) — it has open design questions to resolve first, so start there:
+Run **Step 1** below: resolve child plan 1's open questions, then `/execute-plan` it. Step 2 (cleanup) can run before, after, or in parallel — it has no dependency on Step 1.
 
-```
-/execute-plan plans/20260622-0748-sonar-on-prs-and-colocate-publish.md
-```
+## Steps
 
-Then execute **child plan 2** (cleanup) — fully decided, mechanical:
+- [ ] **Step 1 — Run child plan 1: Sonar on PRs + co-locate publish steps** (workstreams b + d). Path: `plans/20260622-0748-sonar-on-prs-and-colocate-publish.md`.
+  - It **has open questions** (PR-decoration mechanism, quality-gate behavior, scope, delete `SKIP_SONAR`?, decouple metadata from `dev-version`?). **First** run `/refine-plan plans/20260622-0748-sonar-on-prs-and-colocate-publish.md` to resolve them, **then** `/execute-plan plans/20260622-0748-sonar-on-prs-and-colocate-publish.md`.
+  - Internal dependency: (d) is blocked until (b) ungates Sonar from the `on-branch` gate — the child plan enforces this itself.
+  - When the child plan finishes (its file is deleted), check this step off.
+- [ ] **Step 2 — Run child plan 2: Commit-stage workflow cleanup** (workstreams c + e). Path: `plans/20260622-0748-commit-stage-cleanup.md`.
+  - No open questions; mechanical. Just `/execute-plan plans/20260622-0748-commit-stage-cleanup.md`.
+  - Independent of Step 1 (see the child's cross-plan note about the `verify-main`→`check-on-main` rename vs (d)'s step move).
+  - When the child plan finishes, check this step off.
 
-```
-/execute-plan plans/20260622-0748-commit-stage-cleanup.md
-```
-
-Child plan 2 has no dependency on child plan 1; the two can run in either order or in parallel sessions (see each plan's cross-plan note). Child plan 1 is listed first only because (b) is the higher-value, decision-bearing work.
-
-## Child plans
-
-- [ ] **Plan 1 — Sonar on PRs + co-locate publish steps** (workstreams b + d): `plans/20260622-0748-sonar-on-prs-and-colocate-publish.md`
-  - Has **open questions** (PR-decoration mechanism, quality-gate behavior, scope, and whether to delete `SKIP_SONAR`) — resolve via `/refine-plan` before executing.
-  - (d) is blocked until (b) ungates Sonar from the `on-branch` gate.
-- [ ] **Plan 2 — Commit-stage workflow cleanup** (workstreams c + e): `plans/20260622-0748-commit-stage-cleanup.md`
-  - No open questions; mechanical. Renames the SHA-check step and removes two dead bits across all 7 workflows.
-
-When a child plan is fully executed, its file is deleted (per `/execute-plan`); mark its checkbox here done (or delete the line). When both children are gone, delete this coordinator.
+When both steps are done (both child files deleted), delete this coordinator.
 
 ## History
 
