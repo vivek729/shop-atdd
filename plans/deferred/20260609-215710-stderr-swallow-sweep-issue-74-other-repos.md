@@ -1,5 +1,10 @@
 # Stderr-swallow sweep — issue #74 (deferred: actions, gh-optivem, hub)
 
+## TL;DR
+
+**Why:** The recurring stderr-swallow sweep (issue #74) found 51 findings across the sibling repos `actions`, `gh-optivem`, and `hub` — and unlike the shop scope, these include the genuinely dangerous cases (the `gh repo delete` incident class: destructive `gh api --method DELETE`, `git push --delete`, credentialed `git clone`, all discarding stderr).
+**End result:** Every genuine silent-failure site in the three repos captures and surfaces stderr (blessed pattern, shared helper where a call shape repeats); defensible probe/fallback/rate-limit sites are annotated `# stderr-ok(#74)`; each repo is committed separately referencing #74, and the next sweep shows RESOLVED > 0.
+
 **Source:** https://github.com/optivem/shop/issues/74 — "Stderr-swallow sweep 2026-06-08"
 **Scope (this file):** `actions`, `gh-optivem`, `hub` — 51 findings. **Deferred** out of the shop plan.
 **Shop part:** tracked separately in `plans/20260609-215710-stderr-swallow-sweep-issue-74.md` (8 findings).
