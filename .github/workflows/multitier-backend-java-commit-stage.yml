@@ -54,7 +54,7 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     outputs:
-      image-digest-url: ${{ steps.digest-url.outputs.value }}
+      image-digest-url: ${{ steps.digest-url.outputs.digest-url }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -183,8 +183,10 @@ jobs:
       - name: Compose Digest URL
         if: steps.check-on-main.outputs.on-branch == 'true'
         id: digest-url
-        shell: bash
-        run: echo "value=ghcr.io/${{ github.repository }}/multitier-backend-java@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
+        uses: optivem/actions/compose-digest-url@v1
+        with:
+          base-image-url: ghcr.io/${{ github.repository }}/multitier-backend-java
+          digest: ${{ steps.push.outputs.digest }}
 
   # ─────────────────────────────────────────────────────────────────────────
   # OPTIONAL opt-in layer — NOT part of the default build/commit gate.
