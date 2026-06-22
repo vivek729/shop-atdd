@@ -58,6 +58,8 @@ print_rehearsal() {
     if [ "$branch_exists" -eq 1 ]; then
         echo "  BRANCH   exists: $branch"
         local commit_count
+        # stderr-ok(#74): informational warning only — non-zero exit = branch gone (expected),
+        # in which case we correctly skip the "you'd lose commits" notice.
         if commit_count=$(git rev-list --count "$branch" "^HEAD" 2>/dev/null); then
             if [ "$commit_count" -gt 0 ]; then
                 echo "    ($commit_count commit(s) on '$branch' not reachable from current HEAD"

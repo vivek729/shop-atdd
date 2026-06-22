@@ -83,12 +83,15 @@ runs:
                 exit 1
               fi
               if ! git rev-parse --verify --quiet "refs/tags/${rc}" >/dev/null; then
+                # stderr-ok(#74): best-effort fetch — if it fails the very next line re-verifies the
+                # tag and exits 1 with an explanatory ::error::, so a real failure can't vanish.
                 git fetch origin "refs/tags/${rc}:refs/tags/${rc}" 2>/dev/null || true
                 if ! git rev-parse --verify --quiet "refs/tags/${rc}" >/dev/null; then
                   echo "::error::Manifest references ${rc} but that tag no longer exists in origin. Was it cleaned up? Bump cleanup retention or re-run prerelease."
                   exit 1
                 fi
               fi
+              # stderr-ok(#74): deref fallback — expected "not an annotated tag"; || peels plain ref.
               sha=$(git rev-parse "${rc}^{}" 2>/dev/null || git rev-parse "${rc}")
               statuses=$(gh api "repos/${REPO}/commits/${sha}/statuses" --paginate)
               approved=$(echo "$statuses" | jq "[.[] | select(.context==\"qa/signoff\" and .state==\"success\")] | length")

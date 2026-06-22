@@ -66,6 +66,8 @@ runs:
               # Confirm the release actually exists. Anything other than success
               # here (incl. transient network) must surface and not be conflated
               # with "exists".
+              # stderr-ok(#74): existence probe — a real failure is surfaced below at the
+              # ::error:: + `cat "$create_err" >&2` path, not swallowed here.
               if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
                 echo "::notice::Release ${RELEASE_TAG} already exists (likely created by an earlier attempt) — treating as success"
                 rm -f "$create_err"

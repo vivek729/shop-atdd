@@ -75,6 +75,8 @@ runs:
 
               rc=""
               for tag in "${rc_tags[@]}"; do
+                # stderr-ok(#74): deref fallback — 2>/dev/null hides the expected "not an annotated
+                # tag" error; the || branch peels via the plain ref. No unexpected failure hidden.
                 sha=$(git rev-parse "${tag}^{}" 2>/dev/null || git rev-parse "${tag}")
                 statuses=$(gh api "repos/${REPO}/commits/${sha}/statuses" --paginate)
                 approved=$(echo "$statuses" | jq "[.[] | select(.context==\"qa/signoff\" and .state==\"success\")] | length")

@@ -5,6 +5,8 @@
 **Why:** `gh optivem system start` reuses cached `my-shop-{stub,real}-system:latest` images instead of rebuilding from current source, so local UI system tests can run against a stale frontend and fail with confusing `aria-label`/locator timeouts that look like code regressions.
 **End result:** `gh optivem system start` rebuilds the system image from current source before each run (or offers an explicit, documented rebuild path), so local UI tests exercise the code that's actually checked out — no more false stale-image failures.
 
+> **Status (2026-06-22):** Core ask superseded by `gh-optivem afcf00f` (2026-06-19), which added `system start --restart` (incremental `--build --force-recreate --no-deps`, keeps postgres up) plus the pre-existing `system build --rebuild` / `system clean` escape hatches. What remains is documenting the gotcha so people reach for `--restart` — see [Remaining work](#remaining-work).
+
 ## Problem
 
 On 2026-06-18, the UI place-order system tests (`PlaceOrderPositiveTest [Channel: UI]` in Java, `shouldPlaceOrder [Channel: UI]` in TypeScript) failed with a 30s Playwright timeout waiting for `[aria-label="SKU"]`. Investigation showed:
@@ -23,21 +25,25 @@ Net: a pure infrastructure artifact masquerading as a code regression, costing a
 - A plain `docker compose up --build` is cache-aware and usually fast (only changed layers rebuild), so defaulting to `--build` is cheap in the common case; `--no-cache` should remain opt-in for the rare deep-cache problem.
 - CI uses the `docker-compose.pipeline.*.yml` variants and builds fresh per run, so this is a **local-dev-only** problem — the fix should target the local (`*.local.*`) start path.
 
-## Open questions (resolve before executing)
+## What the tool now provides (resolved)
 
-1. **Where does `gh optivem system start` live, and how does it invoke compose?** — Need to locate the extension source (sibling repo) and confirm whether it calls `docker compose up` with or without `--build`. _Recommendation: locate it first; this gates every other step._
-2. **Default to `--build`, or add an opt-in `--rebuild` flag?** — _Recommendation: make `--build` the default for the `*.local.*` path (correctness by default; cache keeps it fast) and add `--no-cache` as an explicit escape hatch. Re-confirm once start-time impact is measured._
-3. **Scope: fix the tool, or just document + provide a helper?** — _Recommendation: fix the tool (default `--build`); fall back to documenting a pre-test rebuild step in `CLAUDE.md` only if the tool lives in a repo we shouldn't modify._
+The tool side of this is done — `gh-optivem/internal/build/runner/system.go` + `system_commands.go` now expose:
 
-## Proposed steps (draft — pending open-question resolution)
+- `gh optivem system start` (default) — `down` + `up -d`, **no build**: reuses the cached image (the stale-image trap is reachable here by design, to keep re-runs fast).
+- `gh optivem system start --restart` — `up -d --build --force-recreate --no-deps`, keeps postgres running: rebuilds changed services from current source. **This is the fix for the failure in `## Problem`.**
+- `gh optivem system build --rebuild` — `docker compose build --no-cache` for the deep-cache case.
+- `gh optivem system clean` — `down -v --rmi local` (drop volumes + locally-built images).
 
-1. Locate the `gh optivem system start` implementation and read how it runs docker compose for the local path.
-2. Change the local `system start` to pass `--build` to `docker compose up` (rebuild from current source by default).
-3. Add an opt-in `--no-cache` / `--rebuild-clean` flag for the deep-cache case.
-4. Verify: with a deliberately stale image, `gh optivem system start` now rebuilds and the UI place-order sample passes for Java + TypeScript.
-5. If the tool can't be modified, instead document the rebuild step in `CLAUDE.md` (System Test Verification section) and add a `rebuild-images.sh` helper.
+Resolved open question: **opt-in won over a `--build` default.** Defaulting plain `start` to `--build` would tax the common "stack already healthy, just re-run tests" path; the surgical `--restart` recreate is the better trade-off.
+
+## Remaining work
+
+The only gap left is **discoverability** — plain `start` still silently serves a stale image, and nothing tells the user to reach for `--restart` after changing code.
+
+1. Document the stale-image gotcha and `--restart` usage in `CLAUDE.md` (System Test Verification section), next to the existing `d325a797` pre-commit-hook hook.
+2. (Optional, decide) Should plain `start` emit a warning when it skips a rebuild against changed source, or is documenting `--restart` sufficient? _Leaning: docs are enough; a warning risks noise on every fast re-run._
 
 ## Done when
 
-- `gh optivem system start` (local) serves an app built from the currently checked-out source, verified by the previously-failing UI place-order sample passing in Java + TypeScript without a manual rebuild.
-- The stale-image gotcha is no longer reachable via the normal local test workflow.
+- The stale-image gotcha and the `--restart` remedy are documented where a contributor running local system tests will see them (`CLAUDE.md`).
+- A contributor who changed frontend/app code knows to run `gh optivem system start --restart` (or `system build --rebuild`) rather than silently testing a stale image.

@@ -24,7 +24,13 @@ fi
 
 echo "Running SonarScanner for monolith .NET..."
 
-dotnet tool install --global dotnet-sonarscanner 2>/dev/null || true
+if ! install_err=$(dotnet tool install --global dotnet-sonarscanner 2>&1); then
+  if [[ "$install_err" == *"already installed"* ]]; then
+    :  # expected — tool present from a prior run
+  else
+    echo "⚠️  dotnet-sonarscanner install failed (continuing): $install_err" >&2
+  fi
+fi
 
 dotnet sonarscanner begin \
     /k:"optivem_shop-monolith-dotnet" \

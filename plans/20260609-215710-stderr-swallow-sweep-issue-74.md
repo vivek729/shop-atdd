@@ -1,13 +1,17 @@
 # Stderr-swallow sweep — issue #74 (shop)
 
-> **STATUS (2026-06-16): NOT STARTED — blocked on the fix-bar decision below.**
-> Only the plan exists (commits `6727ce67` create, `58a283e1` split out other-repos). No fix
-> commits. All 8 shop findings verified unchanged in the working tree. The `## OPEN DECISION —
-> fix bar` has not been made, so no edits have been applied. Reminder: all 8 shop findings are
-> preliminarily **D (defensible)** → under fix bar #1 this repo is a no-op (document rationale +
-> close the loop on #74); real code edits only happen under fix bar #2 or if triage reclassifies
-> a line. The genuine `gh repo delete` silent-failure risk lives in the **deferred** other-repos
-> plan, not here.
+> **STATUS (2026-06-22): READY TO EXECUTE — fix bar decided (HYBRID, see `## DECISION` below).**
+> Plan-only so far (commits `6727ce67` create, `58a283e1` split out other-repos). No fix commits
+> yet. All 8 shop findings verified unchanged in the working tree. Disposition is now locked:
+> **3 hard-fixes** (the `dotnet tool install` best-effort lines, which genuinely hide failures)
+> and **5 allowlisted-as-defensible** (deref fallbacks, the best-effort `git fetch`, the rev-list
+> count, and the already-safe existence probe). The genuine `gh repo delete` silent-failure risk
+> lives in the **deferred** other-repos plan, not here.
+
+## TL;DR
+
+**Why:** A real incident (gh-optivem cleanup run exited 1 silently because `gh repo delete`'s stderr was discarded) prompted a repo-wide sweep for places where an external CLI's failure stderr is swallowed. Issue #74 tracks the 8 `shop`-repo findings.
+**End result:** Every genuine silent-failure site in `shop` captures and surfaces stderr using the blessed capture-and-surface pattern, with defensible probe/fallback patterns documented as intentionally left; issue #74's loop is closed with resolved-vs-defensible counts for the repo.
 
 **Source:** https://github.com/optivem/shop/issues/74 — "Stderr-swallow sweep 2026-06-08"
 **Scope (this file):** `shop` repo only — 8 findings.
@@ -55,52 +59,107 @@ explanatory message, rather than redirecting to `/dev/null`.
   `if gh release view ... >/dev/null 2>&1; then` (existence probe),
   `git rev-parse "${tag}^{}" 2>/dev/null || git rev-parse "${tag}"` (deref fallback).
 
-## OPEN DECISION — fix bar (blocking)
+## DECISION — fix bar = HYBRID (2026-06-22)
 
-Pick before applying edits:
+Chosen over the three original options below because the sweep is **recurring**: the long-term win
+is driving the sweep to **zero standing findings** so future runs are pure signal — but without
+rewriting correct one-liners into verbose defensive blocks where the safety gain is negligible.
 
-1. **Genuine risks only** — fix the lines where a real failure would silently vanish; leave
-   probe/fallback patterns as-is but list them with rationale. Fewer, higher-value edits.
-2. **Resolve every finding** — apply capture-and-surface to all, including existence probes and
-   deref fallbacks (surfacing only the unexpected error class). Literal "resolve each finding"
-   reading; more churn, more helper functions.
-3. **Triage first, then decide** — produce a full per-line triage table, approve the set, then apply.
+**The rule:** hard-fix only where a real (auth/network/permission) failure genuinely vanishes;
+allowlist the lines where non-zero exit *is* the control-flow signal (and silence only the named
+expected error). This honors the standing "never swallow stderr" intent — no *unexpected* failure
+ever vanishes — while documenting the few legitimately-silenced *expected* errors explicitly
+instead of hiding them.
 
-> Note: all 8 shop findings are preliminarily **D (defensible)** — under fix bar #1 this repo is a
-> no-op (document rationale only). Real edits here only happen under fix bar #2 or if triage
-> reclassifies a line.
+Disposition (5 allowlist / 3 fix) is locked in the findings table. Original options, for the
+record:
+
+1. **Genuine risks only** — fix real-vanish lines; leave probes/fallbacks listed with rationale.
+2. **Resolve every finding** — capture-and-surface everywhere; most churn, verbose deref blocks.
+3. **Triage first** — full per-line table then decide. ← effectively what HYBRID did.
+
+### Allowlist mechanism
+
+There is **no tracked sweep-config file in `shop`** — the sweep runs outside this repo and excluded
+the 6 `command -v` probes by judgment, not via a list. So the durable, in-repo allowlist is an
+**inline annotation comment** on each defensible line — convention modeled on `# shellcheck
+disable=` — that both future sweep runs and humans can see and respect:
+
+```bash
+# stderr-ok(#74): <reason — which expected error is silenced and why a real failure can't hide here>
+```
+
+Teaching the sweep tooling to programmatically honor `# stderr-ok(...)` markers is a **sweep-side
+change that lives outside `shop`** (track against issue #74 / the deferred other-repos plan). Until
+then the markers are documentation + the rationale recorded here and in the #74 close-out comment.
 
 ---
 
 ## Findings — `shop` (8 findings)
 
-Paths relative to repo root. Preliminary class: **G** = genuine risk, **D** = defensible.
+Paths relative to repo root. **Disposition** (HYBRID): **FIX** = hard-fix (capture-and-surface);
+**ALLOW** = annotate `# stderr-ok(#74)` and leave (non-zero exit is the control-flow signal).
 
-| Class | Location | Line |
-|---|---|---|
-| D | `.github/actions/build-flavor-rc-manifest/action.yml:78` | `sha=$(git rev-parse "${tag}^{}" 2>/dev/null \|\| git rev-parse "${tag}")` |
-| D | `.github/actions/create-meta-release-tag/action.yml:69` | `if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then` (existence probe) |
-| D | `.github/actions/find-flavor-rcs/action.yml:86` | `git fetch origin "refs/tags/${rc}:refs/tags/${rc}" 2>/dev/null \|\| true` |
-| D | `.github/actions/find-flavor-rcs/action.yml:92` | `sha=$(git rev-parse "${rc}^{}" 2>/dev/null \|\| git rev-parse "${rc}")` |
-| D | `scripts/atdd-rehearsal-end.sh:61` | `if commit_count=$(git rev-list --count "$branch" "^HEAD" 2>/dev/null); then` |
-| D | `system-test/dotnet/run-sonar.sh:28` | `dotnet tool install --global dotnet-sonarscanner 2>/dev/null \|\| true` |
-| D | `system/monolith/dotnet/run-sonar.sh:27` | `dotnet tool install --global dotnet-sonarscanner 2>/dev/null \|\| true` |
-| D | `system/multitier/backend-dotnet/run-sonar.sh:27` | `dotnet tool install --global dotnet-sonarscanner 2>/dev/null \|\| true` |
+| Disposition | Location | Line | Why |
+|---|---|---|---|
+| ALLOW | `.github/actions/build-flavor-rc-manifest/action.yml:78` | `sha=$(git rev-parse "${tag}^{}" 2>/dev/null \|\| git rev-parse "${tag}")` | deref fallback: error = "lightweight tag", expected; `\|\|` peels via plain ref |
+| ALLOW | `.github/actions/create-meta-release-tag/action.yml:69` | `if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then` | existence probe — failure **already surfaced** at lines 74–78 (`::error::` + `cat`) |
+| ALLOW | `.github/actions/find-flavor-rcs/action.yml:86` | `git fetch origin "refs/tags/${rc}:refs/tags/${rc}" 2>/dev/null \|\| true` | best-effort fetch; line 87 re-verifies the tag and errors loudly if still missing |
+| ALLOW | `.github/actions/find-flavor-rcs/action.yml:92` | `sha=$(git rev-parse "${rc}^{}" 2>/dev/null \|\| git rev-parse "${rc}")` | deref fallback, same as :78 |
+| ALLOW | `scripts/atdd-rehearsal-end.sh:61` | `if commit_count=$(git rev-list --count "$branch" "^HEAD" 2>/dev/null); then` | informational warning only; non-zero = branch gone, the expected skip path |
+| **FIX** | `system-test/dotnet/run-sonar.sh:28` | `dotnet tool install --global dotnet-sonarscanner 2>/dev/null \|\| true` | best-effort install hides real network/feed/perms failure → capture-and-surface |
+| **FIX** | `system/monolith/dotnet/run-sonar.sh:27` | `dotnet tool install --global dotnet-sonarscanner 2>/dev/null \|\| true` | same |
+| **FIX** | `system/multitier/backend-dotnet/run-sonar.sh:27` | `dotnet tool install --global dotnet-sonarscanner 2>/dev/null \|\| true` | same |
 
 ---
 
-## Execution plan (once fix bar is chosen)
+## Execution plan (HYBRID — ready)
 
-1. **Triage** each line in context against the criteria above; lock the final set.
-2. **Apply** the blessed capture-and-surface pattern to the chosen set.
-3. **Verify:**
-   - `bash -n <script>` syntax check on every edited script; `shellcheck` if available.
-   - changed `.github/actions/*.yml` are `run:` blocks — `bash -n` the extracted snippet;
-     run `./compile-all.sh` only if code (not just scripts) changed (it won't be here).
-4. **Commit** via the user's skills (`/commit`) — never raw git. One focused commit referencing
-   issue #74.
-5. **Close the loop:** comment on issue #74 with resolved counts for shop (and which were
-   intentionally left as defensible, if fix bar = "genuine risks only").
+### Step 1 — FIX the 3 `run-sonar.sh` tool-install lines
+
+`system-test/dotnet/run-sonar.sh:28`, `system/monolith/dotnet/run-sonar.sh:27`,
+`system/multitier/backend-dotnet/run-sonar.sh:27` — identical line in each. Replace:
+
+```bash
+dotnet tool install --global dotnet-sonarscanner 2>/dev/null || true
+```
+
+with capture-and-surface (silences only the expected "already installed", logs anything else,
+stays non-fatal):
+
+```bash
+if ! install_err=$(dotnet tool install --global dotnet-sonarscanner 2>&1); then
+  if [[ "$install_err" == *"already installed"* ]]; then
+    :  # expected — tool present from a prior run
+  else
+    echo "⚠️  dotnet-sonarscanner install failed (continuing): $install_err" >&2
+  fi
+fi
+```
+
+### Step 2 — ALLOW the 5 defensible lines (annotate, don't rewrite)
+
+Add a trailing/preceding `# stderr-ok(#74): <reason>` marker (mind YAML block-scalar indentation in
+the `.github/actions/*.yml` `run:` blocks) so the next sweep skips them. Reasons per the findings
+table. No behavior change.
+
+### Step 3 — Verify
+
+- `bash -n <script>` on every edited `run-sonar.sh`; `shellcheck` if available.
+- For the annotated `.github/actions/*.yml`: extract the `run:` snippet and `bash -n` it to confirm
+  indentation/comment placement didn't break the block scalar.
+- No `./compile-all.sh` needed — scripts only, no application code changes.
+
+### Step 4 — Commit
+
+Via `/commit` (never raw git; **ask first** per repo convention). One focused commit referencing
+issue #74: "fix 3 best-effort installs, annotate 5 defensible stderr sites".
+
+### Step 5 — Close the loop on #74
+
+Comment on issue #74 with shop disposition: **3 fixed, 5 documented-defensible** (with the
+one-line reasons), and flag the follow-up: teach the sweep tooling to honor `# stderr-ok(#74)`
+markers (lives outside `shop` — track on the deferred other-repos plan).
 
 ## Notes / risks
 
