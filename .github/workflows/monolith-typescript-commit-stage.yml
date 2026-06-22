@@ -68,12 +68,6 @@ jobs:
         with:
           commit-sha: ${{ env.COMMIT_SHA }}
 
-      - name: Read Base Component Version
-        id: read-version
-        uses: optivem/actions/read-base-version@v1
-        with:
-          file: system/monolith/typescript/VERSION
-
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
@@ -117,6 +111,20 @@ jobs:
           working-directory: system/monolith/typescript
           command: bash ./run-sonar.sh
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Pre-pull base images
+        uses: optivem/actions/retry@v1
+        with:
+          command: docker pull node:22-alpine
+
+      - name: Read Base Component Version
+        id: read-version
+        uses: optivem/actions/read-base-version@v1
+        with:
+          file: system/monolith/typescript/VERSION
+
       - name: Compose Dev Version
         if: steps.check-on-main.outputs.on-branch == 'true'
         id: dev-version
@@ -146,14 +154,6 @@ jobs:
             type=raw,value=sha-${{ env.COMMIT_SHA }}
             type=raw,value=latest
             type=raw,value=${{ steps.dev-version.outputs.version }},enable=${{ steps.check-on-main.outputs.on-branch == 'true' }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Pre-pull base images
-        uses: optivem/actions/retry@v1
-        with:
-          command: docker pull node:22-alpine
 
       - name: Build and Push Docker Image
         id: push
