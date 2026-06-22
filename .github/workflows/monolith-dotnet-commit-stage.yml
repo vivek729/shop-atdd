@@ -45,11 +45,6 @@ jobs:
           DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ env.COMMIT_SHA }}
-
   run:
     needs: check
     runs-on: ubuntu-latest
@@ -59,7 +54,6 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     outputs:
-      component-version: ${{ steps.read-version.outputs.base-version }}
       image-digest-url: ${{ steps.digest-url.outputs.value }}
     steps:
       - name: Checkout Repository
@@ -68,8 +62,8 @@ jobs:
           ref: ${{ env.COMMIT_SHA }}
           fetch-depth: 0
 
-      - name: Verify Built SHA Is On Main
-        id: verify-main
+      - name: Check commit is on main
+        id: check-on-main
         uses: optivem/actions/check-sha-on-branch@v1
         with:
           commit-sha: ${{ env.COMMIT_SHA }}
@@ -112,13 +106,11 @@ jobs:
         working-directory: system/monolith/dotnet
 
       - name: Install dotnet-sonarscanner
-        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         uses: optivem/actions/retry@v1
         with:
           command: dotnet tool install --global dotnet-sonarscanner
 
       - name: Begin Sonar Analysis
-        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         # Ignore list extends multitier-backend-dotnet with e4 (css:S4654 wwwroot)
         # and e5 (csharpsquid:S1186 Pages/**) — Razor Pages-specific rules that
         # do not apply to the API-only backend.
@@ -127,19 +119,17 @@ jobs:
         working-directory: system/monolith/dotnet
 
       - name: Build for Sonar
-        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         run: dotnet build
         working-directory: system/monolith/dotnet
 
       - name: End Sonar Analysis
-        if: steps.verify-main.outputs.on-branch == 'true' && vars.SKIP_SONAR != 'true'
         uses: optivem/actions/retry@v1
         with:
           working-directory: system/monolith/dotnet
           command: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
 
       - name: Compose Dev Version
-        if: steps.verify-main.outputs.on-branch == 'true'
+        if: steps.check-on-main.outputs.on-branch == 'true'
         id: dev-version
         uses: optivem/actions/compose-prerelease-version@v1
         with:
@@ -149,7 +139,7 @@ jobs:
           prefix: monolith-dotnet
 
       - name: Log in to GHCR
-        if: steps.verify-main.outputs.on-branch == 'true'
+        if: steps.check-on-main.outputs.on-branch == 'true'
         uses: optivem/actions/docker-login@v1
         with:
           registry: ghcr.io
@@ -166,7 +156,7 @@ jobs:
           tags: |
             type=raw,value=sha-${{ env.COMMIT_SHA }}
             type=raw,value=latest
-            type=raw,value=${{ steps.dev-version.outputs.version }},enable=${{ steps.verify-main.outputs.on-branch == 'true' }}
+            type=raw,value=${{ steps.dev-version.outputs.version }},enable=${{ steps.check-on-main.outputs.on-branch == 'true' }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -187,7 +177,7 @@ jobs:
         with:
           context: system/monolith/dotnet
           file: system/monolith/dotnet/Dockerfile
-          push: ${{ steps.verify-main.outputs.on-branch == 'true' }}
+          push: ${{ steps.check-on-main.outputs.on-branch == 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
@@ -195,7 +185,7 @@ jobs:
           sbom: true
 
       - name: Compose Digest URL
-        if: steps.verify-main.outputs.on-branch == 'true'
+        if: steps.check-on-main.outputs.on-branch == 'true'
         id: digest-url
         shell: bash
         run: echo "value=ghcr.io/${{ github.repository }}/monolith-system-dotnet@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"

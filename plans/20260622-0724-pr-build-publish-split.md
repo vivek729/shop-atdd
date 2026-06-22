@@ -10,27 +10,23 @@
 ## Outcomes
 
 - **(a) Build-on-PR, publish-on-main** — ✅ shipped (commit `ba04682c`), all 7 commit-stage workflows.
-- **(b) Sonar on PRs** with PR decoration — pending (child plan 1).
-- **(d) Co-locate publish steps** once the SHA-check is a pure publish gate — pending (child plan 1, blocked until (b)).
-- **(c) Rename** `verify-main` → `check-on-main` — pending (child plan 2).
-- **(e) Remove dead** `component-version` job output + dead `check`-job checkout — pending (child plan 2).
+- **(b) Sonar on PRs** with PR decoration — ✅ done (uncommitted/committing): ungated + `SKIP_SONAR` removed across all 13 workflows.
+- **(c) Rename** `verify-main` → `check-on-main` — ✅ done (all 7 commit-stage workflows).
+- **(e) Remove dead** `component-version` job output + dead `check`-job checkout — ✅ done (all 7).
+- **(d) Co-locate publish steps** once the SHA-check is a pure publish gate — pending (child plan 1; prototype-then-replicate).
 
 ## ▶ Next executable step (resume here)
 
-Run **Step 1** below: resolve child plan 1's open questions, then `/execute-plan` it. Step 2 (cleanup) can run before, after, or in parallel — it has no dependency on Step 1.
+Only **(d)** remains. Continue child plan 1's (d) workstream: prototype the publish-cluster reorder + metadata decouple on `monolith-java-commit-stage.yml`, get the diff reviewed, then replicate across the other 6 commit-stage workflows. See `plans/20260622-0748-sonar-on-prs-and-colocate-publish.md`.
 
 ## Steps
 
-- [ ] **Step 1 — Run child plan 1: Sonar on PRs + co-locate publish steps** (workstreams b + d). Path: `plans/20260622-0748-sonar-on-prs-and-colocate-publish.md`.
-  - It **has open questions** (PR-decoration mechanism, quality-gate behavior, scope, delete `SKIP_SONAR`?, decouple metadata from `dev-version`?). **First** run `/refine-plan plans/20260622-0748-sonar-on-prs-and-colocate-publish.md` to resolve them, **then** `/execute-plan plans/20260622-0748-sonar-on-prs-and-colocate-publish.md`.
-  - Internal dependency: (d) is blocked until (b) ungates Sonar from the `on-branch` gate — the child plan enforces this itself.
+- [ ] **Step 1 — Child plan 1: Sonar on PRs + co-locate publish steps** (workstreams b + d). Path: `plans/20260622-0748-sonar-on-prs-and-colocate-publish.md`.
+  - **(b) done** (Sonar ungated + `SKIP_SONAR` removed, all 13 workflows). **(d) pending** — the publish-cluster reorder.
   - When the child plan finishes (its file is deleted), check this step off.
-- [ ] **Step 2 — Run child plan 2: Commit-stage workflow cleanup** (workstreams c + e). Path: `plans/20260622-0748-commit-stage-cleanup.md`.
-  - No open questions; mechanical. Just `/execute-plan plans/20260622-0748-commit-stage-cleanup.md`.
-  - Independent of Step 1 (see the child's cross-plan note about the `verify-main`→`check-on-main` rename vs (d)'s step move).
-  - When the child plan finishes, check this step off.
+- **Step 2 — Child plan 2: Commit-stage workflow cleanup** (workstreams c + e) — ✅ **DONE**, child file deleted.
 
-When both steps are done (both child files deleted), delete this coordinator.
+When Step 1 is done (child file deleted), delete this coordinator.
 
 ## History
 
