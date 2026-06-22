@@ -1,12 +1,13 @@
 # Stderr-swallow sweep — issue #74 (shop)
 
-> **STATUS (2026-06-22): READY TO EXECUTE — fix bar decided (HYBRID, see `## DECISION` below).**
-> Plan-only so far (commits `6727ce67` create, `58a283e1` split out other-repos). No fix commits
-> yet. All 8 shop findings verified unchanged in the working tree. Disposition is now locked:
-> **3 hard-fixes** (the `dotnet tool install` best-effort lines, which genuinely hide failures)
-> and **5 allowlisted-as-defensible** (deref fallbacks, the best-effort `git fetch`, the rev-list
-> count, and the already-safe existence probe). The genuine `gh repo delete` silent-failure risk
-> lives in the **deferred** other-repos plan, not here.
+> **STATUS (2026-06-22): DONE — shop fixes shipped; sweep routine disabled; issue #74 closed.**
+> Fix bar = HYBRID. Shop executed in commit `c118e3bf`: **3 hard-fixes** (`dotnet tool install`
+> best-effort lines) + **5 annotated-defensible** (deref fallbacks, best-effort `git fetch`,
+> rev-list count, already-safe existence probe). Sibling repos done too (see deferred plan):
+> `hub` `9bf2dfc`, `gh-optivem` `2e2e664`, `actions` `c489e4a`.
+> **This plan is now the standalone record** — the weekly automated detector that produced #74 has
+> been **disabled** (see `## Detection routine` below), so no further tickets will be generated;
+> #74 was closed as an acted-on snapshot.
 
 ## TL;DR
 
@@ -20,6 +21,25 @@
 **Counts from the sweep (all repos):** NEW 1 · PERSISTING 58 · RESOLVED 0 (59 findings total).
 **Skipped by the sweep:** `optivem/courses` (private/inaccessible); 6 `command -v <cli> &>/dev/null`
 existence probes (correct pattern, excluded).
+
+## Detection routine (DISABLED 2026-06-22)
+
+Issue #74 was **not hand-filed** — it was the output of a weekly scheduled cloud routine
+(`stderr-swallow-sweep`, `trig_017M2gynFB5ppY25HTMaXUau`, cron `0 7 * * 1` = Mondays 07:00 UTC).
+Each run scanned the academy repos, diffed against the prior tracking issue, and opened a new dated
+`Stderr-swallow sweep <date>` issue when there were NEW or RESOLVED entries. It is **report-only**
+(never edits files / opens PRs). It has been **disabled** (not deleted — the API can't delete;
+re-enable at https://claude.ai/code/routines) so the plan files, not a recurring ticket, are the
+record. To resume detection, re-enable the routine or run its logic manually.
+
+Detector spec (preserved here so this plan is self-contained):
+- **Targets:** `*.sh` anywhere; `.github/workflows/**/*.{yml,yaml}`; `.github/actions/**/action.{yml,yaml}`.
+  Skips `gradlew*`/`mvnw*` and anything under `.claude/`.
+- **Repos:** shop, gh-optivem, eshop, eshop-tests, hub, courses, github-utils, optivem-testing, actions.
+- **Redirect patterns flagged:** `2>/dev/null`, `>/dev/null 2>&1`, `&>/dev/null`, `2>&1 >/dev/null`.
+- **In-scope CLIs (must appear on the same line):** `gh`, `git`, `docker`, `curl`, `gcloud`,
+  `sonar-scanner`, `gradle`, `dotnet`, `npm`, `aws`, `az`, `kubectl`, `./gradlew`, `./mvnw`, `mvn`, `terraform`.
+- **Excluded idioms:** lines starting `command -v ` or `ls `; redirects on `printf|echo|cat|find|grep|sed|awk|tr|wc|head|tail|sort|uniq`.
 
 ## The principle
 
