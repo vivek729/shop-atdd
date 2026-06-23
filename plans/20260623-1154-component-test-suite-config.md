@@ -1,6 +1,6 @@
 # 2026-06-23 11:54 UTC — Component-level test suites via `gh optivem component test`
 
-🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-23T13:47:43Z`
+🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-23T14:09:29Z`
 
 ## TL;DR
 
@@ -67,24 +67,18 @@ When the work lands:
 
 ## ▶ Next executable step (resume here)
 
-**Steps 1–2 (the `gh-optivem` Go runner) are DONE** — committed in `gh-optivem`:
-`internal/build/componenttest` (config + runner, with `pending`/`requiresDocker`),
-`component_commands.go` (the `gh optivem component test run/setup` CLI), discovery
-by convention from `gh-optivem.yaml`, and unit tests. The runner is live but no
-component carries a `component-tests.yaml` yet, so it has nothing to run.
+**Steps 1–3 are DONE.** The runner (`gh-optivem`) and both pilot configs
+(`system/multitier/frontend-react/component-tests.yaml` and
+`system/multitier/backend-java/component-tests.yaml`) are committed. Frontend
+unit suite verified locally (1 test, 1.3 s). Java suites need Docker — verify
+with the **Manual verification** commands below before Step 4 lands.
 
-Next unit: **Step 3 — author the two pilot `component-tests.yaml` configs** in the
-`shop` repo:
-- `system/multitier/frontend-react/component-tests.yaml` — `unit` / `integration`
-  (pending) / `component` / `contract`, per the schema block above. Give `unit` an
-  explicit positive filter (OQ-unit-filter) so it isn't a leftover.
-- `system/multitier/backend-java/component-tests.yaml` — `unit` / `integration`
-  (pending) / `component` (`--tests '*Component*'`, `requiresDocker`) / `contract`
-  (`--tests '*Pact*'`, `requiresDocker`).
-
-Then verify locally with the **Manual verification** commands below (frontend needs
-no Docker; Java needs Docker). After Step 3: Step 4 (roll out remaining configs),
-Step 5 (migrate CI to `gh optivem component test run`), Step 6 (docs).
+Next unit: **Step 4 — roll out remaining configs** — add `component-tests.yaml`
+for monolith ×3 (`monolith-java`, `monolith-dotnet`, `monolith-typescript`) and
+multitier backends (`backend-dotnet`, `backend-typescript`). Most suites will be
+`pending: true` until real tests exist; follow the same explicit-positive-filter
+rule. For each component that does have real tests, confirm the suite command and
+sampleTest before writing.
 
 **Resume next session:** `/clear` then `/execute-plan plans/20260623-1154-component-test-suite-config.md`
 
@@ -284,9 +278,6 @@ until the runner reads it. Do **not** block the already-decided gating work on i
 
 ## Steps
 
-- [ ] **Step 3 — pilot configs.** Author `component-tests.yaml` for
-  `frontend-react` + `backend-java` (the two with real tests). Verify each
-  `--suite` and bare `run` locally (frontend needs nothing; Java needs Docker).
 - [ ] **Step 4 — roll out.** Add configs for monolith ×3 and backend-dotnet/ts
   (mostly `pending` suites until real tests exist).
 - [ ] **Step 5 — migrate CI.** Replace the native commit-stage steps (from plan

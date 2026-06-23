@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:component": "vitest run --config vitest.opt-in.config.ts src/test/component",
+    "test:unit": "vitest run src/test/harness.test.tsx",
     "test:pact": "vitest run --config vitest.opt-in.config.ts src/test/pact"
   },
   "devDependencies": {

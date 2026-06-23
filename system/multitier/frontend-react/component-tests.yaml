@@ -1,0 +1,22 @@
+setupCommands:
+  - name: Install Dependencies
+    command: npm ci
+testFilter: -t '<test>'
+suites:
+  - id: unit
+    name: Unit
+    command: npm run test:unit
+    sampleTest: "test harness"
+  - id: integration
+    name: Narrow Integration
+    pending: true
+  - id: component
+    name: Component
+    command: npm run test:component
+    sampleTest: "NewOrder — client-side validation"
+  - id: contract
+    name: Consumer Contract (Pact)
+    command: npm run test:pact
+    sampleTest: "places an order (POST /api/orders -> 201)"
+suiteGroups:
+  all: [unit, integration, component, contract]
