@@ -70,6 +70,11 @@ When the work lands:
 job added, `summary` gating updated), and `docs/pipeline/commit-stage.md` +
 `backend-java/README.md` updated.
 
+**Verified intact post-merge 2026-06-23:** re-audited after a merge conflict — all
+7 configs, all 7 commit-stage workflows (job + setup/run steps + `needs` gating, no
+`if: false` stubs), and both docs are present; no conflict markers; tree clean
+(committed in `ef1b3c7c`). Nothing was dropped by the merge.
+
 Only Step 7 (deferred) remains — see below. No further executable steps.
 
 ## Manual verification — `gh optivem component test` on `optivem/shop`
@@ -83,7 +88,8 @@ $env:GH_OPTIVEM_CONFIG = "gh-optivem-multitier-java.yaml"
 
 # 1. Discovery + listing — should show backend (java) + frontend (typescript)
 #    and each component's suite ids (integration marked "(pending)").
-gh optivem component test list
+#    NB: discovery is the `run --list` flag, not a `list` subcommand.
+gh optivem component test run --list
 
 # 2. One-time setup (npm ci / gradle warm) for both components.
 gh optivem component test setup
@@ -106,7 +112,7 @@ gh optivem component test run --suite contract  --component backend
 gh optivem component test run
 ```
 
-What to confirm: `list`/discovery names components as `backend`/`frontend`; the
+What to confirm: `run --list`/discovery names components as `backend`/`frontend`; the
 `integration` (pending) suite prints "not implemented yet — skipping" and never
 fails; a Docker suite with the daemon stopped fails fast with the "requires Docker"
 message (not a Testcontainers stack trace); bare `run` exercises all four levels

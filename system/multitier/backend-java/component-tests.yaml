@@ -1,11 +1,11 @@
 setupCommands:
   - name: Pre-warm Gradle
-    command: ./gradlew --version
+    command: .\gradlew.bat --version
 testFilter: --tests '*.<test>'
 suites:
   - id: unit
     name: Unit
-    command: ./gradlew test
+    command: .\gradlew.bat test
     sampleTest: "contextLoads"
     requiresDocker: true
   - id: integration
@@ -13,12 +13,12 @@ suites:
     pending: true
   - id: component
     name: Component
-    command: ./gradlew componentTest --tests '*Component*'
+    command: .\gradlew.bat componentTest --tests '*Component*'
     sampleTest: "bootsInProcessAndServesHttp"
     requiresDocker: true
   - id: contract
     name: Consumer Contract (Pact)
-    command: ./gradlew componentTest --tests '*Pact*'
+    command: .\gradlew.bat componentTest --tests '*Pact*'
     sampleTest: "verify"
     requiresDocker: true
 suiteGroups:
