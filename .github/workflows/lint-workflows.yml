@@ -34,7 +34,7 @@ jobs:
           polling_interval_seconds: 0
           command: |
             set -euo pipefail
-            bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+            bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12
             ./actionlint --version
 
       - name: Lint workflow files
