@@ -87,24 +87,6 @@ jobs:
         run: dotnet test
         working-directory: system/multitier/backend-dotnet
 
-      # === Run Narrow Integration Tests ===
-      # Skipped: not implemented yet
-      - name: Run Narrow Integration Tests
-        if: false
-        run: echo "not yet implemented"
-
-      # === Run Component Tests ===
-      # Skipped: not implemented yet
-      - name: Run Component Tests
-        if: false
-        run: echo "not yet implemented"
-
-      # === Run Contract Tests ===
-      # Skipped: not implemented yet
-      - name: Run Contract Tests
-        if: false
-        run: echo "not yet implemented"
-
       # === Run Linter ===
       - name: Run Linter
         run: dotnet format MyCompany.MyShop.Backend.slnx --verify-no-changes
@@ -203,8 +185,39 @@ jobs:
           base-image-url: ghcr.io/${{ github.repository }}/multitier-backend-dotnet
           digest: ${{ steps.push.outputs.digest }}
 
+  component-tests:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GH_OPTIVEM_CONFIG: gh-optivem-multitier-dotnet.yaml
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: 'system/multitier/backend-dotnet/**/*.csproj'
+
+      - name: Install gh-optivem CLI Extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Up Component Test Harness
+        run: gh optivem component test setup --component backend
+
+      - name: Run Component Tests
+        run: gh optivem component test run --component backend
+
   summary:
-    needs: [check, run]
+    needs: [check, run, component-tests]
     if: always()
     runs-on: ubuntu-latest
     permissions: {}

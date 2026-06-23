@@ -1,7 +1,5 @@
 # 2026-06-23 11:54 UTC — Component-level test suites via `gh optivem component test`
 
-🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-23T14:09:29Z`
-
 ## TL;DR
 
 **Why:** Today the commit-stage (component-level) tests — unit, narrow
@@ -67,20 +65,12 @@ When the work lands:
 
 ## ▶ Next executable step (resume here)
 
-**Steps 1–3 are DONE.** The runner (`gh-optivem`) and both pilot configs
-(`system/multitier/frontend-react/component-tests.yaml` and
-`system/multitier/backend-java/component-tests.yaml`) are committed. Frontend
-unit suite verified locally (1 test, 1.3 s). Java suites need Docker — verify
-with the **Manual verification** commands below before Step 4 lands.
+**Steps 1–6 are DONE.** All `component-tests.yaml` configs are in place (5 new +
+2 pilot), all 7 commit-stage workflows updated (stubs removed, `component-tests`
+job added, `summary` gating updated), and `docs/pipeline/commit-stage.md` +
+`backend-java/README.md` updated.
 
-Next unit: **Step 4 — roll out remaining configs** — add `component-tests.yaml`
-for monolith ×3 (`monolith-java`, `monolith-dotnet`, `monolith-typescript`) and
-multitier backends (`backend-dotnet`, `backend-typescript`). Most suites will be
-`pending: true` until real tests exist; follow the same explicit-positive-filter
-rule. For each component that does have real tests, confirm the suite command and
-sampleTest before writing.
-
-**Resume next session:** `/clear` then `/execute-plan plans/20260623-1154-component-test-suite-config.md`
+Only Step 7 (deferred) remains — see below. No further executable steps.
 
 ## Manual verification — `gh optivem component test` on `optivem/shop`
 
@@ -278,14 +268,6 @@ until the runner reads it. Do **not** block the already-decided gating work on i
 
 ## Steps
 
-- [ ] **Step 4 — roll out.** Add configs for monolith ×3 and backend-dotnet/ts
-  (mostly `pending` suites until real tests exist).
-- [ ] **Step 5 — migrate CI.** Replace the native commit-stage steps (from plan
-  `0916`) with `gh optivem component test run` pinned to all suites. Remove the
-  scattered `if: false` stubs — `pending` in the config now holds those slots.
-- [ ] **Step 6 — docs.** Update READMEs / pipeline diagram: the four levels are a
-  declarative, selectable suite set; document the CI-runs-`all` guardrail and the
-  consumer-vs-external "contract" distinction.
 - [ ] **Step 7 — `component test compile` (optional)** — ⏳ Deferred: `run` + `setup`
   landed in `gh-optivem`; `compile` was left out because its semantics for
   in-process component tests are unclear (the language build is already covered by

@@ -86,30 +86,6 @@ jobs:
         run: npm run build
         working-directory: system/multitier/frontend-react
 
-      # === Run Unit Tests ===
-      # Skipped: no frontend test suite wired up yet (no test script in package.json)
-      - name: Run Unit Tests
-        if: false
-        run: echo "not yet implemented"
-
-      # === Run Narrow Integration Tests ===
-      # Skipped: not implemented yet
-      - name: Run Narrow Integration Tests
-        if: false
-        run: echo "not yet implemented"
-
-      # === Run Component Tests ===
-      # Skipped: not implemented yet
-      - name: Run Component Tests
-        if: false
-        run: echo "not yet implemented"
-
-      # === Run Contract Tests ===
-      # Skipped: not implemented yet
-      - name: Run Contract Tests
-        if: false
-        run: echo "not yet implemented"
-
       # === Run Linter ===
       - name: Run Linter
         run: npm run lint
@@ -196,19 +172,13 @@ jobs:
           base-image-url: ghcr.io/${{ github.repository }}/multitier-frontend-react
           digest: ${{ steps.push.outputs.digest }}
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # OPTIONAL opt-in layer — NOT part of the default build/commit gate.
-  # Exercises the in-process component + consumer Pact contract suites that the
-  # default `npm test` deliberately excludes (they run via vitest.opt-in.config.ts).
-  # Runs in parallel with `run` and does not gate image build/push. No compose,
-  # no broker — the consumer pact is written to / read from the repo-owned
-  # `contracts/` folder. Students who clone never run these by default; delete
-  # this job to drop the layer.
-  # ─────────────────────────────────────────────────────────────────────────
-  component-contract-tests:
+  component-tests:
+    needs: check
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -222,20 +192,19 @@ jobs:
           cache: 'npm'
           cache-dependency-path: system/multitier/frontend-react/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: system/multitier/frontend-react
+      - name: Install gh-optivem CLI Extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Component Tests (opt-in)
-        run: npm run test:component
-        working-directory: system/multitier/frontend-react
+      - name: Set Up Component Test Harness
+        run: gh optivem component test setup --component frontend
 
-      - name: Run Contract (Pact) Tests (opt-in)
-        run: npm run test:pact
-        working-directory: system/multitier/frontend-react
+      - name: Run Component Tests
+        run: gh optivem component test run --component frontend
 
   summary:
-    needs: [check, run]
+    needs: [check, run, component-tests]
     if: always()
     runs-on: ubuntu-latest
     permissions: {}

@@ -78,35 +78,42 @@ Run the container on the network:
 docker run -d --name backend --network hero-network -p 8081:8081 backend
 ```
 
-## Optional: in-process component & contract tests
+## Component tests
 
-This project ships with an **opt-in** in-process component + Pact contract test
-layer that is **deliberately kept off the default build**. `./gradlew build` and
-`./gradlew test` run exactly the unit tests they always did — they do **not**
-compile or run this layer, and its extra dependencies (WireMock, Pact) are not on
-the default `test` classpath.
+This project ships with an in-process component + Pact contract test layer that is
+**deliberately kept off the default build**. `./gradlew build` and `./gradlew test`
+run exactly the unit tests — they do **not** compile or run this layer.
 
 The layer lives in its own Gradle source set, `src/componentTest/java`, wired via
 a `componentTest` task and `componentTestImplementation`/`componentTestRuntimeOnly`
 configurations in `build.gradle`.
 
-### Running it
+### Running via gh optivem (recommended — matches CI)
 
 ```shell
-./gradlew componentTest
+# All suites across all components (matches the CI gate exactly)
+gh optivem component test run
+
+# Single suite (fast inner loop)
+gh optivem component test run --suite unit
+gh optivem component test run --suite component --component backend
+gh optivem component test run --suite contract  --component backend
+
+# One-time setup (pre-warm Gradle)
+gh optivem component test setup --component backend
 ```
 
-> **Requires Docker.** The component tests use a real Spring context
-> (`RANDOM_PORT`) against a Testcontainers-Postgres database and stub external
-> systems with WireMock; the contract test verifies the consumer pact. This Docker
-> dependency is part of the documented opt-in cost.
+> **Requires Docker** for the `component` and `contract` suites (Testcontainers-Postgres + WireMock). `--suite unit` is Docker-free.
 
-### Removing it
+### Running natively
 
-There is intentionally **no generation flag** to exclude this layer — it is
-already isolated off the default build, so it is "present but dormant". If you
-don't want it, simply ignore it or delete `src/componentTest/` and the
-`componentTest` source set / task / configurations from `build.gradle`.
+```shell
+# Unit tests only (fast, Docker-free)
+./gradlew test
+
+# Component + contract (Docker required)
+./gradlew componentTest
+```
 
 ### Contract distribution
 

@@ -1,0 +1,21 @@
+setupCommands:
+  - name: Pre-warm Gradle
+    command: ./gradlew --version
+testFilter: --tests '*.<test>'
+suites:
+  - id: unit
+    name: Unit
+    pending: true
+  - id: integration
+    name: Narrow Integration
+    pending: true
+  - id: component
+    name: Component
+    command: ./gradlew test
+    sampleTest: "contextLoads"
+    requiresDocker: true
+  - id: contract
+    name: Consumer Contract (Pact)
+    pending: true
+suiteGroups:
+  all: [unit, integration, component, contract]

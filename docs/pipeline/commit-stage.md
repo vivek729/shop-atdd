@@ -17,29 +17,29 @@ flowchart TD
     gate --> checkout[Checkout Code]
     checkout --> compile[Compile Code]
     compile --> unit[Run Unit Tests]
-    unit --> narrow[Run Narrow Integration Tests]
-    narrow --> component[Run Component Tests]
-    component --> contract[Run Contract Tests]
-    contract --> linter[Run Linter]
+    unit --> linter[Run Linter]
     linter --> analysis[Run Static Code Analysis]
     analysis --> build[Build Docker Image]
     build --> shouldpublish{Should Publish Docker Image?}:::conditional
     shouldpublish -->|on main| publish[Publish Docker Image]
     shouldpublish -->|pull request| done([No publish])
 
+    gate --> ct["gh optivem component test run<br/>(unit · integration · component · contract)"]:::component
+
     publish --> summary([Summary]):::gate
     done --> summary
-
-    checkout -.-> optin["Component + Contract Tests<br/>opt-in · does not gate build"]:::optional
+    ct --> summary
 
     classDef gate fill:#eee,stroke:#999,stroke-dasharray:3 3,color:#333;
     classDef conditional fill:#e8f0ff,stroke:#4070c0,color:#1a3a6a;
-    classDef optional fill:#fff5e6,stroke:#cc8800,stroke-dasharray:4 3,color:#7a4d00;
+    classDef component fill:#e8f4e8,stroke:#408040,color:#1a4a1a;
 ```
 
 - **Gate** and **Summary** are orchestration jobs, not pipeline stages.
 - **Publish Docker Image** runs only on `main`; pull requests build the image but do not push it.
-- The dashed **opt-in branch** runs the real component + contract tests in a separate parallel job that does not gate the image build/push. It exists only where wired up (e.g. `multitier-frontend-react`); on the main line, Component/Contract are skipped placeholders until implemented.
+- **`gh optivem component test run`** runs all four suites (unit · narrow integration · component · contract) via the declarative `component-tests.yaml` per component. It runs in a parallel `component-tests` job alongside `run` and gates the `summary` — failing it blocks the pipeline. Pending suites print a notice and pass; Docker-backed suites (Java Testcontainers) require the Docker daemon (provided on `ubuntu-latest`).
+- **"contract" in the component tier means consumer Pact** (frontend↔backend, in-process). This is distinct from the external-system contract suites in `tests.yaml` (clock/erp/tax, stub-vs-real). Both use the word "contract"; only the label in `component-tests.yaml` (`name: Consumer Contract (Pact)`) disambiguates them.
+- **Local vs CI:** `gh optivem component test run` is the command that matches the CI gate. Bare `npm test` / `./gradlew test` / `dotnet test` run a fast, Docker-light subset and intentionally run *less* than CI. Use `--suite unit` for the fast inner loop, bare `run` to match CI.
 
 ## Diagram ↔ YAML mapping
 
@@ -49,19 +49,16 @@ stage boxes use `# === <Stage> ===` headers; decision diamonds (gates) use
 `# <> <Decision?> <>`. The `check` (env-vars) and `summary` jobs are orchestration and
 are not part of the alignment.
 
-| Diagram box | YAML steps (in the `run` job) |
+| Diagram box | YAML steps |
 |---|---|
-| Checkout Code | Checkout Repository |
-| Compile Code | Setup toolchain, pre-warm, Compile Code |
-| Run Unit Tests | Run Unit Tests |
-| Run Narrow Integration Tests | Run Narrow Integration Tests |
-| Run Component Tests | Run Component Tests |
-| Run Contract Tests | Run Contract Tests |
-| Run Linter | Run Linter |
-| Run Static Code Analysis | Run Code Analysis (reuses Compile Code's build output; a separate build step only where the analyzer needs one) |
-| Build Docker Image | Setup Buildx, pre-pull base images, read/compose version, extract metadata |
-| Publish Docker Image | Registry login, Build and Push (gated on `main` via Check Commit on Main), Compose Digest URL |
-| *(Opt-in branch — where wired up)* | `component-contract-tests` job: Run Component Tests (opt-in), Run Contract (Pact) Tests (opt-in) |
+| Checkout Code | Checkout Repository (`run` job) |
+| Compile Code | Setup toolchain, pre-warm, Compile Code (`run` job) |
+| Run Unit Tests | Run Unit Tests (`run` job; present for languages that also need it for Sonar coverage) |
+| Run Linter | Run Linter (`run` job) |
+| Run Static Code Analysis | Run Code Analysis (`run` job; reuses Compile Code's build output) |
+| Build Docker Image | Setup Buildx, pre-pull base images, read/compose version, extract metadata (`run` job) |
+| Publish Docker Image | Registry login, Build and Push (gated on `main` via Check Commit on Main), Compose Digest URL (`run` job) |
+| gh optivem component test run | `component-tests` job: Install gh-optivem CLI Extension, Set Up Component Test Harness, Run Component Tests |
 
 Workflows: `monolith-{dotnet,java,typescript}-commit-stage.yml`,
 `multitier-backend-{dotnet,java,typescript}-commit-stage.yml`,

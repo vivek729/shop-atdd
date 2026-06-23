@@ -1,0 +1,20 @@
+setupCommands:
+  - name: Install Dependencies
+    command: npm ci
+testFilter: -t '<test>'
+suites:
+  - id: unit
+    name: Unit
+    command: npm test
+    sampleTest: "should be defined"
+  - id: integration
+    name: Narrow Integration
+    pending: true
+  - id: component
+    name: Component
+    pending: true
+  - id: contract
+    name: Consumer Contract (Pact)
+    pending: true
+suiteGroups:
+  all: [unit, integration, component, contract]

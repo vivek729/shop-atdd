@@ -1,0 +1,20 @@
+setupCommands:
+  - name: Restore Dependencies
+    command: dotnet restore
+testFilter: --filter DisplayName~<test>
+suites:
+  - id: unit
+    name: Unit
+    pending: true
+  - id: integration
+    name: Narrow Integration
+    pending: true
+  - id: component
+    name: Component
+    command: dotnet test Tests
+    sampleTest: "HealthEndpoint_ReturnsUp"
+  - id: contract
+    name: Consumer Contract (Pact)
+    pending: true
+suiteGroups:
+  all: [unit, integration, component, contract]
