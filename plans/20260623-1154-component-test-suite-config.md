@@ -30,6 +30,39 @@ gh optivem component test setup                   # setupCommands (npm ci / grad
 CI pins the **full** run (bare `run` / `--suite all`); local `--suite`/`--component`
 selection is a **convenience for feedback speed only** — it never weakens the gate.
 
+### Target end-state (open questions resolved 2026-06-23)
+
+When the work lands:
+
+- **One aggregate command = the gate.** `gh optivem component test run` runs every
+  suite × every component and is the **single command that matches CI** — the repo's
+  cross-language equivalent of `mvn verify` / `./gradlew check`. CI hardcodes the full
+  run; local devs may run *less* (`--suite`, `--component`) for speed, never to weaken
+  the gate.
+- **Native defaults stay fast and Docker-light.** Bare `npm test` / `./gradlew test`
+  remain the quick, no-Docker unit inner loop — `vite.config.ts` keeps excluding
+  `src/test/component/**` + `src/test/pact/**`, and `componentTest` stays out of
+  Gradle's default `check`. This follows industry norms (fast default + explicit heavy
+  suites + one aggregate). **The gap is intentional and documented:** bare native
+  commands run less than CI gates on; the command that matches CI is
+  `gh optivem component test run`.
+- **Every suite is selected by its own explicit positive filter** — never by
+  subtraction — in **every** component that splits test types (frontend-react, all
+  three backends, monolith ×3). No level is "everything minus the others"; a refactor
+  can't silently fold one level into another.
+- **Command is `gh optivem component test`** (`run` / `setup` / `compile`) — a
+  sibling of `gh optivem test`, deliberately separate (in-process system tier vs
+  deployed test tier).
+- **`contract` always labels as "Consumer Contract (Pact)"** to keep it distinct from
+  `tests.yaml`'s external-system contract suites. **Provider-side Pact verification is
+  out of scope** here (cross-component dependency + provider state) — deferred to a
+  separate plan.
+- **What's observably unchanged:** the system-test path (`gh optivem test`, compose,
+  channels), students' default `npm test` / build speed and Docker-free inner loop,
+  and the existing OPT-IN comments. What changes: a declarative `component-tests.yaml`
+  per component, a new `gh optivem component test` runner, and CI commit-stage steps
+  swapped from scattered native commands to the single aggregate.
+
 ## Motivation / value
 
 - **Local↔CI equivalence by construction.** Both invoke the *same*
@@ -218,32 +251,68 @@ until the runner reads it. Do **not** block the already-decided gating work on i
 6. **Separate command namespace** (`component test`) from system `test` — different
    tier (in-process system tier vs deployed test tier).
 
-## Open questions
-
-- **OQ-unit-filter (frontend)** — `npm test` currently collects only top-level
-  `src/test/*.test.tsx`. If component/contract dirs are later un-excluded for some
-  other reason, the `unit` suite needs an explicit unit-only filter to avoid overlap.
-- **OQ-default-naming** — `gh optivem component test` vs `gh optivem system test`
-  vs `gh optivem ct`. *Recommend:* `component test` (most descriptive).
-- **OQ-provider-pact** — provider-side Pact verification (Java backend verifying the
-  consumer contract in `contracts/`) — is it a fifth suite here, or does it belong
-  to a different stage? Out of scope unless confirmed.
-- **OQ-local-default-mechanism** — independent of this config, should the *native*
-  local defaults be made equivalent too — i.e. remove the `src/test/component/**` +
-  `src/test/pact/**` exclusions in `frontend-react/vite.config.ts` and wire
-  `componentTest` into Gradle `check` so `npm test` / `./gradlew build` themselves
-  run everything? Or is equivalence delivered *solely* through
-  `gh optivem component test run` (leaving the raw native defaults fast/Docker-light)?
-  Affects whether the "opt-in / Docker-light default" comments in the configs,
-  `build.gradle`, and the frontend README get reframed. (Carried from plan `0916`.)
-- **OQ-fold-into-local-default** — if the native defaults are NOT changed, devs who
-  run bare `npm test` / `./gradlew test` (instead of the `gh optivem` command) still
-  won't run what CI gates on. Accept that gap (equivalence only via the `gh optivem`
-  entrypoint), or fold the suites into the native defaults so every local path
-  matches the gate? *Recommend:* decide explicitly — the split is surprising.
-  (Carried from plan `0916`.)
-
 ## Resolved decisions
+
+- **OQ-local-default-mechanism + OQ-fold-into-local-default → fast native default +
+  `gh optivem component test run` as the single aggregate.** Local↔CI equivalence is
+  delivered through the `gh optivem` command, **not** by making the everyday native
+  defaults run everything. This matches industry best practice (fast default +
+  explicitly-named heavy suites + one aggregate that runs all — e.g. Maven's
+  `mvn test` unit-only vs `mvn verify` full; Gradle source sets vs `check`).
+  - **Keep native defaults fast/Docker-light.** `vite.config.ts` continues to exclude
+    `src/test/component/**` + `src/test/pact/**`; `componentTest` stays out of Gradle's
+    default `check`/`build`. Bare `npm test` / `./gradlew test` remain the quick,
+    no-Docker inner loop, and the OPT-IN layer for students who never opted in is
+    preserved. The existing "opt-in / Docker-light default" comments stay valid.
+  - **`gh optivem component test run` is the repo's "verify".** It runs the full set
+    (all suites × all components) and is the single documented command that matches
+    the CI gate — the cross-language equivalent of `mvn verify` / `./gradlew check`.
+    `--suite unit` is the fast inner loop within it.
+  - **The gap is intentional and must be documented.** Bare native commands run *less*
+    than CI gates on. The docs (Step 6) must state plainly that the command which
+    matches CI is `gh optivem component test run`, so no one assumes `npm test` /
+    `./gradlew build` reflects the gate.
+
+- **OQ-unit-filter → symmetric explicit filters for every suite, in every component
+  that splits test types.** This is a cross-cutting rule, not a frontend-only fix:
+  **everywhere** the taxonomy splits levels — frontend-react, backend-java /
+  backend-dotnet / backend-typescript, and the monolith ×3 — each suite
+  (`unit`/`integration`/`component`/`contract`) is selected by its **own explicit
+  positive filter**, never by subtraction/leftover.
+  - **Frontend:** today `component`/`contract` use positive includes
+    (`src/test/component`, `src/test/pact`) while `unit` is the leftover after
+    `vite.config.ts` excludes those dirs — asymmetric and fragile (a future
+    un-exclude silently bloats `unit`). Fix: give `unit` an explicit positive include
+    (e.g. `src/test/unit/**`, or a top-level-only glob like `src/test/*.test.tsx`
+    matching the current `harness.test.tsx` layout) so its `command:` collects unit
+    specs only, regardless of exclude-config drift.
+  - **Java:** `test` and `componentTest` are already separate Gradle source sets, and
+    `component`/`contract` already split by `--tests '*Component*'` / `'*Pact*'`. The
+    `unit` suite (`./gradlew test`) must likewise resolve to unit specs only — keep
+    the source-set / `--tests` boundary explicit so no level is defined by exclusion.
+  - **.NET / TS backends + monolith ×3:** apply the same rule as their real suites
+    land (most are `pending:` initially) — when a level gets tests, it gets its own
+    positive filter (test-name pattern, source set, or path glob), symmetric with the
+    others. No suite is "everything minus the others."
+
+  In each `component-tests.yaml`, the per-suite filter is the **authoritative
+  boundary** for that level; note this in the config so a refactor can't silently
+  fold one level into another.
+
+- **OQ-default-naming → `gh optivem component test`.** Most descriptive; mirrors
+  the `gh optivem test` / `tests.yaml` pairing and names the tier explicitly.
+  Rejected `system test` (collides with `gh optivem system start/stop` and blurs the
+  in-process-vs-deployed boundary) and `ct` (cryptic; reads as "contract test",
+  worsening the contract-overload confusion). Subcommands: `run` / `setup` /
+  `compile`.
+
+- **OQ-provider-pact → out of scope; deferred.** This plan covers only the four
+  in-process, per-component suites. Provider-side Pact verification depends on an
+  artifact produced by *another* component (the consumer contract under `contracts/`),
+  needs provider-state setup, and introduces cross-component ordering — a different
+  shape that breaks the no-cross-component-dependency model. Tracked as a follow-up:
+  decide its stage (likely an integration/acceptance concern against a running
+  provider, not a single component in isolation) in a separate plan.
 
 - **OQ-location → co-located per component.** Each component carries its own
   `component-tests.yaml` in its dir (e.g. `system/multitier/frontend-react/`),
