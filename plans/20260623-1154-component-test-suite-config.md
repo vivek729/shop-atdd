@@ -1,5 +1,21 @@
 # 2026-06-23 11:54 UTC — Component-level test suites via `gh optivem component test`
 
+## ✅ CLOSED 2026-06-23
+
+All in-scope work (Steps 1–6) landed and verified. Step 7 (`compile`) is an
+intentional deferral, not outstanding work. Every deferred concern is tracked by a
+dedicated follow-up plan: provider Pact → `20260623-1941`; narrow-integration pilot →
+`20260623-1801`; frontend integration stub mechanism → `20260623-1939`; integration
+rollout to remaining 5 components → `20260623-1944`.
+
+**Manual verification — passed 2026-06-23** (`gh optivem component test`, multitier-java
+config from shop repo root): `run --list` discovery named components `backend`/`frontend`
+with suite ids; `setup` ran npm ci / gradle warm for both; `--suite unit` and
+`--suite unit --sample` ran the fast no-Docker inner loop; Docker-backed `component` /
+`contract` suites ran under the daemon; bare `run` exercised all four levels × both
+components with a component-grouped summary; the `integration` (pending) suite printed
+the skip notice and passed without failing the gate.
+
 ## TL;DR
 
 **Why:** Today the commit-stage (component-level) tests — unit, narrow
@@ -65,7 +81,8 @@ When the work lands:
 
 ## ▶ Next executable step (resume here)
 
-**Steps 1–6 are DONE.** All `component-tests.yaml` configs are in place (5 new +
+**Plan CLOSED 2026-06-23 — no further executable steps.** See the closure note at the
+top. Steps 1–6 are DONE. All `component-tests.yaml` configs are in place (5 new +
 2 pilot), all 7 commit-stage workflows updated (stubs removed, `component-tests`
 job added, `summary` gating updated), and `docs/pipeline/commit-stage.md` +
 `backend-java/README.md` updated.
@@ -274,7 +291,7 @@ until the runner reads it. Do **not** block the already-decided gating work on i
 
 ## Steps
 
-- [ ] **Step 7 — `component test compile` (optional)** — ⏳ Deferred: `run` + `setup`
+- [~] **Step 7 — `component test compile` (optional)** — ⏳ Deferred (not blocking; plan closed): `run` + `setup`
   landed in `gh-optivem`; `compile` was left out because its semantics for
   in-process component tests are unclear (the language build is already covered by
   `setup` + the suite command). Revisit only if a concrete need appears.
