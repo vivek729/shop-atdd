@@ -55,6 +55,22 @@ tasks.named('test') {
 	finalizedBy jacocoTestReport
 }
 
+tasks.withType(Test).configureEach {
+	// Default Gradle mechanisms so test names + counts show in the console
+	// (Gradle is otherwise silent on success).
+	testLogging {
+		events 'passed', 'skipped', 'failed'
+		exceptionFormat 'full'
+	}
+	afterSuite { desc, result ->
+		if (desc.parent == null) {  // root suite only
+			println "Test results: ${result.testCount} tests, " +
+				"${result.successfulTestCount} passed, " +
+				"${result.failedTestCount} failed, ${result.skippedTestCount} skipped"
+		}
+	}
+}
+
 jacocoTestReport {
 	dependsOn test
 	reports {
