@@ -1,5 +1,7 @@
 # 2026-06-23 11:54 UTC — Component-level test suites via `gh optivem component test`
 
+🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-23T13:47:43Z`
+
 ## TL;DR
 
 **Why:** Today the commit-stage (component-level) tests — unit, narrow
@@ -62,6 +64,69 @@ When the work lands:
   and the existing OPT-IN comments. What changes: a declarative `component-tests.yaml`
   per component, a new `gh optivem component test` runner, and CI commit-stage steps
   swapped from scattered native commands to the single aggregate.
+
+## ▶ Next executable step (resume here)
+
+**Steps 1–2 (the `gh-optivem` Go runner) are DONE** — committed in `gh-optivem`:
+`internal/build/componenttest` (config + runner, with `pending`/`requiresDocker`),
+`component_commands.go` (the `gh optivem component test run/setup` CLI), discovery
+by convention from `gh-optivem.yaml`, and unit tests. The runner is live but no
+component carries a `component-tests.yaml` yet, so it has nothing to run.
+
+Next unit: **Step 3 — author the two pilot `component-tests.yaml` configs** in the
+`shop` repo:
+- `system/multitier/frontend-react/component-tests.yaml` — `unit` / `integration`
+  (pending) / `component` / `contract`, per the schema block above. Give `unit` an
+  explicit positive filter (OQ-unit-filter) so it isn't a leftover.
+- `system/multitier/backend-java/component-tests.yaml` — `unit` / `integration`
+  (pending) / `component` (`--tests '*Component*'`, `requiresDocker`) / `contract`
+  (`--tests '*Pact*'`, `requiresDocker`).
+
+Then verify locally with the **Manual verification** commands below (frontend needs
+no Docker; Java needs Docker). After Step 3: Step 4 (roll out remaining configs),
+Step 5 (migrate CI to `gh optivem component test run`), Step 6 (docs).
+
+**Resume next session:** `/clear` then `/execute-plan plans/20260623-1154-component-test-suite-config.md`
+
+## Manual verification — `gh optivem component test` on `optivem/shop`
+
+After the pilot configs land (Step 3), verify the runner from the **shop repo root**
+(the runner discovers components + their `component-tests.yaml` from the active
+`gh-optivem.yaml`). PowerShell:
+
+```pwsh
+$env:GH_OPTIVEM_CONFIG = "gh-optivem-multitier-java.yaml"
+
+# 1. Discovery + listing — should show backend (java) + frontend (typescript)
+#    and each component's suite ids (integration marked "(pending)").
+gh optivem component test list
+
+# 2. One-time setup (npm ci / gradle warm) for both components.
+gh optivem component test setup
+
+# 3. Fast inner loop — unit only, no Docker. Run across both components…
+gh optivem component test run --suite unit
+#    …or narrow to one component:
+gh optivem component test run --suite unit --component frontend
+
+# 4. Sample smoke — one known-good test per selected suite.
+gh optivem component test run --suite unit --sample
+
+# 5. Docker-backed Java suites (needs Docker Desktop running) — the runner
+#    fails fast with a clear message if Docker is absent.
+gh optivem component test run --suite component --component backend
+gh optivem component test run --suite contract  --component backend
+
+# 6. THE GATE — bare run = every suite × every component (what CI pins).
+#    Pending suites print a notice and pass; Docker suites need a daemon.
+gh optivem component test run
+```
+
+What to confirm: `list`/discovery names components as `backend`/`frontend`; the
+`integration` (pending) suite prints "not implemented yet — skipping" and never
+fails; a Docker suite with the daemon stopped fails fast with the "requires Docker"
+message (not a Testcontainers stack trace); bare `run` exercises all four levels
+across both components and the summary table groups by component.
 
 ## Motivation / value
 
@@ -219,14 +284,6 @@ until the runner reads it. Do **not** block the already-decided gating work on i
 
 ## Steps
 
-- [ ] **Step 1 — schema.** Finalise the `component-tests.yaml` schema (fields above,
-  incl. `pending`, `requiresDocker`, two-axis selection). Decide config location:
-  co-located per component (recommended, mirrors `tests.yaml`) vs a central block.
-- [ ] **Step 2 — Go runner.** Implement `gh optivem component test run/setup` in the
-  `gh optivem` tool: discover each component's `component-tests.yaml` via the
-  `system.{backend,frontend}.path` / monolith paths in `gh-optivem-*.yaml`; resolve
-  `--suite` × `--component`; bare `run` = fan out all suites × all components;
-  honor `pending` (skip+notice) and `requiresDocker` (fail-fast preflight).
 - [ ] **Step 3 — pilot configs.** Author `component-tests.yaml` for
   `frontend-react` + `backend-java` (the two with real tests). Verify each
   `--suite` and bare `run` locally (frontend needs nothing; Java needs Docker).
@@ -238,6 +295,10 @@ until the runner reads it. Do **not** block the already-decided gating work on i
 - [ ] **Step 6 — docs.** Update READMEs / pipeline diagram: the four levels are a
   declarative, selectable suite set; document the CI-runs-`all` guardrail and the
   consumer-vs-external "contract" distinction.
+- [ ] **Step 7 — `component test compile` (optional)** — ⏳ Deferred: `run` + `setup`
+  landed in `gh-optivem`; `compile` was left out because its semantics for
+  in-process component tests are unclear (the language build is already covered by
+  `setup` + the suite command). Revisit only if a concrete need appears.
 
 ## Decisions (from this conversation, 2026-06-23)
 
