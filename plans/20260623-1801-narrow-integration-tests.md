@@ -38,14 +38,13 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-**Design is not finished — resolve the Open questions first** (which components are
-in scope for the first pass, and what concrete "edge" each narrow-integration test
-exercises per stack). This is a planning step, not a mechanical edit: run
-`/refine-plan` on this file to settle the Open questions, then the first executable
-unit becomes **Step 2 (Java pilot)** — author a `*IntegrationTest` on top of the
-existing `AbstractIntegrationTest`, wire `backend-java/component-tests.yaml`'s
-`integration` suite (`command: .\gradlew.bat test --tests '*IntegrationTest'` or a
-dedicated source set — see OQ), remove `pending`, add `sampleTest`, and verify with
+**Step 2 — Java pilot (backend-java).** Add a dedicated `integrationTest` Gradle
+source set (parallel to `componentTest`) with a simple `SimpleArithmeticTest` in the
+existing `test` source set (1 + 1 = 2, no Docker) and an `OrderRepositoryIntegrationTest`
+in `src/integrationTest/` extending `AbstractIntegrationTest` (save + read back via
+real Postgres). Wire `backend-java/component-tests.yaml`: `integration` suite gets
+`command: .\gradlew.bat integrationTest`, `requiresDocker: true`, `sampleTest`, `pending`
+removed. The `unit` suite loses `requiresDocker: true`. Verify with
 `gh optivem component test run --suite integration --component backend`.
 
 ## Steps
@@ -73,25 +72,22 @@ dedicated source set — see OQ), remove `pending`, add `sampleTest`, and verify
   the component-test docs already describe the pyramid (`docs/pipeline/commit-stage.md`
   and/or component READMEs).
 
-## Open questions
+## Decisions (resolved 2026-06-23)
 
-- **Scope of the first pass.** All 7 components at once, or pilot (backend-java +
-  frontend-react) then roll out — mirroring how plan `1154` was sequenced?
-  *(Recommend: pilot first.)*
-- **Java: same `test` source set or a dedicated one?** The `unit` suite is already
-  `.\gradlew.bat test` with `requiresDocker: true` and `sampleTest: contextLoads` —
-  i.e. it already boots a Spring context against Postgres, which is arguably itself a
-  narrow-integration concern. Do we (a) carve narrow-integration out by `--tests`
-  name filter within the existing `test` source set, (b) add an `integrationTest`
-  source set parallel to `componentTest`, or (c) re-label what's there? This affects
-  the symmetric-positive-filter guarantee.
-- **What is each component's canonical "edge"?** Per stack, name the one adapter +
-  one real dependency the narrow-integration test pins (repository↔Postgres? outbound
-  HTTP client↔stub? message/DB migration?). Needed before writing any test.
-- **Frontend stub mechanism.** What does the frontend use to stand up a stubbed HTTP
-  server for a narrow client test (MSW, a local fake, the existing Pact mock)? Should
-  it reuse existing test infra rather than add a dependency.
-- **Provider-side Pact** stays out of scope (already deferred in plan `1154`); confirm
-  narrow-integration here does **not** quietly absorb provider verification.
-- **Which components legitimately stay `pending`** after this pass (e.g. backends with
-  no persistence adapter yet) vs. must get a real test now.
+- **OQ 1 — Scope:** Pilot first — backend-java + frontend-react only. Rollout to the
+  remaining 5 components tracked in `plans/20260623-1944-narrow-integration-rollout.md`.
+- **OQ 2 — Java source set:** Option (b) — dedicated `integrationTest` Gradle source set
+  parallel to `componentTest`. The existing `test` source set gets a simple `SimpleArithmeticTest`
+  (1 + 1 = 2, no Docker) so the `unit` suite has real unit tests and no longer needs
+  `requiresDocker: true`. `BackendApplicationTests` (contextLoads) moves to `integrationTest`.
+- **OQ 3 — Java canonical edge:** `OrderRepository` ↔ real Postgres via Testcontainers —
+  save an order and read it back. Uses the existing `AbstractIntegrationTest` anchor.
+- **OQ 4 — Frontend stub mechanism:** Simple fetch/MSW stub (not the Pact mock server) to
+  keep the `integration` and `contract` suites cleanly separated. Whether the Pact mock server
+  could be used stub-only is tracked in `plans/20260623-1939-pact-mock-server-narrow-integration.md`.
+- **OQ 5 — Provider-side Pact:** Out of scope here. Provider verification is already
+  implemented in `BackendPactVerificationTest` (wired into the `contract` suite). Gaps and
+  rollout tracked in `plans/20260623-1941-provider-pact-verification.md`.
+- **OQ 6 — Which components stay `pending`:** Deferred to the rollout plan
+  `plans/20260623-1944-narrow-integration-rollout.md` — audit each component's adapter
+  surface during that pass, not before.
