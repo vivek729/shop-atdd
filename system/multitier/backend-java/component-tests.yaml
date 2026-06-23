@@ -13,12 +13,12 @@ suites:
     pending: true
   - id: component
     name: Component
-    command: .\gradlew.bat componentTest --tests '*Component*'
+    command: .\gradlew.bat componentTest --tests 'com.mycompany.myshop.backend.component.*'
     sampleTest: "bootsInProcessAndServesHttp"
     requiresDocker: true
   - id: contract
     name: Consumer Contract (Pact)
-    command: .\gradlew.bat componentTest --tests '*Pact*'
+    command: .\gradlew.bat componentTest --tests 'com.mycompany.myshop.backend.contract.*'
     sampleTest: "verify"
     requiresDocker: true
 suiteGroups:
