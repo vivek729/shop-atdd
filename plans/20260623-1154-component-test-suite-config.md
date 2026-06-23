@@ -144,6 +144,16 @@ preserves the inside-vs-outside-the-SUT boundary the course teaches.
 - `setup [--component <name>]` — run `setupCommands` (npm ci / gradle warm).
 - `compile [--component <name>]` — optional, mirrors `gh optivem test compile`.
 
+`--component` is **optional and narrowing**, not the source of "which component."
+The active `gh-optivem-*.yaml` already declares the components (via
+`system.{backend,frontend}.path` / monolith path), so the runner always knows the
+full set; omitting `--component` fans out to **all** of them — exactly mirroring how
+omitting `--suite` runs all suites. Bare `run` (neither flag) = every suite × every
+component = the CI gate. Making `--component` mandatory would break that load-bearing
+default and the local↔CI equivalence. For monolith configs there is one component, so
+the flag is moot. The tree output groups by component so a multi-component run is
+visibly labelled.
+
 ## Guardrail (non-negotiable)
 
 **CI always runs the full set** (bare `run` / `--suite all`, all components),
@@ -210,13 +220,6 @@ until the runner reads it. Do **not** block the already-decided gating work on i
 
 ## Open questions
 
-- **OQ-location** — co-locate `component-tests.yaml` in each component dir
-  (recommended) or a central registry block? *Recommend:* co-located, mirrors
-  `tests.yaml`.
-- **OQ-Java-granularity** — `componentTest` is one Gradle task covering component +
-  Pact. Split into two suites via `--tests` filter (matches the diagram's separate
-  boxes, enables `--suite component` vs `--suite contract`) or one `component`
-  suite? *Recommend:* split — the config makes it cheap and declarative.
 - **OQ-unit-filter (frontend)** — `npm test` currently collects only top-level
   `src/test/*.test.tsx`. If component/contract dirs are later un-excluded for some
   other reason, the `unit` suite needs an explicit unit-only filter to avoid overlap.
@@ -239,6 +242,23 @@ until the runner reads it. Do **not** block the already-decided gating work on i
   entrypoint), or fold the suites into the native defaults so every local path
   matches the gate? *Recommend:* decide explicitly — the split is surprising.
   (Carried from plan `0916`.)
+
+## Resolved decisions
+
+- **OQ-location → co-located per component.** Each component carries its own
+  `component-tests.yaml` in its dir (e.g. `system/multitier/frontend-react/`),
+  mirroring `system-test/<lang>/tests.yaml`. The runner discovers it via the
+  `system.{backend,frontend}.path` / monolith paths in `gh-optivem-*.yaml`. Keeps
+  the config with the code it tests and matches the existing convention; no central
+  registry coupling unrelated components into one edit surface.
+
+- **OQ-Java-granularity → split into `component` + `contract`.** Two suites driven
+  by `--tests` filters (`componentTest --tests '*Component*'` and
+  `componentTest --tests '*Pact*'`), as already drafted in the Java config above.
+  Matches the diagram's separate boxes and the frontend's 4-level pyramid, and
+  enables `--suite component` vs `--suite contract` for Java. Caveat: depends on the
+  `*Component*` / `*Pact*` test-name conventions staying accurate — note this in the
+  config so a rename can't silently drop a suite's tests.
 
 ## Risks
 
