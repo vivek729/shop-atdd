@@ -1,5 +1,13 @@
 # 2026-06-24 06:53 UTC — Plan coordination meta-plan: narrow-integration cluster (v2, +frontend boundary)
 
+🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-24T08:47:52Z`
+
+## TL;DR
+
+**Why:** Every component declares a `pending` narrow-integration suite in its `component-tests.yaml` — the pyramid layer that proves a single adapter talks to a real dependency (Postgres via Testcontainers; HTTP via Pact mock server) has zero tests. Provider-side Pact verification gaps and the frontend test-layer boundary doc are also untracked.
+
+**End result:** Wave 1 lands the backend-java + frontend-react pilot: Java gets a real `integrationTest` source set (Postgres via Testcontainers); the frontend gets a narrow-integration spec wired to the Pact mock server emitting into the union contract. U3 audits the other backends for provider-verification gaps. CI runs the `integration` suite green; Wave 2 (rollout + docs) follows.
+
 ## ▶ Next executable step (resume here)
 
 **This is a self-driving parent.** Run `/execute-plan` against *this file* and it executes the cluster for you — you never need to open the sub-plans yourself. The executor handles the low-level wave knowledge: it reads the **Wave status** tracker below, runs the **current** wave per the **Execution protocol**, then stops at that wave's exit gate and updates the tracker so the *next* `/execute-plan` on this file resumes at the next wave. Keep running the same command; it walks the waves.
