@@ -1,12 +1,15 @@
 # 2026-06-24 09:50 UTC — TypeScript narrow-integration tests via testcontainers-node
 
-> 🤖 **Picked up by agent (refine)** — `Valentina_Desk` at `2026-06-24T10:25:20Z`
-
 ## TL;DR
 
 **Why:** `backend-typescript` (TypeORM) and `monolith-typescript` (raw `pg` driver) both have real DB adapters but no narrow-integration test infrastructure. The `integration` suite is `pending: true` in both `component-tests.yaml` files. The Java and .NET backends were handled in `[[20260623-1944-narrow-integration-rollout]]`; the TypeScript components were deferred here because they need the `testcontainers` npm package wired up — a one-time setup that is the same shape for both.
 
 **End result:** Both TypeScript components have a real `OrderRepository` / `insertOrder` integration test against a live Postgres container (via `testcontainers` + `@testcontainers/postgresql`), a separate Jest integration config, and their `component-tests.yaml` `integration` suite unwired from `pending: true`.
+
+**Resolved shape (no production-code changes in either component):**
+- **backend-typescript** reuses the real `AppModule`: the spec sets `POSTGRES_DB_HOST/PORT/NAME/USER/PASSWORD` to the container's values in `beforeAll`, then `Test.createTestingModule({ imports: [AppModule] })` — the existing `forRootAsync` factory connects to the container. No custom TypeORM/`DataSource` override.
+- **monolith-typescript** leaves `src/lib/db.ts` untouched: the spec sets the same `POSTGRES_DB_*` env vars in `beforeAll`, **then** `await import('../lib/db')` so the module-load-time `pg` Pool is constructed against the container. No lazy-init, no `resetPool` seam.
+- For **both**, the container is started/stopped in `beforeAll`/`afterAll` inside the spec — **not** a Jest `globalSetup` (env mutated there does not reliably reach test workers). `jest.integration.config.ts` only scopes the suite (`testRegex`, `testEnvironment: node`).
 
 ## Outcomes
 
@@ -21,7 +24,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 1 — backend-typescript setup.** Add `testcontainers` + `@testcontainers/postgresql` to `devDependencies`, create `jest.integration.config.ts` with `testRegex: .*\.integration\.spec\.ts$` and `testEnvironment: node`, write a Jest `globalSetup` that starts the Postgres container and injects `POSTGRES_HOST` / `POSTGRES_PORT` / `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` into `process.env`, then override the TypeORM connection in `AppModule` (or via a test NestJS module) to use those env vars.
+**Step 1 — backend-typescript setup.** Add `testcontainers` + `@testcontainers/postgresql` to `devDependencies`, create `jest.integration.config.ts` with `testRegex: .*\.integration\.spec\.ts$` and `testEnvironment: node` (no env-mutating `globalSetup`). In the spec's `beforeAll`, start the Postgres container and set `POSTGRES_DB_HOST` / `POSTGRES_DB_PORT` / `POSTGRES_DB_NAME` / `POSTGRES_DB_USER` / `POSTGRES_DB_PASSWORD` into `process.env`, then bootstrap the real `AppModule` via `Test.createTestingModule` — its existing `forRootAsync` factory already reads those env vars, so no TypeORM override is needed.
 
 ## Audit findings (2026-06-24)
 
@@ -44,11 +47,11 @@ Discovered during the `[[20260623-1944-narrow-integration-rollout]]` pre-executi
 
 ## Steps
 
-- [ ] **Step 1 — backend-typescript setup.** Add `testcontainers` + `@testcontainers/postgresql` to `devDependencies`. Create `jest.integration.config.ts` (`testRegex: .*\.integration\.spec\.ts$`, `testEnvironment: node`, `globalSetup` pointing at a shared setup file). Write `test/setup/postgres.ts` that starts a `PostgreSqlContainer`, sets `process.env.TYPEORM_*` (or `POSTGRES_*`) env vars, exports `teardown`. Override TypeORM config in test to read those env vars (use `TypeOrmModule.forRootAsync` with `useFactory` reading `process.env`).
-- [ ] **Step 2 — backend-typescript test.** Write `src/core/repositories/order.repository.integration.spec.ts` — save an order via `Repository<Order>`, read it back, assert. Tag with a marker (e.g. `describe('OrderRepository [integration]', ...)`) so the Jest filter catches it. Add `"test:integration": "jest --config jest.integration.config.ts"` to `package.json`. Confirm `npm run test:integration` passes locally (Docker up) and `npm run test:unit` still passes without Docker.
+- [ ] **Step 1 — backend-typescript setup.** Add `testcontainers` + `@testcontainers/postgresql` to `devDependencies`. Create `jest.integration.config.ts` (`testRegex: .*\.integration\.spec\.ts$`, `testEnvironment: node`) — **no** env-mutating `globalSetup`. Write a `beforeAll` (or a shared helper imported by the spec) that starts a `PostgreSqlContainer` and sets the env vars the existing `AppModule` factory already reads: `POSTGRES_DB_HOST`, `POSTGRES_DB_PORT`, `POSTGRES_DB_NAME`, `POSTGRES_DB_USER`, `POSTGRES_DB_PASSWORD` (note: name var is `POSTGRES_DB_NAME`, not `POSTGRES_DB`). No custom TypeORM override is needed — set the env vars *before* `Test.createTestingModule({ imports: [AppModule] })` and the real `forRootAsync` factory connects to the container. Tear the container down in `afterAll`.
+- [ ] **Step 2 — backend-typescript test.** Write `src/core/repositories/order.repository.integration.spec.ts` — in `beforeAll` start the container + set env (Step 1) then bootstrap `Test.createTestingModule({ imports: [AppModule] })`; in the test, save an order via `Repository<Order>`, read it back, assert. Tag with a marker (e.g. `describe('OrderRepository [integration]', ...)`) so the Jest filter catches it. Add `"test:integration": "jest --config jest.integration.config.ts"` to `package.json`. Confirm `npm run test:integration` passes locally (Docker up) and `npm run test:unit` still passes without Docker.
 - [ ] **Step 3 — backend-typescript YAML.** In `system/multitier/backend-typescript/component-tests.yaml`: remove `pending: true` from the `integration` suite, add `command: npm run test:integration`, `sampleTest: <test name>`, `requiresDocker: true`.
-- [ ] **Step 4 — monolith-typescript setup.** Same packages. Create `jest.integration.config.ts`. Write `test/setup/postgres.ts` that starts `PostgreSqlContainer` and sets `POSTGRES_DB_HOST`, `POSTGRES_DB_PORT`, `POSTGRES_DB_DATABASE`, `POSTGRES_DB_USER`, `POSTGRES_DB_PASSWORD` env vars (matching the variable names in `src/lib/db.ts`'s Pool config).
-- [ ] **Step 5 — monolith-typescript test.** Write `src/__tests__/db.integration.spec.ts` — call `insertOrder(...)`, call `findByOrderNumber(...)`, assert the round-trip. Add `"test:integration": "jest --config jest.integration.config.ts"` to `package.json`. Confirm `npm run test:integration` passes locally (Docker up).
+- [ ] **Step 4 — monolith-typescript setup.** Same packages. Create `jest.integration.config.ts` (`testRegex`, `testEnvironment: node`; **no** env-mutating `globalSetup`). The container is started in a `beforeAll` inside the spec (Step 5). Env var names must match `src/lib/db.ts`'s Pool config: `POSTGRES_DB_HOST`, `POSTGRES_DB_PORT`, `POSTGRES_DB_NAME`, `POSTGRES_DB_USER`, `POSTGRES_DB_PASSWORD`.
+- [ ] **Step 5 — monolith-typescript test.** Write `src/__tests__/db.integration.spec.ts` — in `beforeAll`: start `PostgreSqlContainer`, set the `POSTGRES_DB_*` env vars, **then** `const db = await import('../lib/db')` so the module-load Pool is built against the container (do **not** static-import `db.ts` at the top of the file). Call `db.insertOrder(...)`, `db.findByOrderNumber(...)`, assert the round-trip. Stop the container in `afterAll`. Add `"test:integration": "jest --config jest.integration.config.ts"` to `package.json`. Confirm `npm run test:integration` passes locally (Docker up).
 - [ ] **Step 6 — monolith-typescript YAML.** In `system/monolith/monolith-typescript/component-tests.yaml`: remove `pending: true`, add `command`, `sampleTest`, `requiresDocker: true`.
 - [ ] **Step 7 — Verify both.** `gh optivem component test run --suite integration` for both components. `--sample` works for each.
 
@@ -56,9 +59,8 @@ Discovered during the `[[20260623-1944-narrow-integration-rollout]]` pre-executi
 
 - **NestJS TypeORM wiring → reuse the real `AppModule`.** `AppModule` already declares `TypeOrmModule.forRootAsync` with a `useFactory` that reads `POSTGRES_DB_HOST` / `POSTGRES_DB_PORT` / `POSTGRES_DB_NAME` / `POSTGRES_DB_USER` / `POSTGRES_DB_PASSWORD` from `process.env` (via `ConfigService`). So the integration test does **not** need a custom override or a hand-built `DataSource`: set those env vars to the container's values *before* bootstrapping, then `Test.createTestingModule({ imports: [AppModule] })` and the existing factory connects to the container. This exercises the real production wiring with minimal new code. (Note for Step 1: the DB-name env var is `POSTGRES_DB_NAME`, not `POSTGRES_DB`.)
 
-## Open questions
-
-- **`pg` Pool re-initialisation in monolith-typescript:** `src/lib/db.ts` creates the Pool at module load time. If the container starts after module import, the Pool will use stale connection details. Resolution: either lazy-initialise the Pool (read env vars at first query), or call a `resetPool()` function in `beforeAll`. Check `src/lib/db.ts` Pool initialisation on execution.
+- **`pg` Pool re-init → dynamic import, no production change.** Confirmed: `system/monolith/typescript/src/lib/db.ts` builds `const pool = new Pool({ host: process.env.POSTGRES_DB_HOST || 'localhost', ... })` at module-load time, freezing the connection details on first import. Resolution: the integration test starts the container and sets `process.env.POSTGRES_DB_*` in a `beforeAll`, **then** `await import('../lib/db')` so the Pool is constructed with the container values. `db.ts` is left untouched — the test exercises the real adapter as students ship it (no lazy-init, no `resetPool` seam).
+- **Container starts in `beforeAll`, not Jest `globalSetup`.** Setting `process.env` inside a Jest `globalSetup` does not reliably propagate to test-worker processes, so for **both** components the container is started and env vars are set in a `beforeAll`/`afterAll` inside the test file (or a shared `AbstractIntegrationTest`-style helper imported by the spec). `jest.integration.config.ts` still exists to scope the integration suite (`testRegex`, `testEnvironment: node`), but does **not** carry a `globalSetup` that mutates env.
 
 ## Dependencies
 
