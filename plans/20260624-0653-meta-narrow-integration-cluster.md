@@ -8,7 +8,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Wave 2 is done (2026-06-24) — awaiting CI.** Push the uncommitted Wave 2 fixes (backend-dotnet PactNet v5, backend-typescript nock import, commit-stage.md docs, plan file updates) then let CI run the full pyramid. **Next wave: none — all execution units complete.** Remaining open item: TypeScript narrow-integration tests — see `plans/20260624-0950-typescript-narrow-integration-testcontainers.md` (separate follow-up).
+**COMPLETE (2026-06-24) — CI gate waived by author.** All five execution units (U1–U5) landed and are committed; the cross-cutting suite rename (`contract` → `provider-verification`) also landed (commit `c3c88400`). The Wave 2 fixes are committed (`d1fc8bb2`, `32195b3c`, `d8b48dd9`) — not uncommitted. The "await CI green" gate has been **dropped**. **Next wave: none — cluster done; safe to delete.** Two **independent** follow-ups remain live and are NOT part of this cluster: TypeScript narrow-integration (`plans/20260624-0950-typescript-narrow-integration-testcontainers.md`) and multi-repo contract transport (`plans/20260624-0814-multirepo-contract-transport-dockerized-broker.md`).
 
 ## Execution protocol (how `/execute-plan` drives this parent)
 
@@ -29,7 +29,7 @@ This means a single `/execute-plan <this file>` advances **one wave** (as far as
 
 - **Wave 0 — planning/refine:** ✅ done (2026-06-24) — all sub-plans refined, OQ4 flipped, rename plan `0824` created, decisions settled.
 - **Wave 1 — backend-java pilot + provider-verification audit + frontend narrow-integration:** ✅ done (2026-06-24) — integration suites green in CI (backend-java + frontend-react). Also fixed: `integrationTest/resources/application-test.yml` added (Flyway); gh-optivem v1.6.41 released (component command).
-- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** ⏳ awaiting-CI (2026-06-24) — all units executed; push + CI gate pending. Units done: U4 `1944`; U3(complete) `1941` Steps 3–4; U5 `1957`; `1801` Step 6. TypeScript narrow-integration deferred to `plans/20260624-0950-typescript-narrow-integration-testcontainers.md`. Suite rename (`0824`) is out of scope for this wave.
+- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** ✅ done (2026-06-24) — all units executed and committed; CI gate waived by author. Units done: U4 `1944`; U3(complete) `1941` Steps 3–4 (`BackendPactVerificationTest` present in backend-dotnet + backend-java); U5 `1957` (`docs/atdd/test-taxonomy.md`); `1801` Step 6. **Suite rename `contract` → `provider-verification` landed** (commit `c3c88400`; all 7 `component-tests.yaml` carry the `provider-verification` id; standalone frontend layer-4 suite dropped). TypeScript narrow-integration deferred to the independent follow-up `plans/20260624-0950-typescript-narrow-integration-testcontainers.md`.
 
 ## Target state
 
@@ -71,7 +71,7 @@ This means a single `/execute-plan <this file>` advances **one wave** (as far as
 - ✅ **`1957`** — **rewritten** (not extended) to the symmetric 4-layer rule, the boot/render discriminator, the shared-fixture + both-emit-union design, and the stub-only opt-out. Sequenced after 1801 Step 3 lands (docs-only).
 - ✅ **`1939`** — collapsed to a decision-resolved record: Pact mock server + shared-fixture/both-emit-union + stub-only opt-out. Closed; pattern docs owned by 1957.
 - ✅ **`1941`** — refined: `contracts/` committed (not artifact-passed), no broker by default, provider-verification follows the consumer (monolith scope confirmed by its own Step 1 audit).
-- ✅ **NEW — suite rename `contract` → `provider-verification`** (and drop the standalone frontend layer-4 suite): **plan created → `plans/20260624-0824-rename-contract-suite-to-provider-verification.md`**. Cross-cutting across all 7 `component-tests.yaml`, `suiteGroups.all`, and docs (`commit-stage.md`). **Correction:** grounding found this rename touches **NO CI workflow** — commit-stage workflows invoke the component tier with a bare `gh optivem component test run` (no `--suite`); the only `--suite contract-*` references are the *unrelated* acceptance-stage external-system suites. Not owned by `1801`/`1939`/`1941`/`1944`/`1957`.
+- ✅ **DONE — suite rename `contract` → `provider-verification`** (and drop the standalone frontend layer-4 suite): **landed in commit `c3c88400`** — all 7 `component-tests.yaml` carry the `provider-verification` id. Cross-cutting across all 7 `component-tests.yaml`, `suiteGroups.all`, and docs (`commit-stage.md`). **Correction:** grounding found this rename touches **NO CI workflow** — commit-stage workflows invoke the component tier with a bare `gh optivem component test run` (no `--suite`); the only `--suite contract-*` references are the *unrelated* acceptance-stage external-system suites. Not owned by `1801`/`1939`/`1941`/`1944`/`1957`.
 
 ---
 

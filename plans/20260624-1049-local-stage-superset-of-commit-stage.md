@@ -1,7 +1,5 @@
 # 2026-06-24 10:49 UTC — Make the `local` stage a superset of the commit stage
 
-> 🤖 **Picked up by agent (refine)** — `Valentina_Desk` at `2026-06-24T10:51:53Z`
-
 ## TL;DR
 
 **Why:** The meta-prerelease run on `d1fc8bb2` had every `run / local (...)` job
@@ -21,10 +19,36 @@ lint + component, `multitier-backend-dotnet` unit + component/Pact). That is
 green commit**. The Docker build/push and Sonar analysis stay commit-stage-only
 (they produce/scan the artifact; they are not test gates).
 
-**End result:** the `local` job in `_prerelease-pipeline.yml` also runs that
-config's **lint + unit + component/Pact** checks, mirroring the exact commands the
-matching `*-commit-stage.yml` workflows use, gated by the same
+**End result (target state):** the `local` job in `_prerelease-pipeline.yml` also
+runs that config's **lint + unit + component/Pact** checks, mirroring the exact
+commands the matching `*-commit-stage.yml` workflows use, gated by the same
 `architecture`/`language` conditions the existing compile steps already carry.
+Concretely, once this lands:
+
+- **Order (per config):** compile → **lint → unit → component/Pact** → `gh optivem
+  system start` → `test setup` → `test run --sample`. The new checks sit **before
+  `system start`** (resolved **OQ-1(a)**) so they fail fast and never collide on
+  ports with the real+stub stack.
+- **Frontend:** every multitier `local` config (java, dotnet, typescript) runs
+  frontend-react `npm run lint` + `--component frontend` (resolved **OQ-2(b)** —
+  true superset, each config self-contained), in addition to its backend checks.
+  Frontend has no unit step.
+- **Wiring:** the checks are **inlined** in `_prerelease-pipeline.yml` (resolved
+  **OQ-3(a)**), each block carrying a comment pointing at its source
+  `*-commit-stage.yml`; a separate follow-up plan tracks extracting a shared
+  composite action in `optivem/actions`.
+- **No new legacy axis** (resolved **OQ-4**): the SHA/source-level checks run once
+  per config; the existing latest+legacy system-test sample split is untouched.
+
+**What the user observes:** a green `local` line for a config now **guarantees** a
+green `commit-stage` line for the same config's test gates — the structural gap
+that let `d1fc8bb2` go green-local / red-commit is closed. `local` wall-clock grows
+(it now does lint + unit + component before the sample), but failures surface at
+the first fail-fast gate instead of after the commit-stage fan-out.
+
+**Explicitly unchanged:** the `commit-stage` jobs still own **Docker build/push**
+and **Sonar** (artifact-producing/scanning steps, not test gates); `local` does
+not gain those. The stages stay separate jobs (Option A, not a collapse).
 
 ## Background — why "local" is misleading
 
@@ -135,15 +159,16 @@ the diff before touching the other five.
   plan** to extract compile + lint + unit + component into a reusable composite
   action in `optivem/actions` that both `local` and each `*-commit-stage.yml` call
   (zero drift, single source of truth, also absorbing the existing compile-step
-  duplication). Rejected for now: (b) build the composite action first — correct
+  duplication) — filed as
+  [20260624-1057-composite-action-for-stage-checks.md](20260624-1057-composite-action-for-stage-checks.md).
+  Rejected for now: (b) build the composite action first — correct
   long-term, but a larger cross-repo change that would block this fix.
-
-## Open questions
-
-- **OQ-4 — Legacy sample interaction.** `local` already runs a legacy system-test
-  sample (`skip-acceptance-legacy` gate). The new checks are SHA/source-level
-  (not config-version specific), so they run once regardless of latest/legacy — no
-  legacy variant needed. Confirm.
+- **OQ-4 — Legacy sample interaction = confirmed: no legacy variant** (user,
+  2026-06-24). The new lint + unit + component checks are SHA/source-level — they
+  test the current checkout and have no latest-vs-legacy axis the way the
+  system-test sample does (where legacy means a previously-published config
+  version). So they run **once** per `local` config, independent of the existing
+  `skip-acceptance-legacy` system-test gate, which stays unchanged.
 
 ## Risks
 
