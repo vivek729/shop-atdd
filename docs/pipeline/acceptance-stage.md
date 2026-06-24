@@ -60,7 +60,7 @@ of their group. The `summary` job is orchestration and is not part of the alignm
 | Checkout Code | Checkout Repository, Docker Hub login, GHCR login |
 | Deploy: Real External Systems | Simulate Deployment (Real External Systems), Wait for Systems |
 | Deploy: Stub External Systems | Simulate Deployment (Stub External Systems), Wait for Systems |
-| Setup Test Harness | Setup toolchain, Setup Gradle/pre-warm, Cache Playwright, Install gh-optivem CLI, Setup Test Harness (`gh optivem test setup`) |
+| Setup Test Harness | Setup toolchain, Setup Gradle/pre-warm, Cache Playwright, Install gh-optivem CLI, Setup Test Harness (`gh optivem system-test setup`) |
 | Run Smoke Tests | `smoke-stub`, `smoke-real` |
 | Run Acceptance Tests | `acceptance-parallel-api`, `acceptance-parallel-ui`, `acceptance-isolated-api`, `acceptance-isolated-ui` |
 | Run Contract Tests | `contract-stub`, `contract-stub-isolated`, `contract-real` |

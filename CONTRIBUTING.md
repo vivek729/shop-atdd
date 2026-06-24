@@ -33,7 +33,7 @@ Useful flags:
 
 This is the preferred entry point for verifying cross-language changes.
 
-### Single language — `gh optivem test run`
+### Single language — `gh optivem system-test run`
 
 Point `GH_OPTIVEM_CONFIG` at the variant yaml at the repo root, then run the
 commands without per-flag overrides. Substitute `<language>` ∈ {java, dotnet,
@@ -46,13 +46,13 @@ $env:GH_OPTIVEM_CONFIG = "gh-optivem-<architecture>-<language>.yaml"
 gh optivem system start
 
 # Prepare the test harness (npm ci / gradle compile / dotnet build, depending on language)
-gh optivem test setup
+gh optivem system-test setup
 
 # Run the latest suites
-gh optivem test run
+gh optivem system-test run
 
 # Or a fast smoke (one sample per suite)
-gh optivem test run --sample
+gh optivem system-test run --sample
 
 # Stop when done
 gh optivem system stop
@@ -62,8 +62,8 @@ For the legacy suites, switch the env var to the `-legacy` sibling and re-run se
 
 ```pwsh
 $env:GH_OPTIVEM_CONFIG = "gh-optivem-<architecture>-<language>-legacy.yaml"
-gh optivem test setup
-gh optivem test run
+gh optivem system-test setup
+gh optivem system-test run
 ```
 
 Use this when iterating on a single language, or for the `--sample`

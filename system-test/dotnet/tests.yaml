@@ -28,7 +28,7 @@
 # overrides it with its own `testFilter:` entry.
 #
 # `suiteGroups` (optional) maps an alias name to a list of suite ids —
-# `gh optivem test run --suite <alias>` substitutes the alias with its
+# `gh optivem system-test run --suite <alias>` substitutes the alias with its
 # constituent ids before the runner sees them. Each acceptance channel has TWO
 # concrete partition suites — acceptance-parallel-<ch> (runs in parallel) and
 # acceptance-isolated-<ch> (runs serially) — and a per-channel group alias
@@ -38,7 +38,7 @@
 # fall back to the default. The BPMN runtime emits `--suite=acceptance` from
 # the verify-tests-pass / verify-tests-fail call-activities.
 #
-# `setupCommands` runs once when invoked via `gh optivem test setup` —
+# `setupCommands` runs once when invoked via `gh optivem system-test setup` —
 # typically the build / dependency install. `test system` does not run it
 # implicitly; chain `test setup` before the first `test system` call.
 #

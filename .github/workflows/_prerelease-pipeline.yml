@@ -279,7 +279,7 @@ jobs:
         working-directory: system/multitier/backend-dotnet
 
       # Install the gh-optivem CLI extension. The extension provides the
-      # `gh optivem system start` and `gh optivem test run` subcommands
+      # `gh optivem system start` and `gh optivem system-test run` subcommands
       # used to bring up the docker-compose stacks and run the test suites.
       - name: Install gh-optivem CLI extension
         uses: optivem/actions/install-gh-optivem@v1
@@ -295,68 +295,68 @@ jobs:
       - name: Run Component Tests (monolith, typescript)
         if: inputs.architecture == 'monolith' && inputs.language == 'typescript'
         run: |
-          gh optivem component test setup
-          gh optivem component test run
+          gh optivem component-test setup
+          gh optivem component-test run
 
       - name: Run Component Tests (monolith, java)
         if: inputs.architecture == 'monolith' && inputs.language == 'java'
         run: |
-          gh optivem component test setup
-          gh optivem component test run
+          gh optivem component-test setup
+          gh optivem component-test run
 
       - name: Run Component Tests (monolith, dotnet)
         if: inputs.architecture == 'monolith' && inputs.language == 'dotnet'
         run: |
-          gh optivem component test setup
-          gh optivem component test run
+          gh optivem component-test setup
+          gh optivem component-test run
 
       - name: Run Component Tests (multitier backend, typescript)
         if: inputs.architecture == 'multitier' && inputs.language == 'typescript'
         run: |
-          gh optivem component test setup --component backend
-          gh optivem component test run --component backend
+          gh optivem component-test setup --component backend
+          gh optivem component-test run --component backend
 
       - name: Run Component Tests (multitier backend, java)
         if: inputs.architecture == 'multitier' && inputs.language == 'java'
         run: |
-          gh optivem component test setup --component backend
-          gh optivem component test run --component backend
+          gh optivem component-test setup --component backend
+          gh optivem component-test run --component backend
 
       - name: Run Component Tests (multitier backend, dotnet)
         if: inputs.architecture == 'multitier' && inputs.language == 'dotnet'
         run: |
-          gh optivem component test setup --component backend
-          gh optivem component test run --component backend
+          gh optivem component-test setup --component backend
+          gh optivem component-test run --component backend
 
       # Frontend component tests run in every multitier config (OQ-2b: true
       # superset). Source: multitier-frontend-react-commit-stage.yml.
       - name: Run Component Tests (multitier frontend)
         if: inputs.architecture == 'multitier'
         run: |
-          gh optivem component test setup --component frontend
-          gh optivem component test run --component frontend
+          gh optivem component-test setup --component frontend
+          gh optivem component-test run --component frontend
 
       # Bring up the docker-compose stacks (real + stub) and wait for health.
       - name: Start system
         run: gh optivem system start
 
       - name: Setup test harness (latest)
-        run: gh optivem test setup
+        run: gh optivem system-test setup
 
       - name: Run System Tests - Latest (Sample)
-        run: gh optivem test run --sample
+        run: gh optivem system-test run --sample
 
       - name: Setup test harness (legacy)
         if: ${{ !inputs.skip-acceptance-legacy }}
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-${{ inputs.language }}-legacy.yaml
-        run: gh optivem test setup
+        run: gh optivem system-test setup
 
       - name: Run System Tests - Legacy (Sample)
         if: ${{ !inputs.skip-acceptance-legacy }}
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-${{ inputs.architecture }}-${{ inputs.language }}-legacy.yaml
-        run: gh optivem test run --sample
+        run: gh optivem system-test run --sample
 
   commit-stage:
     needs: [check-version, local]

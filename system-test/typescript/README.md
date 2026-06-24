@@ -23,33 +23,33 @@ gh optivem system start
 Prepare the test harness (`npm ci` + `playwright install chromium`):
 
 ```bash
-gh optivem test setup
+gh optivem system-test setup
 ```
 
 Run all latest test suites:
 
 ```bash
-gh optivem test run
+gh optivem system-test run
 ```
 
 Run legacy test suites — switch the env var first, then re-run setup (legacy has its own setupCommands block):
 
 ```pwsh
 $env:GH_OPTIVEM_CONFIG = "gh-optivem-monolith-typescript-legacy.yaml"
-gh optivem test setup
-gh optivem test run
+gh optivem system-test setup
+gh optivem system-test run
 ```
 
 Run only sample tests (one per suite, fast smoke):
 
 ```bash
-gh optivem test run --sample
+gh optivem system-test run --sample
 ```
 
 Run a specific suite by ID:
 
 ```bash
-gh optivem test run --suite acceptance-parallel-api
+gh optivem system-test run --suite acceptance-parallel-api
 ```
 
 Rebuild container images before bringing the system up:

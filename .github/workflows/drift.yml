@@ -8,7 +8,7 @@ name: drift
 #   1. Bring up Java's `real` and `stub` compose files. `db-migrate` applies
 #      the canonical Flyway migration set to each project's postgres-data
 #      volume (`my-shop-real_postgres-data`, `my-shop-stub_postgres-data`).
-#   2. Run the Java smoke-stub suite. (`gh optivem test run` preflights
+#   2. Run the Java smoke-stub suite. (`gh optivem system-test run` preflights
 #      every system label in systems.yaml — both `real` and `stub` URLs
 #      must respond — so both compose stacks have to be up.)
 #   3. `docker compose down` Java's stacks. Containers go away; the named
@@ -185,12 +185,12 @@ jobs:
       - name: Setup Java test harness
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-monolith-java.yaml
-        run: gh optivem test setup
+        run: gh optivem system-test setup
 
       - name: Run Java smoke-stub
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-monolith-java.yaml
-        run: gh optivem test run --suite smoke-stub
+        run: gh optivem system-test run --suite smoke-stub
 
       # ---- Swap apps. Volumes persist because `down` omits `-v`. ----
 
@@ -238,12 +238,12 @@ jobs:
       - name: Setup TypeScript test harness
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-monolith-typescript.yaml
-        run: gh optivem test setup
+        run: gh optivem system-test setup
 
       - name: Run TypeScript smoke-stub
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-monolith-typescript.yaml
-        run: gh optivem test run --suite smoke-stub
+        run: gh optivem system-test run --suite smoke-stub
 
       - name: Tear down TypeScript stacks
         if: always()
@@ -369,12 +369,12 @@ jobs:
       - name: Setup Java test harness
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
-        run: gh optivem test setup
+        run: gh optivem system-test setup
 
       - name: Run Java smoke-stub
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
-        run: gh optivem test run --suite smoke-stub
+        run: gh optivem system-test run --suite smoke-stub
 
       - name: Stop Java stacks (preserve postgres-data volumes)
         run: |
@@ -422,12 +422,12 @@ jobs:
       - name: Setup TypeScript test harness
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-multitier-typescript.yaml
-        run: gh optivem test setup
+        run: gh optivem system-test setup
 
       - name: Run TypeScript smoke-stub
         env:
           GH_OPTIVEM_CONFIG: gh-optivem-multitier-typescript.yaml
-        run: gh optivem test run --suite smoke-stub
+        run: gh optivem system-test run --suite smoke-stub
 
       - name: Tear down TypeScript stacks
         if: always()

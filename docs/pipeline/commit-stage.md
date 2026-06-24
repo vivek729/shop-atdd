@@ -37,11 +37,11 @@ flowchart TD
 
 - **Gate** and **Summary** are orchestration jobs, not pipeline stages.
 - **Publish Docker Image** runs only on `main`; pull requests build the image but do not push it.
-- **The test pyramid gates the image.** The four suites (unit · narrow integration · component · provider-verification, green above) run **inside the `run` job**, in pyramid order, **ahead of Build/Publish** — each invoked as `gh optivem component test run [--component <c>] --suite <id>` against the declarative `component-tests.yaml`. A red suite blocks the Docker image; there is no longer a separate, non-gating `component-tests` job. Pending suites print a notice and pass; Docker-backed suites require the Docker daemon (provided on `ubuntu-latest`). The **frontend** runs unit · integration · component only — it is consumer-only and has **no** provider-verification suite.
+- **The test pyramid gates the image.** The four suites (unit · narrow integration · component · provider-verification, green above) run **inside the `run` job**, in pyramid order, **ahead of Build/Publish** — each invoked as `gh optivem component-test run [--component <c>] --suite <id>` against the declarative `component-tests.yaml`. A red suite blocks the Docker image; there is no longer a separate, non-gating `component-tests` job. Pending suites print a notice and pass; Docker-backed suites require the Docker daemon (provided on `ubuntu-latest`). The **frontend** runs unit · integration · component only — it is consumer-only and has **no** provider-verification suite.
 - **Narrow integration** exercises one adapter against a real dependency in isolation — no component boot, no full app start. Backends: `OrderRepository` ↔ Testcontainers-Postgres, `TaxGateway`/`ErpGateway` ↔ WireMock-in-Testcontainers. Frontend: `orderService` adapter ↔ in-process Pact mock server (no React render, no Docker). See [test taxonomy](../atdd/test-taxonomy.md) for the full four-layer model and the boot/render discriminator.
 - **Consumer → `contracts/` → provider verification flow:** the frontend `integration` + `component` suites both emit into the committed `contracts/frontend-backend.json` (union of both suites' interactions); the backend `provider-verification` suite reads that committed file and runs provider verification. No inter-job artifact passing — the committed `.pact` is always current. `requiresDocker: false` on the backend provider-verification suite (provider verification uses WireMock + WebApplicationFactory, not Testcontainers).
 - **The component-tier layer-4 suite is provider verification.** Named `Provider Verification (Pact)` with `id: provider-verification`, it runs the backend's `BackendPactVerificationTest`, which verifies the frontend consumer's committed `.pact` against the real provider. It exists **only on backends** (and the monolith) — the frontend is consumer-only and has **no** layer-4 suite; its consumer-contract emission lives in the `integration` + `component` suites. This is distinct from the external-system contract suites in `tests.yaml` (clock/erp/tax, stub-vs-real); both touch Pact/contracts, but the component-tier `provider-verification` suite is the in-process frontend↔backend provider check, not an external-system stub-vs-real comparison.
-- **Local vs CI:** `gh optivem component test run` is the command that matches the CI gate. Bare `npm test` / `./gradlew test` / `dotnet test` run a fast, Docker-light subset and intentionally run *less* than CI. Use `--suite unit` for the fast inner loop, bare `run` to match CI.
+- **Local vs CI:** `gh optivem component-test run` is the command that matches the CI gate. Bare `npm test` / `./gradlew test` / `dotnet test` run a fast, Docker-light subset and intentionally run *less* than CI. Use `--suite unit` for the fast inner loop, bare `run` to match CI.
 
 ## Diagram ↔ YAML mapping
 
@@ -55,10 +55,10 @@ are not part of the alignment.
 |---|---|
 | Checkout Code | Checkout Repository (`run` job) |
 | Compile Code | Setup toolchain, pre-warm, Compile Code (`run` job) |
-| Run Unit Tests | Install gh-optivem CLI Extension, Set Up Component Test Harness, Run Unit Tests (`gh optivem component test run --suite unit`, `run` job) |
-| Run Narrow Integration Tests | Run Narrow Integration Tests (`gh optivem component test run --suite integration`, `run` job) |
-| Run Component Tests | Run Component Tests (`gh optivem component test run --suite component`, `run` job) |
-| Run Provider Verification | Run Provider Verification (`gh optivem component test run --suite provider-verification`, `run` job; backends + monolith only — frontend is consumer-only) |
+| Run Unit Tests | Install gh-optivem CLI Extension, Set Up Component Test Harness, Run Unit Tests (`gh optivem component-test run --suite unit`, `run` job) |
+| Run Narrow Integration Tests | Run Narrow Integration Tests (`gh optivem component-test run --suite integration`, `run` job) |
+| Run Component Tests | Run Component Tests (`gh optivem component-test run --suite component`, `run` job) |
+| Run Provider Verification | Run Provider Verification (`gh optivem component-test run --suite provider-verification`, `run` job; backends + monolith only — frontend is consumer-only) |
 | Run Linter | Run Linter (`run` job) |
 | Run Static Code Analysis | Run Code Analysis (`run` job; reuses Compile Code's build output) |
 | Build Docker Image | Setup Buildx, pre-pull base images, read/compose version, extract metadata (`run` job) |

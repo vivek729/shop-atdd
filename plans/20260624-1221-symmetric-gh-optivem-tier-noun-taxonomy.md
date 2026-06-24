@@ -148,15 +148,20 @@ issues these to itself, so the hard rename would have broken the orchestrator wi
   a stale call site breaks until flipped, so do not merge Phase 2 piecemeal.
 
 ### Phase 2 — shop call sites
-- [ ] Rewrite the 15 workflows + 0916-wave workflows to the new verbs (`gh optivem test …` →
-  `system-test …`; `component test …` → `component-test …`). `actionlint` each.
+- [x] **Verb rename done (uncommitted, 2026-06-24).** All 22 workflows + docs/scripts/READMEs/
+  `tests.yaml`/agent doc rewritten (`gh optivem test run|setup|compile` → `system-test …`;
+  `component test` → `component-test`) across 36 files; `plans/` deliberately excluded.
+  `actionlint` green on all 22 changed workflows. ⚠️ **Must NOT push/merge until the gh-optivem
+  release ships** — a live call site breaks against the old binary (OQ-A flag-day).
+- [x] **`--assume-running` — N/A (verified).** No shop workflow calls the bare `test` aggregate
+  (grep = 0 hits); acceptance stages start the system via the `deploy-docker-compose` composite
+  action and run suites with `gh optivem system-test run --suite …` directly. The flag is a
+  developer-local ergonomic only, so OQ-E's "don't invoke the bare aggregate" branch applies and
+  nothing needs the flag.
 - [ ] Populate `compileCommands:` in all 7 `component-tests.yaml` (OQ-C addendum — the CLI verb is
   live but no-ops until the YAML lists commands), and route the 7 commit-stage `Compile Code`
-  steps to `gh optivem component-test compile [--component <c>]`.
-- [ ] Confirm the acceptance-stage workflows pass `--assume-running` (or don't call the bare `test`
-  aggregate) so its `system start` doesn't clash with the explicit `system start` they already run
-  (OQ-E execution caveat).
-- [ ] Update `docs/pipeline/acceptance-stage.md`, `CLAUDE.md`, `CONTRIBUTING.md`.
+  steps to `gh optivem component-test compile [--component <c>]`. *(Not a rename — net-new content;
+  still pending.)*
 
 ### Phase 3 — Verify
 - [ ] `actionlint` every changed workflow; one green CI run per pipeline.

@@ -33,8 +33,8 @@ After compilation passes, run system tests with `--sample` for each affected lan
 ```pwsh
 $env:GH_OPTIVEM_CONFIG = "gh-optivem-monolith-<language>.yaml"
 gh optivem system start
-gh optivem test setup
-gh optivem test run --sample
+gh optivem system-test setup
+gh optivem system-test run --sample
 gh optivem system stop
 ```
 
@@ -46,7 +46,7 @@ For full-suite runs across all three languages (latest + legacy), use `./test-al
 
 When fixing a failing CI workflow, always follow this sequence:
 
-1. **Reproduce locally first**: Before making any code changes, run `gh optivem test run` locally with the appropriate flags to reproduce the failure. Report whether the failure was reproduced or not.
+1. **Reproduce locally first**: Before making any code changes, run `gh optivem system-test run` locally with the appropriate flags to reproduce the failure. Report whether the failure was reproduced or not.
 2. **Check all languages for the same issue**: The shop repo has parallel implementations in .NET, Java, and TypeScript. When a test fails in one language, check the equivalent test in the other languages for the same problem or inconsistency. Fix all affected languages, not just the one that failed.
-3. **Test locally after fixing**: After applying the fix, run `gh optivem test run` again locally to verify the fix works.
+3. **Test locally after fixing**: After applying the fix, run `gh optivem system-test run` again locally to verify the fix works.
 4. **Then commit**: Only commit and push after local verification passes.

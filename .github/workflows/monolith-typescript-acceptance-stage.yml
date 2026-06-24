@@ -256,57 +256,57 @@ jobs:
           ref: ${{ inputs.gh-optivem-ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Per-suite invocations of `gh optivem test run`. Each suite ID below
+      # Per-suite invocations of `gh optivem system-test run`. Each suite ID below
       # matches an entry in tests.yaml's suites[]. Splitting one step per
       # suite restores the GitHub Actions UI's per-suite green/red checkmarks
       # so a failure surfaces as a specific named step, not as a buried row
       # in a single step's summary table.
       #
-      # `gh optivem test setup` runs the setupCommands block (npm ci +
+      # `gh optivem system-test setup` runs the setupCommands block (npm ci +
       # playwright install) once for the whole batch; the per-suite `test
       # system` steps then run against the prepared workspace. The SUT itself
       # was already brought up earlier in the job by the Simulate Deployment
       # / Wait for Systems steps, so no `gh optivem system start` is needed.
       - name: Setup Test Harness
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test setup
+        run: gh optivem system-test setup
       # === Run Smoke Tests ===
       - name: smoke-stub
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite smoke-stub
+        run: gh optivem system-test run --suite smoke-stub
       - name: smoke-real
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite smoke-real
+        run: gh optivem system-test run --suite smoke-real
       # === Run Acceptance Tests ===
       - name: acceptance-parallel-api
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite acceptance-parallel-api
+        run: gh optivem system-test run --suite acceptance-parallel-api
       - name: acceptance-parallel-ui
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite acceptance-parallel-ui
+        run: gh optivem system-test run --suite acceptance-parallel-ui
       - name: acceptance-isolated-api
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite acceptance-isolated-api
+        run: gh optivem system-test run --suite acceptance-isolated-api
       - name: acceptance-isolated-ui
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite acceptance-isolated-ui
+        run: gh optivem system-test run --suite acceptance-isolated-ui
       # === Run Contract Tests ===
       - name: contract-stub
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite contract-stub
+        run: gh optivem system-test run --suite contract-stub
       - name: contract-stub-isolated
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite contract-stub-isolated
+        run: gh optivem system-test run --suite contract-stub-isolated
       - name: contract-real
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite contract-real
+        run: gh optivem system-test run --suite contract-real
       # === Run E2E Tests ===
       - name: e2e-api
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite e2e-api
+        run: gh optivem system-test run --suite e2e-api
       - name: e2e-ui
         if: ${{ !inputs.debug-skip-tests }}
-        run: gh optivem test run --suite e2e-ui
+        run: gh optivem system-test run --suite e2e-ui
       # === Tag Release Candidate ===
       - name: Read Base System Version
         id: read-version

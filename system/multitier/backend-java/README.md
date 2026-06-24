@@ -92,15 +92,15 @@ configurations in `build.gradle`.
 
 ```shell
 # All suites across all components (matches the CI gate exactly)
-gh optivem component test run
+gh optivem component-test run
 
 # Single suite (fast inner loop)
-gh optivem component test run --suite unit
-gh optivem component test run --suite component --component backend
-gh optivem component test run --suite contract  --component backend
+gh optivem component-test run --suite unit
+gh optivem component-test run --suite component --component backend
+gh optivem component-test run --suite contract  --component backend
 
 # One-time setup (pre-warm Gradle)
-gh optivem component test setup --component backend
+gh optivem component-test setup --component backend
 ```
 
 > **Requires Docker** for the `component` and `contract` suites (Testcontainers-Postgres + WireMock). `--suite unit` is Docker-free.

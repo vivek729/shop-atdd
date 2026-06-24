@@ -103,19 +103,19 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Up Component Test Harness
-        run: gh optivem component test setup --component backend
+        run: gh optivem component-test setup --component backend
 
       - name: Run Unit Tests
-        run: gh optivem component test run --component backend --suite unit
+        run: gh optivem component-test run --component backend --suite unit
 
       - name: Run Narrow Integration Tests
-        run: gh optivem component test run --component backend --suite integration
+        run: gh optivem component-test run --component backend --suite integration
 
       - name: Run Component Tests
-        run: gh optivem component test run --component backend --suite component
+        run: gh optivem component-test run --component backend --suite component
 
       - name: Run Provider Verification (Pact)
-        run: gh optivem component test run --component backend --suite provider-verification
+        run: gh optivem component-test run --component backend --suite provider-verification
 
       # === Run Linter ===
       - name: Run Linter
