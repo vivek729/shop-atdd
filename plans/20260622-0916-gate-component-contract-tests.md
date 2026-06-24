@@ -64,14 +64,20 @@ Checkout → Should-Publish? → Compile
 
 ## ▶ Next executable step (resume here)
 
-**Phase 1 pilot is DONE and green (`5d8db666`, run `28096815510`).** Next is **Step 2 — the
-propagation wave** to the other 6 commit-stage workflows, **but it needs the user's explicit
-go** and a coordination decision first: a sibling plan
-[[20260624-1203-compile-component-and-test-sources-via-gh-optivem]] proposes routing
-**compilation** through the CLI too, touching the **same 7 workflows' compile/test region**. To
-avoid editing each workflow twice, **settle that plan's OQ1/OQ4 before running this wave** — if
-its Option B is chosen, land the CLI compile verb first, then this wave applies the gating steps
-*and* the CLI compile call together. Otherwise, run Step 2 as written (gating only).
+**Phases 1 & 2 are DONE in code** — the pilot (`5d8db666`) plus the gating-only wave across the
+other 6 commit-stage workflows (user chose the "gating only" branch on 2026-06-24, accepting that
+plan [[20260624-1203-compile-component-and-test-sources-via-gh-optivem]]'s Option B CLI-compile
+work will re-edit these same workflows' compile region later). All 6 pass `actionlint`. **What
+remains is Phase 3 (docs & diagram) + verification:**
+
+- **Step 5 verification is the gating unblocker** — each of the 6 changed workflows needs **one
+  green CI run** (Docker suites can't be verified locally — [[project_local_testcontainers_blocked]];
+  ask before any local system-test/stack run — [[feedback_ask_before_local_system_tests]]).
+- Then **Step 3 (diagram)** and **Step 4 (docs reframe)** are pure markdown edits.
+
+Next mechanical move: **Step 3** — `docs/pipeline/commit-stage.md`, move the component/contract
+layer onto the main gating line. Step 4 follows (README + comment reframe). Step 5 (CI green) can
+run in parallel once the wave commits are pushed.
 
 ## Steps
 
@@ -84,22 +90,17 @@ CLI), OQ2 (Linter/Sonar after the block) + OQ4 (one setup) are resolved. Confirm
 workflow_dispatch run `28096815510` passed end-to-end (pyramid + Build and Push). Awaiting the
 user's explicit go for the Phase 2 wave.
 
-### Phase 2 — Propagation wave (only after sign-off)
+### Phase 2 — Propagation wave ✅ DONE (gating-only)
 
-- [ ] **Step 2 — propagate the identical pattern to the other 6 commit stages.** For each,
-  insert the CLI install + `component test setup` (+ `--component backend|frontend` where the
-  multitier ones use it; monolith uses none) and the per-project `--suite` steps in pyramid
-  order ahead of Build/Push, then delete the separate `component-tests` job + its `summary`
-  need. One workflow per unit of work:
-  - [ ] `multitier-frontend-react` — suites: unit, integration, component (no provider-verification)
-  - [ ] `multitier-backend-dotnet` — unit, integration, component, provider-verification
-  - [ ] `multitier-backend-typescript` — unit, integration, component, provider-verification
-  - [ ] `monolith-java` — unit, integration, component, provider-verification
-  - [ ] `monolith-dotnet` — unit, integration, component, provider-verification
-  - [ ] `monolith-typescript` — unit, integration, component, provider-verification
-  Each replaces the 0846 reconcile's `if: false` stub steps for that workflow.
-  *Note:* frontend `run` runs no tests today → this gates its unit/integration/component for
-  the first time.
+Step 2 landed: the gating test-pyramid block (`gh optivem component test run --suite …` in pyramid
+order ahead of Build/Push, plus CLI install + `component test setup`) now runs inside the gating
+`run` job of all 6 remaining commit-stage workflows, and each workflow's separate `component-tests`
+job + its `summary` need were deleted. `--component backend` on the two backends, `--component
+frontend` on the frontend (no provider-verification suite — consumer side), none on the three
+monoliths; `GH_OPTIVEM_CONFIG` added to each `run` env. Frontend `run` ran no tests before → now
+gates unit/integration/component for the first time. All 6 pass `actionlint`. Committed one-per-
+workflow (bisectable). User chose the **gating-only** branch (2026-06-24) over waiting for plan
+1203's CLI-compile verb, accepting a later second edit of these workflows' compile region.
 
 ### Phase 3 — Docs & diagram
 

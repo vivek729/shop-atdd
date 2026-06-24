@@ -53,6 +53,7 @@ jobs:
       packages: write
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
     outputs:
       image-digest-url: ${{ steps.digest-url.outputs.digest-url }}
     steps:
@@ -85,6 +86,29 @@ jobs:
       - name: Compile Code
         run: npm run build
         working-directory: system/multitier/frontend-react
+
+      # === Run Test Pyramid (gates the image) ===
+      # Suites are selected from system/multitier/frontend-react/component-tests.yaml via the
+      # gh-optivem CLI, so the suite→command mapping has a single source of truth. They run
+      # in pyramid order ahead of Build/Push, so a red suite blocks the Docker image.
+      # Frontend is the consumer side — no provider-verification suite.
+      # One setup covers every suite (it runs the component's suite-agnostic setupCommands).
+      - name: Install gh-optivem CLI Extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Up Component Test Harness
+        run: gh optivem component test setup --component frontend
+
+      - name: Run Unit Tests
+        run: gh optivem component test run --component frontend --suite unit
+
+      - name: Run Narrow Integration Tests
+        run: gh optivem component test run --component frontend --suite integration
+
+      - name: Run Component Tests
+        run: gh optivem component test run --component frontend --suite component
 
       # === Run Linter ===
       - name: Run Linter
@@ -172,39 +196,8 @@ jobs:
           base-image-url: ghcr.io/${{ github.repository }}/multitier-frontend-react
           digest: ${{ steps.push.outputs.digest }}
 
-  component-tests:
-    needs: check
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      GH_OPTIVEM_CONFIG: gh-optivem-multitier-java.yaml
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ env.COMMIT_SHA }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22.x
-          cache: 'npm'
-          cache-dependency-path: system/multitier/frontend-react/package-lock.json
-
-      - name: Install gh-optivem CLI Extension
-        uses: optivem/actions/install-gh-optivem@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set Up Component Test Harness
-        run: gh optivem component test setup --component frontend
-
-      - name: Run Component Tests
-        run: gh optivem component test run --component frontend
-
   summary:
-    needs: [check, run, component-tests]
+    needs: [check, run]
     if: always()
     runs-on: ubuntu-latest
     permissions: {}

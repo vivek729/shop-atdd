@@ -42,15 +42,21 @@ describe('Backend Pact Provider Verification', () => {
   let postgres: StartedPostgreSqlContainer;
 
   beforeAll(async () => {
-    nock.enableNetConnect('127.0.0.1');
-
     // Real Postgres via Testcontainers (mirrors the Java harness) so numeric / timestamptz
     // semantics match the contract. External systems stay in-process via nock.
+    //
+    // Start the container BEFORE activating nock: nock patches Node's HTTP client and, once
+    // enableNetConnect is restricted to 127.0.0.1, blocks Testcontainers' communication with the
+    // Docker daemon socket (host 'localhost', not 127.0.0.1). That makes runtime detection fail
+    // with "Could not find a working container runtime strategy". The Postgres connection itself is
+    // raw TCP via node-postgres, which nock does not intercept, so the DB keeps working afterwards.
     postgres = await new PostgreSqlContainer('postgres:16-alpine')
       .withDatabase('app')
       .withUsername('app')
       .withPassword('app')
       .start();
+
+    nock.enableNetConnect('127.0.0.1');
 
     const moduleRef = await Test.createTestingModule({
       imports: [

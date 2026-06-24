@@ -1,5 +1,7 @@
 # 2026-06-24 12:21 UTC — Symmetric `gh optivem` tier taxonomy (kill ambiguous `test` and ambiguous `compile`)
 
+> 🤖 **Picked up by agent (refine)** — `Valentina_Desk` at `2026-06-24T12:27:38Z`
+
 ## TL;DR
 
 **Why:** The `gh optivem` command surface names its two test tiers on two different
@@ -117,9 +119,9 @@ gh optivem
   (flatten the `component` parent). Update `Use:`, `Short`, `Long`, `Example` strings.
 - [ ] Update the bare-`compile` walk per OQ-B.
 - [ ] Update `_test.go` command-tree assertions and any golden help output.
-- [ ] (If OQ-A = alias) register hidden deprecated aliases `test` / `component test` that warn
-  and forward, so old call sites keep working during migration.
-- [ ] Cut a gh-optivem release.
+- [ ] Cut a gh-optivem release (hard rename, no aliases — OQ-A). The shop call-site rewrite
+  (Phase 2) must land together with consumers picking up this release; a stale call site
+  breaks until flipped, so do not merge Phase 2 piecemeal.
 
 ### Phase 2 — shop call sites
 - [ ] Rewrite the 15 workflows + 0916-wave workflows to the new verbs. `actionlint` each.
@@ -127,15 +129,18 @@ gh optivem
 
 ### Phase 3 — Verify
 - [ ] `actionlint` every changed workflow; one green CI run per pipeline.
-- [ ] Grep the workspace for any residual `gh optivem test ` / bare `gh optivem compile`.
-- [ ] (If aliases were added with a deprecation window) schedule alias removal as a later plan.
+- [ ] Grep the workspace for any residual `gh optivem test ` / bare `gh optivem compile`
+  (hard-rename gate — there are no forwarding aliases, so any straggler is a live breakage).
+
+## Resolved decisions
+- **OQ-A — Hard rename (no aliases).** *Decided (refine, 2026-06-24):* **hard rename** — the CLI
+  is renamed and every call site is flipped atomically; no hidden forwarding aliases and no
+  deprecation window. Accepts coupling the gh-optivem release to the shop call-site edits in
+  exchange for no alias cruft and no follow-up removal plan. Flag-day breakage from a missed
+  call site is mitigated by the Phase 3 workspace-wide grep gate (no stale `gh optivem test ` /
+  bare `gh optivem compile` may remain), not by a deprecation warning.
 
 ## Open questions
-- **OQ-A — Hard rename or aliased migration?** *Recommend:* **hidden deprecated aliases** for
-  one release — register `test`/`component test` as aliases that forward + warn, flip all call
-  sites, then remove the aliases in a follow-up. Avoids a flag-day where a stale workflow
-  breaks. A hard rename is simpler but couples the CLI release and every call-site edit into
-  one atomic change.
 - **OQ-B — Bare `compile` / `test` as for-all aggregates.** *Decided (with author, 2026-06-24):*
   **keep both bare verbs as "for-all" aggregates**, not removed and not renamed to `compile-all`.
   `gh optivem compile` compiles every tier (system prod+unit + component-test source sets +
@@ -166,12 +171,14 @@ gh optivem
   doesn't duplicate/repeat `system start` work the acceptance-stage workflows already do.
 
 ## Risks
-- **Flag-day breakage** if hard-renamed without aliases and a call site is missed (OQ-A
-  mitigates).
+- **Flag-day breakage** — OQ-A chose a hard rename with no aliases, so a missed call site is a
+  live breakage, not a warned deprecation. Mitigated by landing the gh-optivem release and the
+  Phase 2 call-site rewrite together and by the Phase 3 workspace-wide grep gate.
 - **Triple-edit churn** on the commit-stage workflows if this, plan 1203, and the 0916 wave
   each rewrite them separately (OQ-C mitigates by sequencing this first / folding 1203 in).
-- **Muscle-memory / docs drift** — `gh optivem test` is entrenched in habit and CLAUDE.md;
-  the deprecation warning (OQ-A) and a workspace-wide grep (Phase 3) catch stragglers.
+- **Muscle-memory / docs drift** — `gh optivem test` is entrenched in habit and CLAUDE.md.
+  With no deprecation warning (hard rename, OQ-A), the workspace-wide grep (Phase 3) is the
+  only safety net for stragglers — so it is a hard gate, not advisory.
 
 ## ▶ Next executable step (resume here)
 
