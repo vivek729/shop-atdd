@@ -2,14 +2,30 @@
 
 ## ▶ Next executable step (resume here)
 
-**Planning phase complete (2026-06-24):** all sub-plan decisions are refined and settled — `1801` OQ4 flipped to the Pact mock server, `1957` rewritten to the symmetric 4-layer model, `1939` closed as decision-resolved, `1941` refined, and the `contract`→`provider-verification` rename now has its own plan (`plans/20260624-0824-rename-contract-suite-to-provider-verification.md`). What remains is **code execution in wave order** (see "Execution waves" below).
+**This is a self-driving parent.** Run `/execute-plan` against *this file* and it executes the cluster for you — you never need to open the sub-plans yourself. The executor handles the low-level wave knowledge: it reads the **Wave status** tracker below, runs the **current** wave per the **Execution protocol**, then stops at that wave's exit gate and updates the tracker so the *next* `/execute-plan` on this file resumes at the next wave. Keep running the same command; it walks the waves.
 
-**Next = Wave 1.** Batch A parallelises across 3 fresh `/clear`-ed sessions (disjoint files):
-- **U2(java)** — `/execute-plan plans/20260623-1801-narrow-integration-tests.md` Steps 1–2 (backend-java pilot).
-- **U3(audit)** — `/execute-plan plans/20260623-1941-provider-pact-verification.md` Steps 1–2 (audit + CI ordering).
-- (U1/`1939` is already done — decision settled this session.)
+**Current position:** planning phase complete (all sub-plans refined 2026-06-24); **next = Wave 1** (see Wave status).
 
-Then Batch B (serial, after U2-java): **U2(frontend)** — `1801` Step 3, frontend narrow-integration spec against the Pact mock server. Wave 2 (`1944` rollout, `1941` Step 3, `1957` docs, then the rename `0824` + the joint `commit-stage.md` doc pass) follows once the pilot lands green.
+## Execution protocol (how `/execute-plan` drives this parent)
+
+When invoked on this file, the executor MUST:
+
+1. **Run the Pre-execute checks** (below). Abort if a sub-plan is claimed by another agent or the relevant working tree is dirty.
+2. **Read the Wave status tracker.** Pick the first wave not marked ✅ done. If it is marked ⛔ blocked, report the blocker and stop (do not skip ahead).
+3. **Execute that wave by delegating each unit to a subagent** (one per unit), to keep this parent session lean:
+   - Batch A units launch **in parallel** (disjoint files — safe). Batch B units run **after** Batch A, **serially**.
+   - Each subagent is told to do its unit's work for this wave only, run/compile-verify what it can, and **NOT commit** (the parent owns commits).
+4. **Review** the subagents' results in the parent, then **commit per repo** — but only after **explicitly asking the user "Can I commit?"** and getting a yes (firm rule). One commit per repo, `git add -A`, Claude co-author trailer.
+5. **Honor the gates** (never bypass): ask-before-every-commit; **never self-run local system tests** (local Testcontainers is blocked here → mark suites CI-verified, push and let CI run them); the hard **1801-pilot-green → Wave 2** gate.
+6. **Stop at the wave exit gate** named in the tracker (typically "push + CI green"). Do **not** start the next wave in the same run. Update the Wave status tracker (mark this wave ✅ or ⏳ awaiting-CI, set the next wave's state) and this resume block, then commit the plan-file update with the wave's commit.
+
+This means a single `/execute-plan <this file>` advances **one wave** (as far as the async CI/push gate allows), and re-running it advances the next. The user issues one command repeatedly; the executor carries the wave detail.
+
+## Wave status
+
+- **Wave 0 — planning/refine:** ✅ done (2026-06-24) — all sub-plans refined, OQ4 flipped, rename plan `0824` created, decisions settled.
+- **Wave 1 — backend-java pilot + provider-verification audit + frontend narrow-integration:** ⬜ **next**. Units: U2(java) `1801` Steps 1–2; U3(audit) `1941` Steps 1–2 (Batch A, parallel); then U2(frontend) `1801` Step 3 (Batch B). **Exit gate:** push + `1801` `integration` suites (Java + frontend) green in CI.
+- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** ⛔ blocked until Wave 1 exit gate met. Units: U4 `1944`; U3(complete) `1941` Step 3; U5 `1957`; rename `0824`; then the joint `docs/pipeline/commit-stage.md` pass (`1801` Step 6 + `1941` Step 4). **Exit gate:** push + full pyramid green in CI.
 
 ## Target state
 
@@ -184,7 +200,7 @@ The wave plan operates on these units, not on raw plan files. `20260623-1955` (p
 
 - Plan content correctness (use each plan's own `/refine-plan` cycle, or `process-audit`).
 - Architecture/code alignment (use `architecture-sync`).
-- Actual execution (use `/execute-plan` against each unit in wave order).
+- ~~Actual execution (use `/execute-plan` against each unit in wave order).~~ **Superseded:** this parent now **self-drives** execution — run `/execute-plan` against *this file* and it walks the waves via the Execution protocol above (delegating each unit to a subagent). You no longer invoke the sub-plans directly.
 - The prior meta-plan `20260623-1955` is superseded by this file; no action needed on it beyond noting the supersession.
 - **Multi-repo contract transport** (how the union `.pact` reaches the provider once repos are split; $0 mechanisms + free Dockerized OSS Pact Broker) — spun out to its own follow-up: **`plans/20260624-0814-multirepo-contract-transport-dockerized-broker.md`**.
 - The `contract` → `provider-verification` suite rename (cross-cutting; its own `/create-plan` per the Target state).
