@@ -12,16 +12,26 @@ patterns, and its compile verb is partly bare. Both are ambiguity sources:
   (`system compile` then `test compile`). With a third tier (component tests) about to get
   its own compile, a bare `compile` no longer says *what* it compiles.
 
-**End result:** Every tier is a flat, parallel noun, and every action is a tier-scoped verb.
-No bare `test`, no bare `compile`. A reader always knows the tier from the noun:
+**End result:** Every tier is a flat, parallel **noun**; every scoped action is a tier-scoped
+verb; and the bare top-level `compile` / `test` survive — redefined as unambiguous **"for-all"
+aggregate verbs** that span every tier. A reader always knows the tier from the noun, and the
+bare word always means "everywhere":
 
 ```
-gh optivem system          <verb>   # the SUT
-gh optivem system-test     <verb>   # outside-in tests vs a deployed system
-gh optivem component-test  <verb>   # in-process commit-stage suites
+# tier nouns — scoped
+gh optivem system          build | start | status | stop | clean | compile
+gh optivem system-test     setup | run | compile
+gh optivem component-test  setup | run | compile
+
+# aggregate verbs — for ALL tiers
+gh optivem compile   # compile every tier: system (prod+unit) + component-test source sets + system-test project
+gh optivem test      # run every test tier in pyramid order: all component-test suites, then the system tests (fail-fast)
 ```
 
-with `compile` / `run` / `setup` living symmetrically under each tier that has them.
+`test` is no longer a *tier* (the source of the old ambiguity) — it is the run-everything verb;
+the tiers are `system-test` / `component-test`. `compile` keeps the tier-walk semantics it
+**already** has today (it walks `system` → `test`), now generalized to all three tiers. Bare =
+for-all, qualified = scoped — the `make` / `make test` mental model.
 
 ## Problem
 
@@ -56,26 +66,31 @@ Two ambiguities:
 
 ## Goal
 
-Make the taxonomy **symmetric**: every tier is a sibling noun, every applicable action is a
-tier-scoped verb. After this:
-- `test` as a bare noun **no longer exists** — it becomes `system-test`.
-- `compile` is **always** tier-scoped (`system compile`, `system-test compile`,
-  `component-test compile`); the bare aggregate, if kept, is renamed to something
-  unambiguous (e.g. `compile-all`) or dropped.
+Make the taxonomy **symmetric** on two axes:
+- **Tier nouns** are flat siblings (`system`, `system-test`, `component-test`), each carrying
+  the same scoped verbs. `test` as a bare *tier noun* **no longer exists** — the system-test
+  tier becomes `system-test`; the component tier becomes `component-test`.
+- **Aggregate verbs** `compile` and `test` survive as the bare top-level shortcuts, redefined
+  as unambiguous "do this for **all** tiers" — `compile` already walks tiers today; `test`
+  gains the symmetric behavior. Bare = for-all, qualified = scoped.
 
 ## Target tree
 
 ```
 gh optivem
-├── system          build | start | status | stop | clean | compile
-├── system-test     setup | run | compile
-└── component-test  setup | run | compile        (compile lands via plan 1203)
+├── system          build | start | status | stop | clean | compile   ← tier noun
+├── system-test     setup | run | compile                             ← tier noun
+├── component-test  setup | run | compile                             ← tier noun (compile lands via plan 1203)
+├── compile         (aggregate verb) compile ALL tiers, halt on first failure
+└── test            (aggregate verb) run ALL test tiers in pyramid order, halt on first failure
 ```
 
 - Both test tiers are now `*-test` siblings with the **same** verb set (`setup`/`run`/`compile`).
 - `component` as a bare parent noun collapses into `component-test` (it only ever hosted
   `test`); revisit only if a non-test component verb ever appears.
-- Compile is uniformly tier-scoped. See **OQ-B** for the fate of the bare `compile` walk.
+- The bare verbs `compile` / `test` are kept as ergonomic for-all aggregates (see **OQ-B**), not
+  removed. `compile` extends its existing two-tier walk to all three; `test` is new behavior
+  (see **OQ-E** for the system-lifecycle question it raises).
 
 ## Scope / blast radius (verified)
 
@@ -121,11 +136,14 @@ gh optivem
   sites, then remove the aliases in a follow-up. Avoids a flag-day where a stale workflow
   breaks. A hard rename is simpler but couples the CLI release and every call-site edit into
   one atomic change.
-- **OQ-B — Fate of the bare `compile` walk.** Rename to `gh optivem compile-all` (unambiguous
-  aggregate), keep `compile` as a deprecated alias, or drop it and let callers list tiers?
-  *Recommend:* **rename to `compile-all`** — keeps the one-shot convenience the structural
-  cycle relies on while removing the bare-`compile` ambiguity. Confirm the `compile_all`
-  action / structural-cycle caller is updated in lockstep.
+- **OQ-B — Bare `compile` / `test` as for-all aggregates.** *Decided (with author, 2026-06-24):*
+  **keep both bare verbs as "for-all" aggregates**, not removed and not renamed to `compile-all`.
+  `gh optivem compile` compiles every tier (system prod+unit + component-test source sets +
+  system-test project); `gh optivem test` runs every test tier in pyramid order (all
+  component-test suites, then the system tests), halting on first failure. Rationale: bare =
+  for-all is unambiguous (the bare word is a *verb spanning tiers*, never a tier), keeps the
+  ergonomic shortcut, and just generalizes the tier-walk `compile` **already** does. The tiers
+  stay the only nouns. Remaining sub-question for OQ-E: the `test` aggregate's system lifecycle.
 - **OQ-C — Sequencing with plan 1203 + the 0916 wave.** Plan 1203 adds `component-test compile`
   and re-routes the 7 commit-stage `Compile Code` steps; the 0916 wave edits the same
   workflows for gating. *Recommend:* land **this rename first** (or fold 1203's compile verb
@@ -136,6 +154,16 @@ gh optivem
   under `system`)? *Recommend:* **hyphenated siblings** — nesting `test` under `system` would
   wrongly imply the component tier nests too, and the tiers are genuinely parallel, not
   parent/child.
+- **OQ-E — `gh optivem test` aggregate and the system lifecycle.** Component-tests need no
+  running system; system-tests need `system start` + `system stop`. Should the aggregate
+  **orchestrate** the lifecycle (run component-tests → `system start` → `system-test run` →
+  `system stop`), or **assume the system is already up** and just run the tiers in order
+  (leaving start/stop to the caller, as CI does today)? *Recommend:* **orchestrate, but make
+  it opt-out** — bare `gh optivem test` does the full cheap→expensive sequence including
+  start/stop so a developer gets "run everything" in one command; a flag (e.g.
+  `--no-system-lifecycle` / `--assume-running`) skips start/stop for CI, which already manages
+  the system explicitly. Bare `compile` has no analog — it is a pure source build. Confirm this
+  doesn't duplicate/repeat `system start` work the acceptance-stage workflows already do.
 
 ## Risks
 - **Flag-day breakage** if hard-renamed without aliases and a call site is missed (OQ-A

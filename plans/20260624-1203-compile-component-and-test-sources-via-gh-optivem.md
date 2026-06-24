@@ -1,7 +1,5 @@
 # 2026-06-24 12:03 UTC — Compile the component **and all its test sources** up front, ideally via `gh optivem`
 
-> 🤖 **Picked up by agent (refine)** — `Valentina_Desk` at `2026-06-24T12:08:26Z`
-
 ## TL;DR
 
 **Why:** The commit-stage `Compile Code` step compiles main + the **unit** test source only.
