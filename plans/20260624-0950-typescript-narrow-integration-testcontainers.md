@@ -24,11 +24,13 @@
 
 ## ▶ Next executable step (resume here)
 
-**Step 1 — backend-typescript setup.** Add `testcontainers` + `@testcontainers/postgresql` to `devDependencies`, create `jest.integration.config.ts` with `testRegex: .*\.integration\.spec\.ts$` and `testEnvironment: node` (no env-mutating `globalSetup`). In the spec's `beforeAll`, start the Postgres container and set `POSTGRES_DB_HOST` / `POSTGRES_DB_PORT` / `POSTGRES_DB_NAME` / `POSTGRES_DB_USER` / `POSTGRES_DB_PASSWORD` into `process.env`, then bootstrap the real `AppModule` via `Test.createTestingModule` — its existing `forRootAsync` factory already reads those env vars, so no TypeORM override is needed.
+> **Already done (2026-06-24, commit `32195b3c`):** `testcontainers` + `@testcontainers/postgresql` are already in `backend-typescript/package.json` `devDependencies` (added while wiring the Pact provider-verification test to a real Postgres container). So for backend-ts, skip the package-add part of Step 1 — start at `jest.integration.config.ts`. The monolith-typescript package-add is still outstanding.
+
+**Step 1 — backend-typescript setup.** Add `testcontainers` + `@testcontainers/postgresql` to `devDependencies` (**done for backend-ts — see note above**), create `jest.integration.config.ts` with `testRegex: .*\.integration\.spec\.ts$` and `testEnvironment: node` (no env-mutating `globalSetup`). In the spec's `beforeAll`, start the Postgres container and set `POSTGRES_DB_HOST` / `POSTGRES_DB_PORT` / `POSTGRES_DB_NAME` / `POSTGRES_DB_USER` / `POSTGRES_DB_PASSWORD` into `process.env`, then bootstrap the real `AppModule` via `Test.createTestingModule` — its existing `forRootAsync` factory already reads those env vars, so no TypeORM override is needed.
 
 ## Audit findings (2026-06-24)
 
-Discovered during the `[[20260623-1944-narrow-integration-rollout]]` pre-execution audit.
+Discovered during the narrow-integration rollout (plan `1944`, since completed and removed) pre-execution audit.
 
 | Component | ORM / DB driver | Test framework | Testcontainers? | Existing test infra |
 |---|---|---|---|---|
@@ -64,10 +66,10 @@ Discovered during the `[[20260623-1944-narrow-integration-rollout]]` pre-executi
 
 ## Dependencies
 
-- **Prerequisite:** `[[20260623-1944-narrow-integration-rollout]]` Steps 1–4 (Java + .NET components) must be done, or at least the `component-tests.yaml` `integration` pattern must be established for comparison.
+- **Prerequisite (satisfied):** the narrow-integration rollout (Java + .NET components, plan `1944`, completed and removed 2026-06-24) established the `component-tests.yaml` `integration` pattern to follow.
 - **No hard dependency** on any other open plan — this is self-contained.
 
 ## Cross-references
 
-- `[[20260623-1944-narrow-integration-rollout]]` — parent rollout plan; this plan covers the two TypeScript components deferred from it.
-- `[[20260624-0653-meta-narrow-integration-cluster]]` — coordination meta-plan; deferred TypeScript note lives in U4's wave-2 entry.
+- Narrow-integration rollout (plan `1944`, completed and removed 2026-06-24) — parent rollout; this plan covers the two TypeScript components deferred from it.
+- Narrow-integration cluster meta-plan (`0653`, completed and removed 2026-06-24) — the coordination parent that deferred the TypeScript components here.

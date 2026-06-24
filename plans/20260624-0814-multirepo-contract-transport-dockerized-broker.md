@@ -1,7 +1,7 @@
 # 2026-06-24 08:14 UTC — Multi-repo contract transport: $0 strategy + free dockerized Pact Broker
 
-> **Follow-up to the narrow-integration cluster** (`plans/20260624-0653-meta-narrow-integration-cluster.md`).
-> Spun out of that meta-plan's `## Target state` discussion: under the union-emission design the
+> **Follow-up to the narrow-integration cluster** (completed and removed 2026-06-24).
+> Spun out of that cluster's target-state discussion: under the union-emission design the
 > frontend `integration` + `component` suites jointly produce one `frontend-backend` contract, and the
 > question *"where does that contract live / how does it reach the provider once repos are split?"* is
 > **out of scope** for the cluster's five plans. This plan owns it. **No code changes are committed by
