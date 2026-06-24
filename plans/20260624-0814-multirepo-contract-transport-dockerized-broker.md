@@ -55,7 +55,7 @@ scaffolding actually existing** and is deferred to that point (Step 6), so it is
 - **Do not run locally — Step 3 (broker spike).** Standing up Postgres + the OSS broker via Docker hits the
   no-self-initiated-local-docker rule and local Docker/Testcontainers is already flaky on this machine; it is
   opt-in anyway. Keep it as a write-up.
-- **Recommended scope for `/execute-plan` now:** README revision (Steps 1, 4, 5) only; leave 2/3/6 deferred.
+- **Recommended scope for `/execute-plan` now:** Steps 1, 4, 5, 5a (README revision + local verify); leave 2/3/6 deferred.
 
 ## Outcomes
 
@@ -76,29 +76,18 @@ scaffolding actually existing** and is deferred to that point (Step 6), so it is
 
 ## ▶ Next executable step (resume here)
 
-Decision/design plan — no mechanical edits yet. Run `/refine-plan` on this file to settle the Open
-questions (esp. the default $0 multi-repo mechanism and ephemeral-vs-persistent broker), then `/execute-plan`
-to revise `contracts/README.md` (and any scaffolder/CI follow-on).
+Remaining steps are deferred (blocked on multi-repo scaffolding existing). No mechanical edits remain
+for the current monorepo. Only deferred items below — see `## Deferred steps`.
 
-## Steps
+## Deferred steps
 
-- [ ] **Step 1 — Confirm the failure mode.** Reproduce/confirm that the current "duplicate copy in both
-  repos" model lets the provider verify a stale contract (false-green) when the consumer changes and the
-  copy isn't re-synced. Document it as the motivating problem.
-- [ ] **Step 2 — Evaluate the $0 git-transport mechanism (recommended default).** Design
-  consumer-CI-pushes-pact-to-provider-repo: consumer CI generates the union pact, opens a PR / commits it to
-  the provider repo's `contracts/`, provider CI verifies on that PR. Settle the cross-repo auth (PAT vs
-  GitHub App token) and the local-dev story (backend verifies the last-pushed copy offline).
-- [ ] **Step 3 — Spike the free Dockerized OSS broker.** Stand up `pactfoundation/pact-broker` + Postgres
-  via docker-compose; publish the frontend pact, verify from the backend, try `can-i-deploy`. Record
-  ephemeral (per-CI-run) vs persistent (standing service) trade-offs and what each costs.
-- [ ] **Step 4 — Evaluate the CI artifact / release-asset hand-off** as the alternative $0 CI-only option;
-  note it loses local `provider-verification`.
-- [ ] **Step 5 — Decide + document.** Pick the default $0 multi-repo mechanism; frame the broker as the
-  labelled opt-in production answer. Revise `contracts/README.md` accordingly.
-- [ ] **Step 6 — Scaffolder / CI follow-on (if needed).** If the chosen mechanism needs gh-optivem
-  scaffolder or CI-workflow support (e.g. the cross-repo push workflow), capture that as concrete edits or a
-  further plan — do not bake broker infra into the default path.
+- [ ] **Step 2 — Consumer-CI-push CI workflow + cross-repo auth.** ⏳ Deferred: blocked on separate
+  `*-frontend` / `*-backend` repos existing (confirmed monorepo today). Design the workflow and
+  cross-repo GitHub App auth at that time.
+- [ ] **Step 3 — Spike the free Dockerized OSS broker.** ⏳ Deferred: opt-in only; local Docker flaky
+  on this machine (no-self-initiated-local-docker rule). Keep as a write-up until broker lesson is built.
+- [ ] **Step 6 — Scaffolder / CI follow-on.** ⏳ Deferred: blocked on multi-repo scaffolding existing.
+  Capture as concrete edits or a further plan when `*-frontend` / `*-backend` scaffold lands.
 
 ## Resolved decisions
 
