@@ -174,3 +174,5 @@ The wave plan operates on these units, not on raw plan files. `20260623-1955` (p
 - Architecture/code alignment (use `architecture-sync`).
 - Actual execution (use `/execute-plan` against each unit in wave order).
 - The prior meta-plan `20260623-1955` is superseded by this file; no action needed on it beyond noting the supersession.
+- **Multi-repo contract transport** (how the union `.pact` reaches the provider once repos are split; $0 mechanisms + free Dockerized OSS Pact Broker) — spun out to its own follow-up: **`plans/20260624-0814-multirepo-contract-transport-dockerized-broker.md`**.
+- The `contract` → `provider-verification` suite rename (cross-cutting; its own `/create-plan` per the Target state).
