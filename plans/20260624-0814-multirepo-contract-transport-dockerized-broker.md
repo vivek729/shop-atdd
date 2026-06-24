@@ -1,7 +1,5 @@
 # 2026-06-24 08:14 UTC — Multi-repo contract transport: $0 strategy + free dockerized Pact Broker
 
-> 🤖 **Picked up by agent (refine)** — `Valentina_Desk` at `2026-06-24T11:52:56Z`
-
 > **Follow-up to the narrow-integration cluster** (completed and removed 2026-06-24).
 > Spun out of that cluster's target-state discussion: under the union-emission design the
 > frontend `integration` + `component` suites jointly produce one `frontend-backend` contract, and the
@@ -24,6 +22,23 @@ consumer, which defeats the entire point of consumer-driven contracts.
 project that does **not** silently drift, plus an honest framing of the **free self-hosted (Dockerized) OSS
 Pact Broker** as the production answer — both kept as **opt-in / labelled**, never on the default `$0`
 zero-infra path. `contracts/README.md` is revised to match.
+
+**Decided end-state (all open questions resolved — see `## Resolved decisions`):**
+- **$0 multi-repo default = consumer-CI-push.** Consumer CI commits/PRs the freshly-generated union pact into
+  the provider repo's `contracts/`; the provider verifies the just-pushed copy. Git-only, no standing infra,
+  kills the false-green, and keeps local offline provider-verification. Manual-duplicate is demoted to a
+  labelled compromised fallback; CI-artifact hand-off is documented but not default (loses offline verify).
+- **Pact Broker = the labelled opt-in production answer**, taught as **persistent** (ephemeral = demo only),
+  including a **`can-i-deploy`** lesson — never on the $0 default path.
+- **Cross-repo auth = scoped GitHub App** (fine-grained PAT as the simpler alternative), surfaced as the one
+  explicit setup step the $0 multi-repo mode needs.
+- **This is forward-looking:** the repo is a monorepo today, so the plan *designs in* the target transport
+  for when multi-repo scaffolding lands rather than retrofitting it.
+
+**Effort:** as scoped, this is **mostly a documentation/design task** (easy–medium): the committed deliverable
+is the `contracts/README.md` revision plus confirming the false-green failure mode. The genuinely harder work
+— the consumer-CI-push CI workflow + cross-repo auth, and any broker infra — is **gated behind multi-repo
+scaffolding actually existing** and is deferred to that point (Step 6), so it is not part of doing this now.
 
 ## Outcomes
 

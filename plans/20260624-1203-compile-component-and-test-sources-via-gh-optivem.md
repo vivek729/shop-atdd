@@ -1,5 +1,7 @@
 # 2026-06-24 12:03 UTC — Compile the component **and all its test sources** up front, ideally via `gh optivem`
 
+> 🤖 **Picked up by agent (refine)** — `Valentina_Desk` at `2026-06-24T12:08:26Z`
+
 ## TL;DR
 
 **Why:** The commit-stage `Compile Code` step compiles main + the **unit** test source only.
@@ -97,11 +99,17 @@ both means touching each workflow twice. See OQ4 (coordination with the 0916 wav
 1. **Compilation must fail fast before the gating suites** — all test sources compile in (or
    before) the gating block, ahead of the slow Docker suites.
 
+## Resolved decisions
+- **OQ1 → Option B only.** Skip the interim raw widening (Option A); go straight to the CLI
+  compile verb reading from `component-tests.yaml`. *Rationale:* the Java fail-fast gap has been
+  open all along — no urgency justifies a throwaway raw `…Classes` step that B immediately
+  replaces. B-only gives single source of truth from day one and edits each of the 7 workflows
+  exactly once (vs. twice for A→B). The one tradeoff — workflows can't adopt the verb until a
+  gh-optivem release ships it — is a sequencing matter, not a blocker (the release was needed for
+  B regardless). Coordinates cleanly with OQ4: land the CLI verb first, then a single wave edit
+  applies gating + the CLI compile call together.
+
 ## Open questions
-- **OQ1 — Option A, B, or A→B?** *Recommend:* **A→B** — close the Java coverage gap immediately
-  (Option A), then route compile through the CLI (Option B) so it shares one home with the
-  suites. Accept touching each workflow's compile step twice, *unless* OQ4 bundles B into the
-  0916 wave (then it's once).
 - **OQ2 — (if B) config shape.** A dedicated `compileCommands:` list + a `compile` verb, or fold
   the compile command into the existing suite-agnostic `setupCommands`? *Recommend:* a dedicated
   `compileCommands` + `compile` verb — `setup` is harness prep (pre-warm), compile is a distinct
