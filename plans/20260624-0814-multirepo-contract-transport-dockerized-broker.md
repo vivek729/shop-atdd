@@ -24,10 +24,13 @@ Pact Broker** as the production answer — both kept as **opt-in / labelled**, n
 zero-infra path. `contracts/README.md` is revised to match.
 
 **Decided end-state (all open questions resolved — see `## Resolved decisions`):**
-- **$0 multi-repo default = consumer-CI-push.** Consumer CI commits/PRs the freshly-generated union pact into
-  the provider repo's `contracts/`; the provider verifies the just-pushed copy. Git-only, no standing infra,
-  kills the false-green, and keeps local offline provider-verification. Manual-duplicate is demoted to a
-  labelled compromised fallback; CI-artifact hand-off is documented but not default (loses offline verify).
+- **$0 multi-repo default = consumer-CI-push.** Consumer CI commits the freshly-generated union pact
+  **directly** (no PR gate) and **immediately** into the provider repo's `contracts/`; the provider verifies
+  the just-pushed copy. Git-only, no standing infra, kills the stale-copy false-green, and keeps local offline
+  provider-verification. Manual-duplicate is demoted to a labelled compromised fallback; CI-artifact hand-off
+  is documented but not default (loses offline verify). **Known limitation:** breakage is caught *after the
+  fact* in the provider's verification run, not at the consumer's pre-merge gate — the documented reason to
+  graduate to the opt-in broker's `can-i-deploy`.
 - **Pact Broker = the labelled opt-in production answer**, taught as **persistent** (ephemeral = demo only),
   including a **`can-i-deploy`** lesson — never on the $0 default path.
 - **Cross-repo auth = scoped GitHub App** (fine-grained PAT as the simpler alternative), surfaced as the one
@@ -110,6 +113,16 @@ to revise `contracts/README.md` (and any scaffolder/CI follow-on).
 - **Teach `can-i-deploy` → yes, inside the opt-in broker lesson.** It is the broker's headline payoff and the
   concrete reason to adopt a broker over the git mechanisms, so it belongs in the broker lesson rather than
   the $0 default path.
+- **Consumer-CI-push delivery → direct commit, pushed immediately.** The consumer CI commits the freshly
+  generated union pact **directly** into the provider repo's `contracts/` (no PR gate) and does so
+  immediately on the consumer build — it does not wait for provider verification. This keeps the $0 mechanism
+  simple and lockstep with the consumer.
+- **Known limitation (the honest motivation for the broker): breakage is caught after the fact.** Because the
+  consumer pushes immediately and has usually already merged, a breaking consumer change is detected in the
+  **provider** repo's verification run *after* it lands — not at the consumer's gate before merge. The git
+  mechanism has no pre-merge "is the provider compatible?" check. That pre-merge guarantee is exactly what a
+  Pact Broker's **`can-i-deploy`** provides, so this limitation is documented as the deliberate reason to
+  graduate to the opt-in broker (ties to the `can-i-deploy` decision above).
 
 ## Out of scope
 
