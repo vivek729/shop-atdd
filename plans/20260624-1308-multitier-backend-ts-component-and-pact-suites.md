@@ -105,10 +105,33 @@ The TS Pact spec already constructs exactly the harness a Component suite needs 
 - **Docker flakiness in CI** — both Component and Provider Verification now `requiresDocker`; a runner without Docker fails both. Mitigated by the integration suite already depending on Docker successfully.
 - **Harness refactor regressing Pact** — Phase 1 keeps `backend.pact.spec.ts` behavior identical; verify before adding Component specs.
 
-## Status (2026-06-24 ~13:30 UTC)
-- **Phase 0 done** — re-run on `main` confirmed Bug 1 fixed and surfaced Bug 2 (contract path).
-- **Phases 1–3 done (uncommitted)**: shared `test/support/component-harness.ts` extracted; `backend.pact.spec.ts` re-pointed at it AND contract path fixed (`../../../../../`); `test/jest-component.json` + `test:component` script added; three component specs under `test/component/` (place-order, coupon, order-history); `component-tests.yaml` stub flipped to a real gating suite.
-- **Verified locally**: `npx tsc --noEmit`, `npm run build`, `npx eslint test/**` all clean. The suites themselves can't run locally (Testcontainers/Docker blocked here) — CI is the gate.
+### Root cause — Component/Pact external stubbing (Bug 3, found by CI run 28101758440)
+
+After committing Bugs 1+2 and flipping Component on, the Component suite ran and **6/8 tests
+failed with HTTP 500**: `Failed to fetch current time from URL: http://clock-stub.local —
+TypeError: fetch failed`. The coupon test (no external calls) passed; every order test failed.
+
+Cause: the ERP/Tax/Clock gateways call out via Node's **global `fetch`** (undici). The harness
+stubbed them with **nock 13.5.6**, which patches `http.ClientRequest` and **does not intercept
+`fetch`** — so the stubs never matched and requests escaped to the nonexistent `*-stub.local`
+hosts. This flaw was latent in the original Pact spec too; it had never actually passed (it died on
+Bug 1, then Bug 2, before any external call was made).
+
+Fix: replace nock in the harness with **real in-process HTTP stub servers** on `127.0.0.1` (the Node
+analogue of Java's WireMock), and point the gateway base-URLs at them. This is more faithful to the
+Java harness and sidesteps fetch-interception fragility entirely. (A routine separately bumped the
+`nock` devDep to ^14, which *does* support fetch — now unused, harmless.)
+
+## Status (2026-06-24 ~13:35 UTC)
+- **Bug 1 (nock/Testcontainers order)** — fixed (commit `52e47ac5`), confirmed by CI.
+- **Bug 2 (contract path)** — fixed (`../../../../../contracts/...`), committed in `4b279b32`.
+- **Bug 3 (nock vs fetch)** — fix written + verified locally (tsc/lint/build clean), **uncommitted**.
+- **.NET provider verification** — was *also* failing (content-type reset to `application/json`);
+  fixed in `4b279b32`; .NET commit stage is now **green**.
+- The TS suites can't run locally (Testcontainers/Docker blocked — see [20260624-1325](20260624-1325-local-testcontainers-docker-blocked-investigation.md)); CI is the only gate, hence the bug-per-CI-run cadence.
 
 ## ▶ Next executable step (resume here)
-Commit + push the changes (needs explicit user go-ahead per repo convention). The push to `system/multitier/backend-typescript/**` triggers the commit stage, which is the only way to verify Component + Provider Verification green (local Docker blocked). Watch run, confirm both suites pass and the image builds.
+Commit + push Bug 3 fix (needs user go-ahead). Watch the triggered commit stage: expect Component
+(8/8) and Provider Verification both green, then image build/push. If Provider Verification still
+fails, it'll be the *next* masked issue (the contract's actual interaction assertions) — read that
+log and iterate.

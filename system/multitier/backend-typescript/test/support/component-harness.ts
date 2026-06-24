@@ -4,7 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as http from 'http';
 import { AddressInfo } from 'net';
-import nock from 'nock';
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
@@ -26,22 +25,58 @@ import { DecimalFormatInterceptor } from '../../src/api/interceptor/decimal-form
 import { Order } from '../../src/core/entities/order.entity';
 import { Coupon } from '../../src/core/entities/coupon.entity';
 
-export const ERP_URL = 'http://erp-stub.local';
-export const TAX_URL = 'http://tax-stub.local';
-export const CLOCK_URL = 'http://clock-stub.local';
+/**
+ * A tiny in-process HTTP stub server (the Node analogue of WireMock used by the Java harness).
+ * Routes are registered per test/provider-state and matched by `METHOD path`; everything else 404s.
+ * Used instead of nock because the gateways call out via global `fetch` (undici), which nock's
+ * `http.ClientRequest` patching does not intercept — a real socket the app can fetch from does.
+ */
+class StubServer {
+  private readonly server: http.Server;
+  private readonly routes = new Map<
+    string,
+    { status: number; body?: unknown }
+  >();
+  url = '';
+
+  constructor() {
+    this.server = http.createServer((req, res) => {
+      const route = this.routes.get(`${req.method ?? 'GET'} ${req.url ?? ''}`);
+      const status = route?.status ?? 404;
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(route?.body === undefined ? '' : JSON.stringify(route.body));
+    });
+  }
+
+  async start(): Promise<void> {
+    await new Promise<void>((resolve) =>
+      this.server.listen(0, '127.0.0.1', resolve),
+    );
+    const port = (this.server.address() as AddressInfo).port;
+    this.url = `http://127.0.0.1:${port}`;
+  }
+
+  stub(method: string, path: string, status: number, body?: unknown): void {
+    this.routes.set(`${method} ${path}`, { status, body });
+  }
+
+  reset(): void {
+    this.routes.clear();
+  }
+
+  async stop(): Promise<void> {
+    await new Promise<void>((resolve, reject) =>
+      this.server.close((err) => (err ? reject(err) : resolve())),
+    );
+  }
+}
 
 /**
  * In-process component-test harness: boots the Nest app on a random port (real HTTP over a real
  * socket), backs it with a Testcontainers-managed Postgres (real dialect/numeric semantics) and
- * stubs the ERP / Tax / Clock external HTTP systems in-process with nock. No docker compose, no
- * deployment. Mirrors the Java `AbstractComponentTest` and is shared by both the Component suite
- * and the Pact provider-verification test.
- *
- * Start the container BEFORE activating nock: nock patches Node's HTTP client and, once
- * enableNetConnect is restricted to 127.0.0.1, blocks Testcontainers' communication with the Docker
- * daemon socket (host 'localhost', not 127.0.0.1). That makes runtime detection fail with "Could
- * not find a working container runtime strategy". The Postgres connection itself is raw TCP via
- * node-postgres, which nock does not intercept, so the DB keeps working afterwards.
+ * stubs the ERP / Tax / Clock external HTTP systems with in-process stub servers on 127.0.0.1.
+ * No docker compose, no deployment. Mirrors the Java `AbstractComponentTest` and is shared by both
+ * the Component suite and the Pact provider-verification test.
  */
 export class ComponentHarness {
   app!: INestApplication;
@@ -50,6 +85,9 @@ export class ComponentHarness {
   orderRepo!: Repository<Order>;
   couponRepo!: Repository<Coupon>;
   private postgres!: StartedPostgreSqlContainer;
+  private readonly erp = new StubServer();
+  private readonly tax = new StubServer();
+  private readonly clock = new StubServer();
 
   async start(): Promise<void> {
     this.postgres = await new PostgreSqlContainer('postgres:16-alpine')
@@ -58,7 +96,7 @@ export class ComponentHarness {
       .withPassword('app')
       .start();
 
-    nock.enableNetConnect('127.0.0.1');
+    await Promise.all([this.erp.start(), this.tax.start(), this.clock.start()]);
 
     const moduleRef = await Test.createTestingModule({
       imports: [
@@ -93,9 +131,9 @@ export class ComponentHarness {
           useValue: {
             get: (key: string, defaultValue?: unknown) => {
               const cfg: Record<string, string> = {
-                ERP_API_URL: ERP_URL,
-                TAX_API_URL: TAX_URL,
-                CLOCK_API_URL: CLOCK_URL,
+                ERP_API_URL: this.erp.url,
+                TAX_API_URL: this.tax.url,
+                CLOCK_API_URL: this.clock.url,
                 EXTERNAL_SYSTEM_MODE: 'stub',
               };
               return cfg[key] ?? defaultValue;
@@ -121,15 +159,15 @@ export class ComponentHarness {
 
   async stop(): Promise<void> {
     await this.app.close();
-    nock.cleanAll();
-    nock.restore();
+    await Promise.all([this.erp.stop(), this.tax.stop(), this.clock.stop()]);
     await this.postgres.stop();
   }
 
-  /** Clears in-process external stubs and empties the DB — call before each test/provider state. */
+  /** Clears external stubs and empties the DB — call before each test/provider state. */
   async resetState(): Promise<void> {
-    nock.cleanAll();
-    nock.enableNetConnect('127.0.0.1');
+    this.erp.reset();
+    this.tax.reset();
+    this.clock.reset();
     await this.orderRepo.clear();
     await this.couponRepo.clear();
   }
@@ -143,34 +181,31 @@ export class ComponentHarness {
   }
 
   // --- External-system stub helpers (shared by component tests and provider states) ---
-  // Persisted so a single state/test can drive multiple requests to the same endpoint.
 
   stubClock(isoInstant: string): void {
-    nock(CLOCK_URL).persist().get('/api/time').reply(200, { time: isoInstant });
+    this.clock.stub('GET', '/api/time', 200, { time: isoInstant });
   }
 
   stubProduct(sku: string, price: number): void {
-    nock(ERP_URL)
-      .persist()
-      .get(`/api/products/${sku}`)
-      .reply(200, { id: sku, price });
+    this.erp.stub('GET', `/api/products/${sku}`, 200, { id: sku, price });
   }
 
   stubProductMissing(sku: string): void {
-    nock(ERP_URL).persist().get(`/api/products/${sku}`).reply(404);
+    this.erp.stub('GET', `/api/products/${sku}`, 404);
   }
 
   stubPromotion(active: boolean, discount: number): void {
-    nock(ERP_URL)
-      .persist()
-      .get('/api/promotion')
-      .reply(200, { promotionActive: active, discount });
+    this.erp.stub('GET', '/api/promotion', 200, {
+      promotionActive: active,
+      discount,
+    });
   }
 
   stubTax(country: string, rate: number): void {
-    nock(TAX_URL)
-      .persist()
-      .get(`/api/countries/${country}`)
-      .reply(200, { id: country, countryName: country, taxRate: rate });
+    this.tax.stub('GET', `/api/countries/${country}`, 200, {
+      id: country,
+      countryName: country,
+      taxRate: rate,
+    });
   }
 }

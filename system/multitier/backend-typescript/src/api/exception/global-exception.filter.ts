@@ -59,7 +59,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         detail: ex.message,
         timestamp: new Date().toISOString(),
       };
-      response.status(422).json(body);
+      response.status(422).type('application/problem+json').json(body);
     } else {
       const body: Record<string, unknown> = {
         type: VALIDATION_ERROR_TYPE_URI,
@@ -69,7 +69,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         timestamp: new Date().toISOString(),
         errors: [{ field: ex.fieldName, message: ex.message }],
       };
-      response.status(422).json(body);
+      response.status(422).type('application/problem+json').json(body);
     }
   }
 
@@ -84,7 +84,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       detail: ex.message,
       timestamp: new Date().toISOString(),
     };
-    response.status(404).json(body);
+    response.status(404).type('application/problem+json').json(body);
   }
 
   private handleBadRequestException(
@@ -109,7 +109,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         timestamp: new Date().toISOString(),
         errors,
       };
-      response.status(422).json(body);
+      response.status(422).type('application/problem+json').json(body);
       return;
     }
 
@@ -121,7 +121,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       detail: 'Invalid request format',
       timestamp: new Date().toISOString(),
     };
-    response.status(400).json(body);
+    response.status(400).type('application/problem+json').json(body);
   }
 
   private handleHttpException(ex: HttpException, response: Response) {
@@ -133,7 +133,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       detail: ex.message,
       timestamp: new Date().toISOString(),
     };
-    response.status(status).json(body);
+    response.status(status).type('application/problem+json').json(body);
   }
 
   private handleGeneralException(ex: unknown, response: Response) {
@@ -147,7 +147,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       detail: `Internal server error: ${error.message}`,
       timestamp: new Date().toISOString(),
     };
-    response.status(500).json(body);
+    response.status(500).type('application/problem+json').json(body);
   }
 
   private buildValidationErrors(

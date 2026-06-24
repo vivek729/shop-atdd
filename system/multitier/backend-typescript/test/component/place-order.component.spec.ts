@@ -4,7 +4,8 @@ import { ComponentHarness } from '../support/component-harness';
 /**
  * Drives the real place-order flow end-to-end through the in-process API: ClockGateway ->
  * ErpGateway (price + promotion) -> CouponService (DB) -> TaxGateway, all behind POST /api/orders
- * and read back via GET /api/orders/{n}. Externals are nock-stubbed; DB is Testcontainers Postgres.
+ * and read back via GET /api/orders/{n}. Externals are stubbed by in-process HTTP servers; DB is
+ * Testcontainers Postgres.
  * Mirrors the Java PlaceOrderComponentTest.
  */
 describe('Place Order (component)', () => {
