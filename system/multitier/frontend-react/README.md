@@ -33,6 +33,12 @@ The default config (`vite.config.ts`) ignores `src/test/component/**` and
 `src/test/pact/**`; these suites run only via a separate opt-in config
 (`vitest.opt-in.config.ts`).
 
+"Opt-in" refers to the **local** default build — `npm test` stays fast and
+Docker-free. **CI is different:** the commit-stage pipeline runs these suites
+(`gh optivem component test run --suite component` / `--suite integration`)
+**inside the gating `run` job, ahead of the Docker image build**, so a red suite
+blocks the image. See [`docs/pipeline/commit-stage.md`](../../../docs/pipeline/commit-stage.md).
+
 ### Running it
 
 ```shell

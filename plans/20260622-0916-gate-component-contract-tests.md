@@ -64,20 +64,16 @@ Checkout → Should-Publish? → Compile
 
 ## ▶ Next executable step (resume here)
 
-**Phases 1 & 2 are DONE in code** — the pilot (`5d8db666`) plus the gating-only wave across the
-other 6 commit-stage workflows (user chose the "gating only" branch on 2026-06-24, accepting that
-plan [[20260624-1203-compile-component-and-test-sources-via-gh-optivem]]'s Option B CLI-compile
-work will re-edit these same workflows' compile region later). All 6 pass `actionlint`. **What
-remains is Phase 3 (docs & diagram) + verification:**
+**Phases 1, 2 (code) and Phase 3 Steps 3–4 (docs) are DONE.** Only **Step 5 — verify all** remains,
+and it is a **push gate, not a mechanical edit**: the wave commit (`52e47ac5`) plus the docs commit
+are unpushed; pushing to `main` triggers all 7 commit-stage workflows. Docker suites cannot be
+verified locally ([[project_local_testcontainers_blocked]]), so a **green CI run per workflow** is
+the only verification — which needs the push.
 
-- **Step 5 verification is the gating unblocker** — each of the 6 changed workflows needs **one
-  green CI run** (Docker suites can't be verified locally — [[project_local_testcontainers_blocked]];
-  ask before any local system-test/stack run — [[feedback_ask_before_local_system_tests]]).
-- Then **Step 3 (diagram)** and **Step 4 (docs reframe)** are pure markdown edits.
-
-Next mechanical move: **Step 3** — `docs/pipeline/commit-stage.md`, move the component/contract
-layer onto the main gating line. Step 4 follows (README + comment reframe). Step 5 (CI green) can
-run in parallel once the wave commits are pushed.
+Next move: **ask the user for the go to push** ([[feedback_ask_before_commit]]). Once pushed, watch
+each of the 7 commit-stage runs go green (pyramid block + Build/Push). If a stub suite reds, fix or
+revert per-workflow (bisectable — one workflow per commit). No further code edits expected unless CI
+surfaces a failure.
 
 ## Steps
 
@@ -98,20 +94,19 @@ order ahead of Build/Push, plus CLI install + `component test setup`) now runs i
 job + its `summary` need were deleted. `--component backend` on the two backends, `--component
 frontend` on the frontend (no provider-verification suite — consumer side), none on the three
 monoliths; `GH_OPTIVEM_CONFIG` added to each `run` env. Frontend `run` ran no tests before → now
-gates unit/integration/component for the first time. All 6 pass `actionlint`. Committed one-per-
-workflow (bisectable). User chose the **gating-only** branch (2026-06-24) over waiting for plan
+gates unit/integration/component for the first time. All 6 pass `actionlint`. Landed in a single
+local commit `52e47ac5` (**not pushed** — pushing to `main` triggers these commit-stage workflows,
+held pending the user's go). User chose the **gating-only** branch (2026-06-24) over waiting for plan
 1203's CLI-compile verb, accepting a later second edit of these workflows' compile region.
 
 ### Phase 3 — Docs & diagram
 
-- [ ] **Step 3 — diagram.** `docs/pipeline/commit-stage.md`: move the component/contract
-  layer from the dashed non-gating opt-in branch onto the **main gating line**
-  (Unit → Integration → Component → Provider Verification → Build), now the rule for *all*
-  workflows. Reconcile with the 0846 plan's Step 2b.
-- [ ] **Step 4 — docs/comments reframe.** Update "does not gate" language:
-  `system/multitier/frontend-react/README.md`; any removed-job comment blocks; confirm each
-  `component-tests.yaml` opt-in framing still reads correctly (suites stay off the *local*
-  default build; CI gates them — say so).
+Steps 3 (diagram) and 4 (docs reframe) are DONE: `docs/pipeline/commit-stage.md` now shows the
+four suites on the main gating line inside `run` (ahead of Build/Push), its bullets + Diagram↔YAML
+mapping table reflect the deleted `component-tests` job, and `system/multitier/frontend-react/README.md`
+clarifies that "opt-in" is local-only while CI gates the suites. (Both `backend-java`/`frontend-react`
+READMEs' local opt-in framing was confirmed already-correct.)
+
 - [ ] **Step 5 — verify all.** `actionlint` every changed workflow. Cannot verify Docker
   suites locally ([[project_local_testcontainers_blocked]]); rely on CI. Ask before any
   local system-test/stack run ([[feedback_ask_before_local_system_tests]]). Consider
