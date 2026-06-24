@@ -42,8 +42,7 @@ What we get out of this — the goals and deliverables:
 
 ## Steps
 
-- [ ] **Step 5 — Roll out to remaining in-scope components** — ⏳ Deferred to `plans/20260623-1944-narrow-integration-rollout.md` (Wave 2).
-- [ ] **Step 6 — Docs.** Note the narrow-integration level in `docs/pipeline/commit-stage.md` — joint pass with `1941` Step 4 (Wave 2 Batch B).
+All remaining steps done (Wave 2, 2026-06-24). Step 5 rollout executed via 1944; Step 6 docs added to `docs/pipeline/commit-stage.md`.
 
 ## Decisions (resolved 2026-06-23)
 

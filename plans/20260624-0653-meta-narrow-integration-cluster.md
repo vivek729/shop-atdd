@@ -1,7 +1,5 @@
 # 2026-06-24 06:53 UTC — Plan coordination meta-plan: narrow-integration cluster (v2, +frontend boundary)
 
-🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-24T09:39:03Z`
-
 ## TL;DR
 
 **Why:** Every component declares a `pending` narrow-integration suite in its `component-tests.yaml` — the pyramid layer that proves a single adapter talks to a real dependency (Postgres via Testcontainers; HTTP via Pact mock server) has zero tests. Provider-side Pact verification gaps and the frontend test-layer boundary doc are also untracked.
@@ -10,9 +8,7 @@
 
 ## ▶ Next executable step (resume here)
 
-**Wave 2 is ready to start.** Wave 1 CI gate is green (backend-java + frontend-react `integration` suites both passed, 2026-06-24). Re-run `/execute-plan plans/20260624-0653-meta-narrow-integration-cluster.md` to execute Wave 2 (rollout + provider tests + frontend docs).
-
-**Current position:** Wave 1 ✅ done (2026-06-24); **next = Wave 2** (see Wave status).
+**Wave 2 is done (2026-06-24) — awaiting CI.** Push the uncommitted Wave 2 fixes (backend-dotnet PactNet v5, backend-typescript nock import, commit-stage.md docs, plan file updates) then let CI run the full pyramid. **Next wave: none — all execution units complete.** Remaining open item: TypeScript narrow-integration tests — see `plans/20260624-0950-typescript-narrow-integration-testcontainers.md` (separate follow-up).
 
 ## Execution protocol (how `/execute-plan` drives this parent)
 
@@ -33,7 +29,7 @@ This means a single `/execute-plan <this file>` advances **one wave** (as far as
 
 - **Wave 0 — planning/refine:** ✅ done (2026-06-24) — all sub-plans refined, OQ4 flipped, rename plan `0824` created, decisions settled.
 - **Wave 1 — backend-java pilot + provider-verification audit + frontend narrow-integration:** ✅ done (2026-06-24) — integration suites green in CI (backend-java + frontend-react). Also fixed: `integrationTest/resources/application-test.yml` added (Flyway); gh-optivem v1.6.41 released (component command).
-- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** 🟡 ready to start. Units: U4 `1944`; U3(complete) `1941` Step 3; U5 `1957`; rename `0824`; then the joint `docs/pipeline/commit-stage.md` pass (`1801` Step 6 + `1941` Step 4). **Exit gate:** push + full pyramid green in CI.
+- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** ⏳ awaiting-CI (2026-06-24) — all units executed; push + CI gate pending. Units done: U4 `1944`; U3(complete) `1941` Steps 3–4; U5 `1957`; `1801` Step 6. TypeScript narrow-integration deferred to `plans/20260624-0950-typescript-narrow-integration-testcontainers.md`. Suite rename (`0824`) is out of scope for this wave.
 
 ## Target state
 

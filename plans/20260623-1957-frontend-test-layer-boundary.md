@@ -27,11 +27,7 @@ Once 1801 Step 3 has landed: write the canonical page under `docs/atdd/` per the
 
 ## Steps
 
-- [ ] Step 1: Confirm the factual boundary against the current code **after `[[20260623-1801-narrow-integration-tests]]` Step 3 lands** — re-read the frontend `unit` / `integration` / `component` specs, `src/test/interactions/` (the shared fixture builders), and `test-utils.tsx` (`routeApiTo` / `renderWithProviders`) — so the documented rule matches the shipped reality (Pact mock server in both middle suites; both emit into the union contract).
-- [ ] Step 2: Write the canonical page under `docs/atdd/`: state the **symmetric 4-layer** rule and the **boot/render discriminator** as the canonical frame; detail the frontend's three-suite instantiation; reference (don't restate) the backend's four-suite instantiation via the Target state.
-- [ ] Step 3: Document the **frontend mechanics** on that page: the shared-fixture (`src/test/interactions/`) + both-emit-union design, that both middle suites are Docker-free, the stub-only opt-out, the per-state table, the no-duplication point, and that the old standalone `contract` (`npm run test:pact`) suite is folded with no layer-4 frontend suite afterward.
-- [ ] Step 4: Cross-link — reduce the three test-file header comments to one-line pointers at the canonical page; cross-link the page to the `docs/pipeline/commit-stage.md` pyramid note rather than restating it.
-- [ ] Step 5: Sanity-check the rule generalises — confirm the same 4-layer/boot-render framing reads correctly for the coupon flows and for the backend instantiation, so the doc is genuinely the cluster-wide taxonomy and not frontend-only prose.
+All steps done (Wave 2, 2026-06-24). Canonical page written at `docs/atdd/test-taxonomy.md`; three frontend test-file header comments reduced to one-line pointers. Note: the frontend `component` suite still uses `vi.fn()` stubs (the Pact mock server migration is pending); the doc describes the Target state and notes the rename is tracked separately.
 
 ## Decisions (resolved 2026-06-24)
 

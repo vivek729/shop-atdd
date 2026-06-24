@@ -26,8 +26,7 @@
 
 ## Steps
 
-- [ ] Step 3 — Add provider verification tests for backend-dotnet (PactNet) and backend-typescript (@pact-foundation/pact Verifier). Wire `contract` suite in each `component-tests.yaml`. Explicitly mark monolith ×3 deferred-with-reason.
-- [ ] Step 4 — Docs. Add a short section to `docs/pipeline/commit-stage.md` explaining the consumer → committed `contracts/` → provider verification flow (joint pass with `1801` Step 6).
+All steps done (Wave 2, 2026-06-24). Steps 3 and 4 executed: provider verification tests added for backend-dotnet (PactNet v5) and backend-typescript; monolith ×3 marked deferred-with-reason; `docs/pipeline/commit-stage.md` updated with consumer→contracts→provider flow.
 
 ## Decisions (resolved 2026-06-24)
 

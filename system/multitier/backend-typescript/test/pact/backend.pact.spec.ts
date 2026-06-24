@@ -6,7 +6,7 @@ import { Verifier } from '@pact-foundation/pact';
 import * as path from 'path';
 import * as http from 'http';
 import { AddressInfo } from 'net';
-import nock from 'nock';
+import nock = require('nock');
 import { AppController } from '../../src/app.controller';
 import { AppService } from '../../src/app.service';
 import { HealthController } from '../../src/api/controller/health.controller';

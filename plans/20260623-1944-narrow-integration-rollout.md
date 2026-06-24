@@ -16,17 +16,4 @@
 
 ## ▶ Next executable step (resume here)
 
-**Prerequisite:** the pilot plan `20260623-1801-narrow-integration-tests.md` must be fully executed first. Once the pilot lands, the first executable unit here is **Step 1** — read each remaining component's `component-tests.yaml` and source tree to determine whether a real adapter exists, then produce a per-component decision list before writing any tests.
-
-## Steps
-
-- [ ] Step 1 — Audit each remaining component. For backend-dotnet, backend-typescript, monolith-java, monolith-dotnet, monolith-typescript: check whether a real adapter (DB repository, outbound HTTP client, etc.) exists in the source tree. Produce a decision: `add test` or `stay pending (reason)`.
-- [ ] Step 2 — Add narrow integration tests to components flagged `add test` in Step 1, following the same shape as the pilot (dedicated source set or script, positive name filter, `requiresDocker` if needed).
-- [ ] Step 3 — Wire each new test into its `component-tests.yaml`: remove `pending`, add `command`, `sampleTest`, and (where needed) `requiresDocker`.
-- [ ] Step 4 — For components staying `pending`, add an inline `# reason` comment to `component-tests.yaml` explaining why.
-- [ ] Step 5 — Verify locally: `gh optivem component test run --suite integration` passes for all newly wired components; `--sample` works for each.
-
-## Open questions
-
-- Do the three monoliths share the same adapter pattern as the multitier backends, or do they have a different persistence/HTTP-client structure that needs a different test shape?
-- Should the rollout happen in one PR per component, or one PR for all 5 together?
+**All steps done (Wave 2, 2026-06-24).** monolith-java, backend-dotnet, monolith-dotnet wired with real narrow-integration tests; backend-typescript and monolith-typescript marked pending with reason (see `plans/20260624-0950-typescript-narrow-integration-testcontainers.md`). CI-verified.
