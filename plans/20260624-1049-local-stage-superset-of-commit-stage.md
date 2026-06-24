@@ -82,40 +82,24 @@ commit-stage (build + lint + component only).
 
 ## ▶ Next executable step (resume here)
 
-Resolve **OQ-1** (component-test placement / port clash) and **OQ-2** (frontend
-redundancy), then apply **Step 1** as the pilot on a single config
-(`monolith-typescript` — simplest, no frontend, no Docker-format quirks) and show
-the diff before touching the other five.
+All inline edits are landed and `actionlint`-clean. The only remaining unit is a
+**CI dry-run that runs system/component tests**, which needs explicit user
+approval (memory rule). To do it: trigger a `level: local` meta-prerelease run on
+current `HEAD` (e.g. `gh workflow run _meta-prerelease-pipeline.yml -f level=local`
+or the relevant meta dispatch) and confirm (a) the new lint/unit/component steps
+execute in each `local` job, and (b) a green `local` line matches a green
+`commit-stage` line for the same config. If the component step fails on the bare
+runner (no prior `system start`), fall back to OQ-1 option (b): tear down then run
+component after `system start`.
 
 ## Steps
 
-- [ ] **Step 1 — pilot: monolith-typescript.** In the `local` job, after the
-  existing `Compile System (monolith, typescript)` step and **before** `Install
-  gh-optivem CLI extension` / `Start system`, add (each `if: inputs.architecture
-  == 'monolith' && inputs.language == 'typescript'`, `working-directory:
-  system/monolith/typescript`):
-  - `Run Unit Tests (monolith, typescript)` → `npm test`
-  - `Run Linter (monolith, typescript)` → `npm run lint`
-  Then add the component step(s) per **OQ-1** outcome. Show the diff; confirm the
-  pipeline YAML still validates.
-- [ ] **Step 2 — remaining monolith configs (java, dotnet).** Same shape with the
-  per-language commands from the mapping table. Java lint = `./gradlew
-  checkstyleMain`; dotnet lint = `dotnet format <sln> --verify-no-changes`.
-- [ ] **Step 3 — multitier backends (java, dotnet, typescript).** Mirror the
-  backend commit-stage commands, `working-directory: system/multitier/backend-<lang>`,
-  `if: inputs.architecture == 'multitier' && inputs.language == '<lang>'`.
-  Component step uses `--component backend`.
-- [ ] **Step 4 — frontend-react.** Add `npm run lint` + `--component frontend` in
-  **every** multitier `local` config (java, dotnet, typescript) per resolved
-  **OQ-2(b)**. `working-directory: system/multitier/frontend-react`. No unit step.
-- [ ] **Step 5 — ordering & fail-fast.** Place lint + unit (cheap, no Docker)
-  ahead of `gh optivem system start` so they fail fast. Component placement per
-  **OQ-1**.
-- [ ] **Step 6 — verify.** Validate all six `prerelease-pipeline-*.yml` still
-  parse (and `_prerelease-pipeline.yml`). Trigger a `level: local` meta dry-run
-  on current `HEAD` and confirm: (a) the checks now run in `local`, (b) green
-  local lines up with green commit for the same config. **Ask before any
-  system-test / component-test run** (memory rule).
+- [ ] **Step 6 (CI dry-run) — ⏳ Deferred: needs user approval to trigger CI.**
+  Static validation is done (`actionlint` clean on `_prerelease-pipeline.yml` +
+  all six `prerelease-pipeline-*.yml`). Remaining: trigger a `level: local` meta
+  dry-run on `HEAD` and confirm (a) the new checks run in `local`, (b) green local
+  lines up with green commit for the same config. **Ask before any system-test /
+  component-test run** (memory rule); this runs the component harness on CI.
 
 ## Decisions
 

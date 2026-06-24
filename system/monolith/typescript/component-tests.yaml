@@ -9,8 +9,9 @@ suites:
     sampleTest: "should be defined"
   - id: integration
     name: Narrow Integration
-    pending: true
-    # testcontainers-node setup required — see plans/20260624-0950-typescript-narrow-integration-testcontainers.md
+    command: npm run test:integration
+    sampleTest: "inserts an order and finds it by order number"
+    requiresDocker: true
   - id: component
     name: Component
     pending: true

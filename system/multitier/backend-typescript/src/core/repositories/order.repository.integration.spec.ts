@@ -1,0 +1,122 @@
+import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { DataSource, Repository } from 'typeorm';
+import { Client } from 'pg';
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from '@testcontainers/postgresql';
+import * as fs from 'fs';
+import * as path from 'path';
+import { AppModule } from '../../app.module';
+import { Order } from '../entities/order.entity';
+import { OrderStatus } from '../entities/order-status.enum';
+
+// Canonical schema — the same migrations Flyway applies for the Java backend
+// (system/db/migrations). Applied to the throwaway container so the test
+// exercises the real DDL, not an entity-synchronised schema.
+const MIGRATIONS_DIR = path.resolve(__dirname, '../../../../../db/migrations');
+
+async function applyMigrations(
+  container: StartedPostgreSqlContainer,
+): Promise<void> {
+  const client = new Client({
+    host: container.getHost(),
+    port: container.getPort(),
+    user: container.getUsername(),
+    password: container.getPassword(),
+    database: container.getDatabase(),
+  });
+  await client.connect();
+  try {
+    const files = fs
+      .readdirSync(MIGRATIONS_DIR)
+      .filter((f) => f.endsWith('.sql'))
+      .sort();
+    for (const file of files) {
+      const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8');
+      await client.query(sql);
+    }
+  } finally {
+    await client.end();
+  }
+}
+
+describe('OrderRepository [integration]', () => {
+  let app: INestApplication;
+  let postgres: StartedPostgreSqlContainer;
+  let orderRepo: Repository<Order>;
+
+  beforeAll(async () => {
+    postgres = await new PostgreSqlContainer('postgres:16-alpine')
+      .withDatabase('app')
+      .withUsername('app')
+      .withPassword('app')
+      .start();
+
+    await applyMigrations(postgres);
+
+    // Point the real AppModule factory at the container — no TypeORM override.
+    // The existing forRootAsync useFactory reads these env vars verbatim.
+    process.env.POSTGRES_DB_HOST = postgres.getHost();
+    process.env.POSTGRES_DB_PORT = String(postgres.getPort());
+    process.env.POSTGRES_DB_NAME = postgres.getDatabase();
+    process.env.POSTGRES_DB_USER = postgres.getUsername();
+    process.env.POSTGRES_DB_PASSWORD = postgres.getPassword();
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+
+    orderRepo = moduleRef.get(DataSource).getRepository(Order);
+  }, 120_000);
+
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
+    if (postgres) {
+      await postgres.stop();
+    }
+  }, 60_000);
+
+  beforeEach(async () => {
+    await orderRepo.clear();
+  });
+
+  it('saves an order and reads it back', async () => {
+    const saved = await orderRepo.save(
+      orderRepo.create({
+        orderNumber: 'ORD-001',
+        orderTimestamp: new Date('2026-01-01T00:00:00Z'),
+        country: 'US',
+        sku: 'BOOK-123',
+        quantity: 2,
+        unitPrice: 10.0,
+        basePrice: 20.0,
+        discountRate: 0,
+        discountAmount: 0,
+        subtotalPrice: 20.0,
+        taxRate: 0.1,
+        taxAmount: 2.0,
+        totalPrice: 22.0,
+        status: OrderStatus.PLACED,
+        appliedCouponCode: null,
+      }),
+    );
+
+    const found = await orderRepo.findOne({
+      where: { orderNumber: 'ORD-001' },
+    });
+
+    expect(found).not.toBeNull();
+    expect(found!.id).toBe(saved.id);
+    expect(found!.sku).toBe('BOOK-123');
+    // numeric columns round-trip as strings via node-postgres.
+    expect(Number(found!.totalPrice)).toBeCloseTo(22.0);
+    expect(found!.status).toBe(OrderStatus.PLACED);
+  });
+});

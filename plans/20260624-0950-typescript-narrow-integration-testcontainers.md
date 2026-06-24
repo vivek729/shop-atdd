@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-**Why:** `backend-typescript` (TypeORM) and `monolith-typescript` (raw `pg` driver) both have real DB adapters but no narrow-integration test infrastructure. The `integration` suite is `pending: true` in both `component-tests.yaml` files. The Java and .NET backends were handled in `[[20260623-1944-narrow-integration-rollout]]`; the TypeScript components were deferred here because they need the `testcontainers` npm package wired up — a one-time setup that is the same shape for both.
+**Why:** `backend-typescript` (TypeORM) and `monolith-typescript` (raw `pg` driver) both have real DB adapters but no narrow-integration test infrastructure. The `integration` suite is `pending: true` in both `component-tests.yaml` files. The Java and .NET backends were handled in the narrow-integration rollout (plan `1944`, since completed and removed); the TypeScript components were deferred here because they need the `testcontainers` npm package wired up — a one-time setup that is the same shape for both.
 
 **End result:** Both TypeScript components have a real `OrderRepository` / `insertOrder` integration test against a live Postgres container (via `testcontainers` + `@testcontainers/postgresql`), a separate Jest integration config, and their `component-tests.yaml` `integration` suite unwired from `pending: true`.
 
@@ -24,9 +24,9 @@
 
 ## ▶ Next executable step (resume here)
 
-> **Already done (2026-06-24, commit `32195b3c`):** `testcontainers` + `@testcontainers/postgresql` are already in `backend-typescript/package.json` `devDependencies` (added while wiring the Pact provider-verification test to a real Postgres container). So for backend-ts, skip the package-add part of Step 1 — start at `jest.integration.config.ts`. The monolith-typescript package-add is still outstanding.
+> **All code is wired and verified Docker-free (2026-06-24).** Both components have `jest.integration.config.ts`, a real `*.integration.spec.ts` (seeding the canonical `system/db/migrations` DDL into a throwaway `postgres:16-alpine` container), a `test:integration` npm script, integration specs excluded from the default unit run, and their `component-tests.yaml` `integration` suite unwired from `pending`. `tsc --noEmit`, `jest --listTests` (unit excludes integration; integration finds its spec), and the unit suites all pass locally without Docker.
 
-**Step 1 — backend-typescript setup.** Add `testcontainers` + `@testcontainers/postgresql` to `devDependencies` (**done for backend-ts — see note above**), create `jest.integration.config.ts` with `testRegex: .*\.integration\.spec\.ts$` and `testEnvironment: node` (no env-mutating `globalSetup`). In the spec's `beforeAll`, start the Postgres container and set `POSTGRES_DB_HOST` / `POSTGRES_DB_PORT` / `POSTGRES_DB_NAME` / `POSTGRES_DB_USER` / `POSTGRES_DB_PASSWORD` into `process.env`, then bootstrap the real `AppModule` via `Test.createTestingModule` — its existing `forRootAsync` factory already reads those env vars, so no TypeORM override is needed.
+**Only remaining item: Step 7 — confirm the live-container runs are green in CI** (local Testcontainers is blocked on this machine). Watch the component-tests workflow for `backend-typescript` and `monolith/typescript`, suite `integration`. If green, delete Step 7 and this plan file. If red, reproduce against the CI logs and fix the spec/migration wiring.
 
 ## Audit findings (2026-06-24)
 
@@ -49,13 +49,13 @@ Discovered during the narrow-integration rollout (plan `1944`, since completed a
 
 ## Steps
 
-- [ ] **Step 1 — backend-typescript setup.** Add `testcontainers` + `@testcontainers/postgresql` to `devDependencies`. Create `jest.integration.config.ts` (`testRegex: .*\.integration\.spec\.ts$`, `testEnvironment: node`) — **no** env-mutating `globalSetup`. Write a `beforeAll` (or a shared helper imported by the spec) that starts a `PostgreSqlContainer` and sets the env vars the existing `AppModule` factory already reads: `POSTGRES_DB_HOST`, `POSTGRES_DB_PORT`, `POSTGRES_DB_NAME`, `POSTGRES_DB_USER`, `POSTGRES_DB_PASSWORD` (note: name var is `POSTGRES_DB_NAME`, not `POSTGRES_DB`). No custom TypeORM override is needed — set the env vars *before* `Test.createTestingModule({ imports: [AppModule] })` and the real `forRootAsync` factory connects to the container. Tear the container down in `afterAll`.
-- [ ] **Step 2 — backend-typescript test.** Write `src/core/repositories/order.repository.integration.spec.ts` — in `beforeAll` start the container + set env (Step 1) then bootstrap `Test.createTestingModule({ imports: [AppModule] })`; in the test, save an order via `Repository<Order>`, read it back, assert. Tag with a marker (e.g. `describe('OrderRepository [integration]', ...)`) so the Jest filter catches it. Add `"test:integration": "jest --config jest.integration.config.ts"` to `package.json`. Confirm `npm run test:integration` passes locally (Docker up) and `npm run test:unit` still passes without Docker.
-- [ ] **Step 3 — backend-typescript YAML.** In `system/multitier/backend-typescript/component-tests.yaml`: remove `pending: true` from the `integration` suite, add `command: npm run test:integration`, `sampleTest: <test name>`, `requiresDocker: true`.
-- [ ] **Step 4 — monolith-typescript setup.** Same packages. Create `jest.integration.config.ts` (`testRegex`, `testEnvironment: node`; **no** env-mutating `globalSetup`). The container is started in a `beforeAll` inside the spec (Step 5). Env var names must match `src/lib/db.ts`'s Pool config: `POSTGRES_DB_HOST`, `POSTGRES_DB_PORT`, `POSTGRES_DB_NAME`, `POSTGRES_DB_USER`, `POSTGRES_DB_PASSWORD`.
-- [ ] **Step 5 — monolith-typescript test.** Write `src/__tests__/db.integration.spec.ts` — in `beforeAll`: start `PostgreSqlContainer`, set the `POSTGRES_DB_*` env vars, **then** `const db = await import('../lib/db')` so the module-load Pool is built against the container (do **not** static-import `db.ts` at the top of the file). Call `db.insertOrder(...)`, `db.findByOrderNumber(...)`, assert the round-trip. Stop the container in `afterAll`. Add `"test:integration": "jest --config jest.integration.config.ts"` to `package.json`. Confirm `npm run test:integration` passes locally (Docker up).
-- [ ] **Step 6 — monolith-typescript YAML.** In `system/monolith/monolith-typescript/component-tests.yaml`: remove `pending: true`, add `command`, `sampleTest`, `requiresDocker: true`.
-- [ ] **Step 7 — Verify both.** `gh optivem component test run --suite integration` for both components. `--sample` works for each.
+- [ ] **Step 7 — Verify both in CI.** ⏳ Deferred: local Testcontainers is blocked on this machine (Docker Engine returns 400), so the live-container runs were not executed locally. Confirm `gh optivem component test run --suite integration` (and `--sample`) passes in CI for both `backend-typescript` and `monolith/typescript`. Everything that can be verified Docker-free passes locally: `tsc --noEmit`, `jest --listTests` (unit excludes integration; the integration config finds its spec), and both unit suites. Once CI is green, delete this item and the plan file.
+
+### Done (committed 2026-06-24)
+
+Steps 1–6 are implemented and verified Docker-free. Actual layout differs from the original draft in two ways worth recording:
+- **monolith path** is `system/monolith/typescript/` (not `system/monolith/monolith-typescript/`).
+- **Schema seeding:** because the real `AppModule` uses `synchronize: false` and `db.ts` uses a raw `pg` Pool, neither auto-creates the schema. Both specs apply the canonical `system/db/migrations/*.sql` (the same files Flyway runs for the Java backend) into the container via a short-lived `pg` `Client` in `beforeAll` — faithful to "real schema, no production override". The monolith integration config sets `forceExit: true` because `db.ts`'s module-load Pool has no close seam (left untouched on purpose).
 
 ## Resolved decisions
 
