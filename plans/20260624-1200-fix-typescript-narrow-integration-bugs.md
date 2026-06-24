@@ -43,28 +43,6 @@ dry-run (with `fail-fast=false`) is green across all six `local` configs.
 
 ## Steps
 
-- [ ] **Step 1 — Fix Bug 1 (lint).** Add the missing `pg` typing to
-  `system/multitier/backend-typescript` so the type-aware lint resolves `Client`
-  (mirror whatever monolith-typescript declares — likely `pg` + `@types/pg` in
-  `devDependencies`/`dependencies`). Run `npm run lint` in
-  `system/multitier/backend-typescript` → must be clean. Confirm `npx tsc --noEmit`
-  still passes.
-
-- [ ] **Step 2 — Fix Bug 2 (teardown race).** Export a `closePool()` (calls
-  `pool.end()`) from `system/monolith/typescript/src/lib/db.ts`, and call it in
-  the spec's `afterAll` **before** `postgres.stop()`. Run
-  `npm run test:integration` in `system/monolith/typescript` → suite passes with
-  no unhandled-connection error. (No equivalent change needed in the multitier
-  spec — `app.close()` already disposes its pool.)
-
-- [ ] **Step 3 — Cross-language audit (CLAUDE.md rule).** Confirm the Java and
-  .NET narrow-integration tests release DB connections before container teardown
-  (expected: framework-managed, no fix). Check
-  `system/multitier/backend-java/src/integrationTest/java/.../AbstractIntegrationTest.java`
-  and `system/multitier/backend-dotnet/Tests/Integration/AbstractIntegrationTest.cs`.
-  If either leaks a connection across `@Container`/fixture teardown, fix to match.
-  Record the verdict in the commit message even if no change is needed.
-
 - [ ] **Step 4 (verification — ⏳ needs user approval to trigger CI / run tests).**
   Re-trigger the `level=local` dry-run on `HEAD` with `fail-fast=false` and
   `auto-trigger-stage=false`
@@ -76,12 +54,26 @@ dry-run (with `fail-fast=false`) is green across all six `local` configs.
 
 ## ▶ Next executable step (resume here)
 
-Start **Step 1** — add `pg`/`@types/pg` typing to
-`system/multitier/backend-typescript` (mirror monolith-typescript's declaration),
-then `npm run lint` there until clean. This is a self-contained `package.json`
-(+ `package-lock.json`) edit; no cross-file coordination. Steps 1–3 are
-code-only (compile/lint/test locally — allowed without approval); Step 4 is the
-gated CI re-run.
+All code fixes (Steps 1–3) are landed and compile/lint-clean. Only **Step 4**
+remains: the **gated CI re-run** to prove all six `local` configs go green.
+Resume = get user approval, then
+`gh workflow run meta-prerelease-dry-run.yml --ref main -f level=local
+-f variant=all -f skip-local=false -f auto-trigger-stage=false -f fail-fast=false`
+on `HEAD`; confirm every `local` config is green. When green, delete Step 4 and
+this plan.
+
+## Done (committed)
+
+- **Bug 1 (lint)** — added `@types/pg ^8.11.11` to
+  `system/multitier/backend-typescript` devDependencies; `npm run lint` +
+  `tsc --noEmit` now clean.
+- **Bug 2 (teardown race)** — added `closePool()` to
+  `system/monolith/typescript/src/lib/db.ts`; the integration spec's `afterAll`
+  now calls `db.closePool()` before `postgres.stop()`.
+- **Step 3 (cross-language audit)** — no fix needed: Java uses
+  `@Testcontainers`/`@ServiceConnection` (framework-managed pool); .NET's
+  `DisposeAsync()` already disposes `DbContext` before the container. The bug was
+  TS-only.
 
 ## Open questions
 

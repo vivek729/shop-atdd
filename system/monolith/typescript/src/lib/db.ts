@@ -128,3 +128,10 @@ export async function findAllCoupons(): Promise<CouponRow[]> {
   const result = await pool.query<CouponRow>('SELECT * FROM coupons ORDER BY id');
   return result.rows;
 }
+
+// Releases the connection pool. Tests must call this before stopping a
+// Testcontainers Postgres, otherwise the container shutdown surfaces as an
+// unhandled "terminating connection due to administrator command" pool error.
+export async function closePool(): Promise<void> {
+  await pool.end();
+}

@@ -61,6 +61,12 @@ describe('db adapter [integration]', () => {
   }, 120_000);
 
   afterAll(async () => {
+    // Close the pg pool before stopping the container, else the shutdown
+    // surfaces as an unhandled "terminating connection due to administrator
+    // command" error and fails the suite.
+    if (db) {
+      await db.closePool();
+    }
     if (postgres) {
       await postgres.stop();
     }
