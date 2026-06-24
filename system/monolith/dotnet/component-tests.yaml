@@ -1,6 +1,9 @@
 setupCommands:
   - name: Restore Dependencies
     command: dotnet restore
+compileCommands:
+  - name: Compile production + test projects
+    command: dotnet build
 testFilter: --filter DisplayName~<test>
 suites:
   - id: unit

@@ -1,6 +1,9 @@
 setupCommands:
   - name: Install Dependencies
     command: npm ci
+compileCommands:
+  - name: Typecheck production + test sources
+    command: npx tsc --noEmit
 testFilter: -t '<test>'
 suites:
   - id: unit

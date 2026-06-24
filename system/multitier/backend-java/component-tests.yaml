@@ -1,6 +1,9 @@
 setupCommands:
   - name: Pre-warm Gradle
     command: .\gradlew.bat --version
+compileCommands:
+  - name: Compile production + test source sets
+    command: .\gradlew.bat compileJava compileTestJava compileIntegrationTestJava compileComponentTestJava
 testFilter: --tests '*.<test>'
 suites:
   - id: unit

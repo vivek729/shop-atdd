@@ -79,19 +79,22 @@ jobs:
           cache: true
           cache-dependency-path: 'system/multitier/backend-dotnet/**/*.csproj'
 
+      - name: Install gh-optivem CLI Extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Compile production + component-test projects up front (the component's
+      # compileCommands in component-tests.yaml) so a compile error fails fast before the
+      # gating suites.
       - name: Compile Code
-        run: dotnet build
-        working-directory: system/multitier/backend-dotnet
+        run: gh optivem component-test compile --component backend
 
       # === Run Test Pyramid (gates the image) ===
       # Suites are selected from system/multitier/backend-dotnet/component-tests.yaml via the
       # gh-optivem CLI, so the suite→command mapping has a single source of truth. They run
       # in pyramid order ahead of Build/Push, so a red suite blocks the Docker image.
       # One setup covers every suite (it runs the component's suite-agnostic setupCommands).
-      - name: Install gh-optivem CLI Extension
-        uses: optivem/actions/install-gh-optivem@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Up Component Test Harness
         run: gh optivem component-test setup --component backend

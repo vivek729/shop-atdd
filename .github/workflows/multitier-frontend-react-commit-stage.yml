@@ -83,9 +83,16 @@ jobs:
         run: npm ci
         working-directory: system/multitier/frontend-react
 
+      - name: Install gh-optivem CLI Extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Typecheck production + component-test sources up front (the component's
+      # compileCommands in component-tests.yaml) so a compile error fails fast before the
+      # gating suites.
       - name: Compile Code
-        run: npm run build
-        working-directory: system/multitier/frontend-react
+        run: gh optivem component-test compile --component frontend
 
       # === Run Test Pyramid (gates the image) ===
       # Suites are selected from system/multitier/frontend-react/component-tests.yaml via the
@@ -93,10 +100,6 @@ jobs:
       # in pyramid order ahead of Build/Push, so a red suite blocks the Docker image.
       # Frontend is the consumer side — no provider-verification suite.
       # One setup covers every suite (it runs the component's suite-agnostic setupCommands).
-      - name: Install gh-optivem CLI Extension
-        uses: optivem/actions/install-gh-optivem@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Up Component Test Harness
         run: gh optivem component-test setup --component frontend

@@ -1,5 +1,7 @@
 # 2026-06-24 12:21 UTC — Symmetric `gh optivem` tier taxonomy (kill ambiguous `test` and ambiguous `compile`)
 
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-06-24T14:03:36Z`
+
 ## TL;DR
 
 **Why:** The `gh optivem` command surface names its two test tiers on two different
@@ -143,30 +145,25 @@ fixed):** the embedded ATDD orchestrator — `internal/atdd/process/process-flow
 `setup-tests` / `compile-tests` / `run-tests` command strings) and `command.go`'s
 `isTestRun` prefix match — plus user-facing remediation labels in `verify_classify.go`; the CLI
 issues these to itself, so the hard rename would have broken the orchestrator without them.
-- [ ] **Cut a gh-optivem release** (hard rename, no aliases — OQ-A). ⚠️ **User action — outward-facing.**
-  The shop call-site rewrite (Phase 2) must land together with consumers picking up this release;
-  a stale call site breaks until flipped, so do not merge Phase 2 piecemeal.
+- ✅ **gh-optivem released 2026-06-24 (user).** Hard rename, no aliases (OQ-A). The live CLI carries
+  `component-test compile` (with `--component`); verb-rename call sites are on `origin/main`.
 
 ### Phase 2 — shop call sites
-- [x] **Verb rename done (uncommitted, 2026-06-24).** All 22 workflows + docs/scripts/READMEs/
-  `tests.yaml`/agent doc rewritten (`gh optivem test run|setup|compile` → `system-test …`;
-  `component test` → `component-test`) across 36 files; `plans/` deliberately excluded.
-  `actionlint` green on all 22 changed workflows. ⚠️ **Must NOT push/merge until the gh-optivem
-  release ships** — a live call site breaks against the old binary (OQ-A flag-day).
-- [x] **`--assume-running` — N/A (verified).** No shop workflow calls the bare `test` aggregate
-  (grep = 0 hits); acceptance stages start the system via the `deploy-docker-compose` composite
-  action and run suites with `gh optivem system-test run --suite …` directly. The flag is a
-  developer-local ergonomic only, so OQ-E's "don't invoke the bare aggregate" branch applies and
-  nothing needs the flag.
-- [ ] Populate `compileCommands:` in all 7 `component-tests.yaml` (OQ-C addendum — the CLI verb is
-  live but no-ops until the YAML lists commands), and route the 7 commit-stage `Compile Code`
-  steps to `gh optivem component-test compile [--component <c>]`. *(Not a rename — net-new content;
-  still pending.)*
+- ✅ **Verb rename** — all 22 workflows + docs/scripts/READMEs rewritten (`gh optivem test …` →
+  `system-test …`; `component test` → `component-test`); committed `251f9cf4`, on `origin/main`.
+- ✅ **`--assume-running` — N/A (verified).** No shop workflow calls the bare `test` aggregate.
+- ✅ **`compileCommands:` populated in all 7 `component-tests.yaml`** (Java `compileJava
+  compileTestJava compileIntegrationTestJava [compileComponentTestJava]` — task names verified via
+  `gradlew --dry-run`; .NET `dotnet build`; TS `npx tsc --noEmit`) and the 7 commit-stage `Compile Code` steps routed to `gh optivem component-test
+  compile [--component backend|frontend]`, with the CLI-install step relocated ahead of compile.
+  TS note: the native `npm run build` (next/nest/vite bundle) was *replaced* by `npx tsc --noEmit`
+  (symmetric pure-source compile incl. test sources; the bundler still runs in the Docker image build).
 
 ### Phase 3 — Verify
-- [ ] `actionlint` every changed workflow; one green CI run per pipeline.
-- [ ] Grep the workspace for any residual `gh optivem test ` / bare `gh optivem compile`
-  (hard-rename gate — there are no forwarding aliases, so any straggler is a live breakage).
+- ✅ `actionlint` clean on all 7 changed commit-stage workflows (2026-06-24).
+- ✅ Straggler grep clean — no residual `gh optivem test ` / `gh optivem component test` outside `plans/`.
+- [ ] **One green CI run per commit-stage pipeline after push** — the post-push confirmation that
+  `gh optivem component-test compile` runs green for all 7 components (Java/.NET/TS).
 
 ## Resolved decisions
 - **OQ-A — Hard rename (no aliases).** *Decided (refine, 2026-06-24):* **hard rename** — the CLI
@@ -284,20 +281,15 @@ issues these to itself, so the hard rename would have broken the orchestrator wi
 
 ## ▶ Next executable step (resume here)
 
-**Phase 1 gh-optivem code is committed (2026-06-24); the rename is functionally complete and the
-full Go test suite is green.** The single remaining Phase 1 item is the **gh-optivem release cut**
-— an outward-facing user action, not an agent edit. Then Phase 2 + Phase 3 run together against
-that release.
+**All code/config edits are done.** gh-optivem is released; the 7 `component-tests.yaml` carry
+`compileCommands:`; the 7 commit-stage `Compile Code` steps now call `gh optivem component-test
+compile`; `actionlint` and the straggler grep are clean locally. These changes are committed to
+shop but the **final verification is a post-push CI run**.
 
-Concretely, next session:
-1. **(User)** Cut the gh-optivem release (hard rename, no aliases). Phase 2 must land with consumers
-   picking it up — do not merge Phase 2 piecemeal.
-2. **Phase 2 (shop):** rewrite the 15 + 0916-wave workflows to `system-test` / `component-test`;
-   populate `compileCommands:` in the 7 `component-tests.yaml` and route the `Compile Code` steps to
-   `gh optivem component-test compile`; pass `--assume-running` where the workflow already manages the
-   system; update `docs/pipeline/acceptance-stage.md`, `CLAUDE.md`, `CONTRIBUTING.md`.
-3. **Phase 3:** `actionlint` every changed workflow + one green CI run per pipeline; workspace-wide
-   grep for residual `gh optivem test ` / bare `gh optivem compile` (hard-rename straggler gate).
+The only remaining unit is **observational, not an edit**: after the commit-stage changes are
+pushed, confirm one green CI run per pipeline — i.e. that `gh optivem component-test compile` builds
+green for all 7 components. If a component's compile fails (e.g. a wrong gradle task name or a
+`tsc` config gap), fix that component's `compileCommands:` and re-run.
 
 Resume with `/clear` then `/execute-plan plans/20260624-1221-symmetric-gh-optivem-tier-noun-taxonomy.md`.
 

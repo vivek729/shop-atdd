@@ -88,9 +88,16 @@ jobs:
           max_attempts: 3
           command: cd system/monolith/java && ./gradlew --version
 
+      - name: Install gh-optivem CLI Extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Compile production + component-test source sets up front (each component's
+      # compileCommands in component-tests.yaml) so a compile error fails fast before the
+      # gating suites.
       - name: Compile Code
-        run: ./gradlew compileJava compileTestJava
-        working-directory: system/monolith/java
+        run: gh optivem component-test compile
 
       # === Run Test Pyramid (gates the image) ===
       # Suites are selected from system/monolith/java/component-tests.yaml via the gh-optivem
@@ -98,10 +105,6 @@ jobs:
       # order ahead of Build/Push, so a red suite blocks the Docker image. The unit suite runs
       # ./gradlew test (finalizedBy jacocoTestReport); the later suites do not regenerate it, so
       # Sonar coverage stays unit-only. One setup covers every suite (suite-agnostic setupCommands).
-      - name: Install gh-optivem CLI Extension
-        uses: optivem/actions/install-gh-optivem@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Up Component Test Harness
         run: gh optivem component-test setup
