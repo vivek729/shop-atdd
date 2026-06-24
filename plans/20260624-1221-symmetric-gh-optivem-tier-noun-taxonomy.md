@@ -1,5 +1,7 @@
 # 2026-06-24 12:21 UTC — Symmetric `gh optivem` tier taxonomy (kill ambiguous `test` and ambiguous `compile`)
 
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-06-24T13:22:29Z`
+
 ## TL;DR
 
 **Why:** The `gh optivem` command surface names its two test tiers on two different

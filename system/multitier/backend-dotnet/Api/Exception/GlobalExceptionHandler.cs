@@ -6,6 +6,8 @@ namespace MyCompany.MyShop.Backend.Api.Exception;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
+    private const string ProblemJsonContentType = "application/problem+json";
+
     private const string ValidationErrorTypeUri = "https://api.my-company.com/errors/validation-error";
     private const string ResourceNotFoundTypeUri = "https://api.my-company.com/errors/resource-not-found";
     private const string InternalServerErrorTypeUri = "https://api.my-company.com/errors/internal-server-error";
@@ -38,7 +40,6 @@ public class GlobalExceptionHandler : IExceptionHandler
     private static async Task WriteValidationResponse(HttpContext httpContext, ValidationException ex, CancellationToken cancellationToken)
     {
         httpContext.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
-        httpContext.Response.ContentType = "application/problem+json";
 
         object response;
 
@@ -69,13 +70,13 @@ public class GlobalExceptionHandler : IExceptionHandler
             };
         }
 
-        await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(
+            response, options: (JsonSerializerOptions?)null, contentType: ProblemJsonContentType, cancellationToken);
     }
 
     private static async Task WriteNotExistResponse(HttpContext httpContext, NotExistValidationException ex, CancellationToken cancellationToken)
     {
         httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-        httpContext.Response.ContentType = "application/problem+json";
 
         var response = new
         {
@@ -86,7 +87,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             timestamp = DateTime.UtcNow
         };
 
-        await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(
+            response, options: (JsonSerializerOptions?)null, contentType: ProblemJsonContentType, cancellationToken);
     }
 
     private async Task WriteInternalServerErrorResponse(HttpContext httpContext, System.Exception ex, CancellationToken cancellationToken)
@@ -94,7 +96,6 @@ public class GlobalExceptionHandler : IExceptionHandler
         _logger.LogError(ex, "Unexpected error occurred");
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        httpContext.Response.ContentType = "application/problem+json";
 
         var response = new
         {
@@ -105,6 +106,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             timestamp = DateTime.UtcNow
         };
 
-        await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(
+            response, options: (JsonSerializerOptions?)null, contentType: ProblemJsonContentType, cancellationToken);
     }
 }

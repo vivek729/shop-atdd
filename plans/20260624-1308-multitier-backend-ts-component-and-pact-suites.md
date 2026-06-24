@@ -22,11 +22,20 @@ Could not find a working container runtime strategy
 
 and the Component suite reported `PENDING` (skipped, not implemented).
 
-### Root cause — Provider Verification
+### Root cause — Provider Verification (TWO stacked bugs)
 
-At sha `8207e27b`, `test/pact/backend.pact.spec.ts` called `nock.enableNetConnect('127.0.0.1')` **before** `new PostgreSqlContainer(...).start()`. nock patches Node's HTTP client; restricting net-connect to `127.0.0.1` blocks Testcontainers from reaching the Docker daemon socket (host `localhost`, not `127.0.0.1`), so container-runtime detection fails. The Narrow Integration suite passed in the same job (Docker was available) precisely because it never touches nock — proving the cause is the nock/Testcontainers ordering, not a missing runtime.
+**Bug 1 (nock/Testcontainers ordering) — already fixed.** At sha `8207e27b`, `backend.pact.spec.ts` called `nock.enableNetConnect('127.0.0.1')` **before** `new PostgreSqlContainer(...).start()`. nock patches Node's HTTP client; restricting net-connect to `127.0.0.1` blocks Testcontainers from reaching the Docker daemon socket (host `localhost`, not `127.0.0.1`), so container-runtime detection fails with *"Could not find a working container runtime strategy."* Commit `52e47ac5` reordered it (container → then nock). The re-run on current `main` confirmed the container now starts and the test reaches the Verifier — Bug 1 is genuinely fixed.
 
-Commit `52e47ac5` already reordered the spec (start container → then `nock.enableNetConnect`) and added an explanatory comment block. `8207e27b` is an ancestor of `52e47ac5`, which is an ancestor of current `main` (`9d6f5caf`). **The fix is committed and pushed but has had no CI run on the new `main`** — the scheduled meta run fired on the stale sha.
+**Bug 2 (wrong contract-file path) — the real remaining failure.** Re-running the commit stage on current `main` (run [28101011683](https://github.com/optivem/shop/actions/runs/28101011683)) surfaced a *different* error, previously masked by Bug 1:
+
+```
+the required ffi function 'pactffiVerifierAddDirectorySource' failed validation:
+'/home/runner/work/shop/shop/system/contracts/frontend-backend.json' does not exist
+```
+
+The spec resolved the contract with `path.resolve(__dirname, '../../../../contracts/frontend-backend.json')`. `__dirname` is `system/multitier/backend-typescript/test/pact` — **5 levels** below the repo root — so reaching the repo-owned `contracts/` folder needs **5** `../`, not 4. Four lands at `system/contracts/` (nonexistent). Java reads it correctly via `@PactFolder("../../../contracts")` and .NET via 7 `../` from its bin dir. Fix: change `../../../../` → `../../../../../`. The contract file is git-tracked at `contracts/frontend-backend.json` and declares all 7 provider states the spec handles.
+
+**Lesson:** the "already fixed, just re-run" assumption in the first draft of this plan was wrong — Bug 1's fix unmasked Bug 2. Phase 0's empirical re-run is what caught it.
 
 ### Root cause — Component
 
@@ -96,5 +105,10 @@ The TS Pact spec already constructs exactly the harness a Component suite needs 
 - **Docker flakiness in CI** — both Component and Provider Verification now `requiresDocker`; a runner without Docker fails both. Mitigated by the integration suite already depending on Docker successfully.
 - **Harness refactor regressing Pact** — Phase 1 keeps `backend.pact.spec.ts` behavior identical; verify before adding Component specs.
 
+## Status (2026-06-24 ~13:30 UTC)
+- **Phase 0 done** — re-run on `main` confirmed Bug 1 fixed and surfaced Bug 2 (contract path).
+- **Phases 1–3 done (uncommitted)**: shared `test/support/component-harness.ts` extracted; `backend.pact.spec.ts` re-pointed at it AND contract path fixed (`../../../../../`); `test/jest-component.json` + `test:component` script added; three component specs under `test/component/` (place-order, coupon, order-history); `component-tests.yaml` stub flipped to a real gating suite.
+- **Verified locally**: `npx tsc --noEmit`, `npm run build`, `npx eslint test/**` all clean. The suites themselves can't run locally (Testcontainers/Docker blocked here) — CI is the gate.
+
 ## ▶ Next executable step (resume here)
-Phase 0: with user go-ahead, dispatch `multitier-backend-typescript-commit-stage.yml` on `main` and confirm Provider Verification is green. Then start Phase 1 (extract shared harness).
+Commit + push the changes (needs explicit user go-ahead per repo convention). The push to `system/multitier/backend-typescript/**` triggers the commit stage, which is the only way to verify Component + Provider Verification green (local Docker blocked). Watch run, confirm both suites pass and the image builds.

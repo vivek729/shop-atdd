@@ -14,7 +14,9 @@ suites:
     requiresDocker: true
   - id: component
     name: Component
-    pending: true
+    command: npm run test:component
+    sampleTest: "computes totals from price, promotion and tax"
+    requiresDocker: true
   - id: provider-verification
     name: Provider Verification (Pact)
     command: npm run test:pact

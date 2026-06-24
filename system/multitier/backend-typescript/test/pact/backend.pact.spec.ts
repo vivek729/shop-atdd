@@ -1,135 +1,19 @@
-import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Verifier } from '@pact-foundation/pact';
 import * as path from 'path';
-import * as http from 'http';
-import { AddressInfo } from 'net';
-import nock from 'nock';
-import {
-  PostgreSqlContainer,
-  StartedPostgreSqlContainer,
-} from '@testcontainers/postgresql';
-import { AppController } from '../../src/app.controller';
-import { AppService } from '../../src/app.service';
-import { HealthController } from '../../src/api/controller/health.controller';
-import { OrderController } from '../../src/api/controller/order.controller';
-import { CouponController } from '../../src/api/controller/coupon.controller';
-import { OrderService } from '../../src/core/services/order.service';
-import { CouponService } from '../../src/core/services/coupon.service';
-import { ErpGateway } from '../../src/core/services/external/erp.gateway';
-import { ClockGateway } from '../../src/core/services/external/clock.gateway';
-import { TaxGateway } from '../../src/core/services/external/tax.gateway';
-import { GlobalExceptionFilter } from '../../src/api/exception/global-exception.filter';
-import { CustomValidationPipe } from '../../src/api/exception/custom-validation.pipe';
-import { DecimalFormatInterceptor } from '../../src/api/interceptor/decimal-format.interceptor';
+import { ComponentHarness } from '../support/component-harness';
 import { Order } from '../../src/core/entities/order.entity';
-import { Coupon } from '../../src/core/entities/coupon.entity';
 import { OrderStatus } from '../../src/core/entities/order-status.enum';
-import { DataSource, Repository } from 'typeorm';
-
-const ERP_URL = 'http://erp-stub.local';
-const TAX_URL = 'http://tax-stub.local';
-const CLOCK_URL = 'http://clock-stub.local';
 
 describe('Backend Pact Provider Verification', () => {
-  let app: INestApplication;
-  let port: number;
-  let dataSource: DataSource;
-  let orderRepo: Repository<Order>;
-  let couponRepo: Repository<Coupon>;
-  let postgres: StartedPostgreSqlContainer;
+  const harness = new ComponentHarness();
 
   beforeAll(async () => {
-    // Real Postgres via Testcontainers (mirrors the Java harness) so numeric / timestamptz
-    // semantics match the contract. External systems stay in-process via nock.
-    //
-    // Start the container BEFORE activating nock: nock patches Node's HTTP client and, once
-    // enableNetConnect is restricted to 127.0.0.1, blocks Testcontainers' communication with the
-    // Docker daemon socket (host 'localhost', not 127.0.0.1). That makes runtime detection fail
-    // with "Could not find a working container runtime strategy". The Postgres connection itself is
-    // raw TCP via node-postgres, which nock does not intercept, so the DB keeps working afterwards.
-    postgres = await new PostgreSqlContainer('postgres:16-alpine')
-      .withDatabase('app')
-      .withUsername('app')
-      .withPassword('app')
-      .start();
-
-    nock.enableNetConnect('127.0.0.1');
-
-    const moduleRef = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          host: postgres.getHost(),
-          port: postgres.getPort(),
-          username: postgres.getUsername(),
-          password: postgres.getPassword(),
-          database: postgres.getDatabase(),
-          entities: [Order, Coupon],
-          synchronize: true,
-        }),
-        TypeOrmModule.forFeature([Order, Coupon]),
-      ],
-      controllers: [
-        AppController,
-        HealthController,
-        OrderController,
-        CouponController,
-      ],
-      providers: [
-        AppService,
-        OrderService,
-        CouponService,
-        ErpGateway,
-        ClockGateway,
-        TaxGateway,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: (key: string, defaultValue?: unknown) => {
-              const cfg: Record<string, string> = {
-                ERP_API_URL: ERP_URL,
-                TAX_API_URL: TAX_URL,
-                CLOCK_API_URL: CLOCK_URL,
-                EXTERNAL_SYSTEM_MODE: 'stub',
-              };
-              return cfg[key] ?? defaultValue;
-            },
-          },
-        },
-      ],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new CustomValidationPipe());
-    app.useGlobalFilters(new GlobalExceptionFilter());
-    app.useGlobalInterceptors(new DecimalFormatInterceptor());
-    await app.listen(0);
-
-    const server = app.getHttpServer() as http.Server;
-    port = (server.address() as AddressInfo).port;
-
-    dataSource = moduleRef.get(DataSource);
-    orderRepo = dataSource.getRepository(Order);
-    couponRepo = dataSource.getRepository(Coupon);
+    await harness.start();
   }, 120_000);
 
   afterAll(async () => {
-    await app.close();
-    nock.cleanAll();
-    nock.restore();
-    await postgres.stop();
+    await harness.stop();
   }, 60_000);
-
-  const resetState = async () => {
-    nock.cleanAll();
-    nock.enableNetConnect('127.0.0.1');
-    await orderRepo.clear();
-    await couponRepo.clear();
-  };
 
   const sampleOrder = (): Partial<Order> => ({
     orderTimestamp: new Date('2026-03-10T12:00:00Z'),
@@ -149,6 +33,9 @@ describe('Backend Pact Provider Verification', () => {
   });
 
   it('verifies the frontend consumer contract', async () => {
+    // __dirname is system/multitier/backend-typescript/test/pact — five levels below the repo
+    // root, where the consumer-owned contracts/ folder lives (same neutral location Java's
+    // @PactFolder and the .NET verifier read from).
     const pactFile = path.resolve(
       __dirname,
       '../../../../../contracts/frontend-backend.json',
@@ -156,55 +43,51 @@ describe('Backend Pact Provider Verification', () => {
 
     await new Verifier({
       provider: 'backend',
-      providerBaseUrl: `http://127.0.0.1:${port}`,
+      providerBaseUrl: harness.baseUrl(),
       pactUrls: [pactFile],
       stateHandlers: {
         'product BOOK-123 exists and US is taxable': async () => {
-          await resetState();
-          nock(CLOCK_URL)
-            .get('/api/time')
-            .reply(200, { time: '2026-03-10T12:00:00Z' });
-          nock(ERP_URL)
-            .get('/api/products/BOOK-123')
-            .reply(200, { id: 'BOOK-123', price: 10.0 });
-          nock(ERP_URL)
-            .get('/api/promotion')
-            .reply(200, { promotionActive: false, discount: 1.0 });
-          nock(TAX_URL)
-            .get('/api/countries/US')
-            .reply(200, { id: 'US', countryName: 'US', taxRate: 0.1 });
+          await harness.resetState();
+          harness.stubClock('2026-03-10T12:00:00Z');
+          harness.stubProduct('BOOK-123', 10.0);
+          harness.stubPromotion(false, 1.0);
+          harness.stubTax('US', 0.1);
         },
 
         'order placement is blocked by the New Year blackout': async () => {
-          await resetState();
-          nock(CLOCK_URL)
-            .get('/api/time')
-            .reply(200, { time: '2026-12-31T23:59:00Z' });
+          await harness.resetState();
+          harness.stubClock('2026-12-31T23:59:00Z');
         },
 
         'at least one order exists': async () => {
-          await resetState();
-          await orderRepo.save(
-            orderRepo.create({ ...sampleOrder(), orderNumber: 'ORD-HIST-1' }),
+          await harness.resetState();
+          await harness.orderRepo.save(
+            harness.orderRepo.create({
+              ...sampleOrder(),
+              orderNumber: 'ORD-HIST-1',
+            }),
           );
         },
 
         'order ORD-1 exists': async () => {
-          await resetState();
-          await orderRepo.save(
-            orderRepo.create({ ...sampleOrder(), orderNumber: 'ORD-1' }),
+          await harness.resetState();
+          await harness.orderRepo.save(
+            harness.orderRepo.create({
+              ...sampleOrder(),
+              orderNumber: 'ORD-1',
+            }),
           );
         },
 
         'no order UNKNOWN exists': async () => {
-          await resetState();
+          await harness.resetState();
           // DB is empty after resetState.
         },
 
         'at least one coupon exists': async () => {
-          await resetState();
-          await couponRepo.save(
-            couponRepo.create({
+          await harness.resetState();
+          await harness.couponRepo.save(
+            harness.couponRepo.create({
               code: 'SAVE10',
               discountRate: 0.2,
               usageLimit: 100,
@@ -216,7 +99,7 @@ describe('Backend Pact Provider Verification', () => {
         },
 
         'no coupon SAVE10 exists yet': async () => {
-          await resetState();
+          await harness.resetState();
           // DB is empty after resetState.
         },
       },
