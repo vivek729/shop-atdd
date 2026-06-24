@@ -12,10 +12,11 @@ patterns, and its compile verb is partly bare. Both are ambiguity sources:
   (`system compile` then `test compile`). With a third tier (component tests) about to get
   its own compile, a bare `compile` no longer says *what* it compiles.
 
-**End result:** Every tier is a flat, parallel **noun**; every scoped action is a tier-scoped
+**End result:** Each tier is addressed by a **noun**; every scoped action is a tier-scoped
 verb; and the bare top-level `compile` / `test` survive — redefined as unambiguous **"for-all"
 aggregate verbs** that span every tier. A reader always knows the tier from the noun, and the
-bare word always means "everywhere":
+bare word always means "everywhere". (The noun set spans two axes, not one flat list — see
+**Goal** / **OQ-F**.)
 
 ```
 # tier nouns — scoped
@@ -40,7 +41,9 @@ silent change); a workspace-wide grep is the safety net (OQ-A). Hyphenated sibli
 `system-test` / `component-test`, not nested/concatenated (OQ-D). The bare `test` aggregate
 **orchestrates** the system lifecycle by default with a `--assume-running` opt-out for CI (OQ-E).
 Plan 1203's `component-test compile` verb is **folded in here** so the shared commit-stage
-workflows are rewritten exactly once (OQ-C). See **Resolved decisions** for full rationale.
+workflows are rewritten exactly once (OQ-C). Test levels stay **nouns**; per-component selection
+is a `--component` **flag** on `system`, never a `component` noun (OQ-F). See **Resolved
+decisions** for full rationale.
 
 ## Problem
 
@@ -75,31 +78,37 @@ Two ambiguities:
 
 ## Goal
 
-Make the taxonomy **symmetric** on two axes:
-- **Tier nouns** are flat siblings (`system`, `system-test`, `component-test`), each carrying
-  the same scoped verbs. `test` as a bare *tier noun* **no longer exists** — the system-test
-  tier becomes `system-test`; the component tier becomes `component-test`.
+Make the taxonomy symmetric **within each of two genuinely distinct axes** (not by pretending
+`system` and the `*-test` tiers are one flat noun list — see **OQ-F**):
+- **Runtime axis (one noun: `system`).** The deployable SUT, carrying lifecycle + compile verbs
+  (`build | start | status | stop | clean | compile`). A component in its own repo is just
+  *another* `system` from that repo's vantage; per-component selection inside a monorepo is a
+  `--component` **flag** on `system`, never a top-level `component` noun.
+- **Test-pyramid axis (parallel `*-test` nouns).** `system-test` and `component-test` are flat
+  sibling **levels**, each carrying test verbs (`setup | run | compile`). They are pyramid
+  *levels* (like unit / integration / e2e), not "the test of a subject noun" — which is exactly
+  why `component-test` exists but `component` does not. `test` as a bare *level* **no longer
+  exists**.
 - **Aggregate verbs** `compile` and `test` survive as the bare top-level shortcuts, redefined
-  as unambiguous "do this for **all** tiers" — `compile` already walks tiers today; `test`
-  gains the symmetric behavior. Bare = for-all, qualified = scoped.
+  as unambiguous "do this for **all** levels" — `compile` already walks tiers today; `test`
+  gains the symmetric behavior. Bare = for-all, qualified (noun and/or `--component` flag) =
+  scoped along that axis.
 
 ## Target tree
 
 ```
 gh optivem
-├── system          build | start | status | stop | clean | compile   ← tier noun
-├── system-test     setup | run | compile                             ← tier noun
-├── component-test  setup | run | compile                             ← tier noun (compile folded in here from plan 1203 — OQ-C)
+├── system          build | start | status | stop | clean | compile   ← runtime noun  [--component <name> selects a subset; OQ-F]
+├── system-test     setup | run | compile                             ← test-level noun
+├── component-test  setup | run | compile                             ← test-level noun (compile folded in here from plan 1203 — OQ-C)
 ├── compile         (aggregate verb) compile ALL tiers, halt on first failure
-└── test            (aggregate verb) run ALL test tiers in pyramid order, halt on first failure
+└── test            (aggregate verb) run ALL test levels in pyramid order, halt on first failure
 ```
 
-- Both test tiers are now `*-test` siblings with the **same** verb set (`setup`/`run`/`compile`).
-- `component` as a bare parent noun collapses into `component-test` (it only ever hosted
-  `test`); revisit only if a non-test component verb ever appears.
-- The bare verbs `compile` / `test` are kept as ergonomic for-all aggregates (see **OQ-B**), not
-  removed. `compile` extends its existing two-tier walk to all three; `test` is new behavior
-  (see **OQ-E** for the system-lifecycle question it raises).
+Two axes (full rationale in **Goal** + **OQ-F**): **runtime** = the single `system` noun + a
+`--component` flag; **test pyramid** = the parallel `*-test` level nouns sharing `setup | run |
+compile`. There is no `component` noun (flag-axis, not noun-axis). The bare `compile` / `test`
+are for-all aggregates (**OQ-B** / **OQ-E**).
 
 ## Scope / blast radius (verified)
 
@@ -120,7 +129,8 @@ gh optivem
 - [x] All open questions resolved (refine, 2026-06-24) — see **Resolved decisions**: hard rename
   with no aliases (OQ-A), keep bare `compile`/`test` as for-all aggregates (OQ-B), fold plan 1203
   in under this rename (OQ-C), hyphenated sibling tier nouns (OQ-D), `test` aggregate orchestrates
-  the system lifecycle with a CI opt-out flag (OQ-E).
+  the system lifecycle with a CI opt-out flag (OQ-E), test levels are nouns + component selection
+  is a `--component` flag (two-axis model, OQ-F).
 
 ### Phase 1 — gh-optivem CLI
 - [ ] Re-parent: `newTestCmd` → registered as `system-test`; `component test` → `component-test`
@@ -150,13 +160,20 @@ gh optivem
   exchange for no alias cruft and no follow-up removal plan. Flag-day breakage from a missed
   call site is mitigated by the Phase 3 workspace-wide grep gate (no stale `gh optivem test ` /
   bare `gh optivem compile` may remain), not by a deprecation warning.
-  - *Backward compatibility (consequence of the hard rename):* **not backward compatible by
-    design.** `gh optivem test <run|setup|compile>` and `gh optivem component test <run|setup>`
-    **break** (→ `system-test …` / `component-test …`); `gh optivem compile` (bare) keeps
-    working with broader scope; `gh optivem test` (bare) is reused for the new aggregate; `gh
-    optivem system …` is unchanged. Old `test`/`component test` *subverb* calls fail loudly with
-    "unknown command" (not a silent misbehavior) — that loud failure plus the Phase 3 grep is
-    the safety net that replaces the deprecation warning a hard rename forgoes.
+  - *Backward compatibility (consequence of the hard rename):* **partial — the bare top-level
+    words survive, the qualified subcommands break.** Precisely:
+    - ✅ `gh optivem compile` (bare) is **fully backward compatible** — same command, *superset*
+      behavior (it already walked `system → test`; now walks all three tiers). Every existing
+      `compile` call still works and just does more; nothing breaks.
+    - ⚠️ `gh optivem test` (bare) is **repurposed, not breaking** — it previously only printed
+      help (needed a subverb); now it runs the for-all aggregate. Nothing that did work before
+      stops working.
+    - ❌ `gh optivem test <run|setup|compile>` and `gh optivem component test <run|setup>`
+      **break** (→ `system-test …` / `component-test …`), failing loudly with "unknown command"
+      (not a silent misbehavior). The `--component` flag (OQ-F) is purely additive — zero new
+      breakage.
+    - `gh optivem system …` is unchanged. The loud failure on the broken subverbs plus the
+      Phase 3 grep is the safety net that replaces the deprecation warning a hard rename forgoes.
 - **OQ-B — Bare `compile` / `test` as for-all aggregates.** *Decided (with author, 2026-06-24):*
   **keep both bare verbs as "for-all" aggregates**, not removed and not renamed to `compile-all`.
   `gh optivem compile` compiles every tier (system prod+unit + component-test source sets +
@@ -194,6 +211,36 @@ gh optivem
   - *Execution caveat to verify during Phase 2:* confirm the acceptance-stage workflows pass
     `--assume-running` (or otherwise don't invoke the bare aggregate) so the aggregate's
     `system start` doesn't duplicate/clash with the `system start` those workflows already run.
+
+- **OQ-F — Test levels are nouns; component selection is a flag (two-axis model).** *Decided
+  (refine, 2026-06-24):* keep **nouns per test level** (`system-test` / `component-test`) and add
+  a **`--component` flag on `system`** for per-component selection — rather than collapsing
+  everything into a flag matrix (`gh optivem test --suite {unit|component|system} --component …`).
+  The taxonomy has two genuinely distinct axes and each gets the right tool:
+  - **Runtime axis → one noun + a flag.** `system` is the sole deployable noun; `--component
+    backend` selects a subset within a monorepo, and a component split into its own repo simply
+    *is* a `system` from that repo's vantage (the repo boundary is the selector — no flag needed
+    there). Uniform selection ⇒ a flag composes cleanly.
+  - **Test-pyramid axis → nouns.** `system-test` / `component-test` are pyramid *levels* with
+    **divergent** setup, lifecycle, and compile targets (system-test needs `system start`/`stop`
+    and `--assume-running`; component-test needs none; each compiles a different source
+    set/project). A noun bundles each level's exact legal verb set and makes illegal states
+    unrepresentable — `component-test` simply has no `--assume-running`. A flag matrix would
+    scatter that divergence into conditional behavior behind flag combinations with invalid
+    tuples (`--assume-running` only valid with the system level, etc.), plus weaker
+    discoverability and worse CI-YAML readability.
+  - *Why this resolves the "why `component-test` but no `component`" objection:* the two were
+    never parallel nouns. `component` is a **flag-axis** (uniform selector); test level is a
+    **noun-axis** (divergent behavior). The earlier "three flat tier nouns" framing was the
+    error — corrected in **Goal** to the two-axis model.
+  - *Bonus:* this is why bare `gh optivem test` cleanly means "everything" — with `test` no
+    longer a *level*, the word is free as the for-all aggregate; you subtract scope with a noun
+    (`system-test`) and/or the `--component` flag. The flag matrix would have left bare `test`
+    ambiguous (run-all vs demand `--suite`).
+  - *Scope note:* the `--component` flag on `system` is **net-new capability**, purely additive
+    (no backward-compat impact). It need not land in the first cut — it can be a fast-follow once
+    the rename is in — but the taxonomy reserves the flag-axis for it so a `component` noun is
+    never introduced.
 
 ## Risks
 - **Flag-day breakage** — OQ-A chose a hard rename with no aliases, so a missed call site is a

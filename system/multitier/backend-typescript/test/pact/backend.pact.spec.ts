@@ -151,7 +151,7 @@ describe('Backend Pact Provider Verification', () => {
   it('verifies the frontend consumer contract', async () => {
     const pactFile = path.resolve(
       __dirname,
-      '../../../../contracts/frontend-backend.json',
+      '../../../../../contracts/frontend-backend.json',
     );
 
     await new Verifier({
