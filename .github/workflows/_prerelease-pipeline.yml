@@ -340,6 +340,23 @@ jobs:
       - name: Start system
         run: gh optivem system start
 
+      # Diagnostic: `gh optivem system start` only surfaces compose's
+      # "container X exited (1)" and swallows the container's own stderr, so a
+      # crash-on-boot is undebuggable from the run logs. On any failure of this
+      # job, dump every container's state + logs so the real error is visible.
+      # (Aligns with the repo rule: never swallow stderr from external commands.)
+      - name: Dump container logs (on failure)
+        if: failure()
+        run: |
+          echo "=== docker ps -a ==="
+          docker ps -a
+          for c in $(docker ps -aq); do
+            name=$(docker inspect --format '{{.Name}}' "$c" | sed 's#^/##')
+            echo "::group::logs: $name (exit=$(docker inspect --format '{{.State.ExitCode}}' "$c"))"
+            docker logs "$c" 2>&1 || true
+            echo "::endgroup::"
+          done
+
       - name: Setup test harness (latest)
         run: gh optivem system-test setup
 
