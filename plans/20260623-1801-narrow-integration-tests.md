@@ -82,9 +82,19 @@ removed. The `unit` suite loses `requiresDocker: true`. Verify with
   `requiresDocker: true`. `BackendApplicationTests` (contextLoads) moves to `integrationTest`.
 - **OQ 3 — Java canonical edge:** `OrderRepository` ↔ real Postgres via Testcontainers —
   save an order and read it back. Uses the existing `AbstractIntegrationTest` anchor.
-- **OQ 4 — Frontend stub mechanism:** Simple fetch/MSW stub (not the Pact mock server) to
-  keep the `integration` and `contract` suites cleanly separated. Whether the Pact mock server
-  could be used stub-only is tracked in `plans/20260623-1939-pact-mock-server-narrow-integration.md`.
+- **OQ 4 — Frontend stub mechanism (re-decided 2026-06-24):** The frontend
+  `integration` (narrow) suite uses the **Pact mock server** via `PactV3` and a
+  shared interaction fixture under `src/test/interactions/`, emitting into the
+  union `frontend→backend` contract alongside the `component` suite (the committed
+  `.pact` is the union of both suites' interactions). This **flips** the earlier
+  MSW provisional default. The two middle suites differ by the **boot/render
+  discriminator** (boots/renders the real component → `component`; calls a single
+  adapter directly → narrow `integration`), not by stub mechanism — both share the
+  Pact mock server. A low-level stub-only mode (no `.pact` written) stays available
+  as an opt-out for a narrow test that must deliberately not touch the contract.
+  Settled in `[[20260623-1939-pact-mock-server-narrow-integration]]` on 2026-06-24
+  (per the Target state in
+  `plans/20260624-0653-meta-narrow-integration-cluster.md`).
 - **OQ 5 — Provider-side Pact:** Out of scope here. Provider verification is already
   implemented in `BackendPactVerificationTest` (wired into the `contract` suite). Gaps and
   rollout tracked in `plans/20260623-1941-provider-pact-verification.md`.

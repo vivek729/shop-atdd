@@ -1,5 +1,16 @@
 # 2026-06-24 06:53 UTC — Plan coordination meta-plan: narrow-integration cluster (v2, +frontend boundary)
 
+## ▶ Next executable step (resume here)
+
+**Planning phase complete (2026-06-24):** all sub-plan decisions are refined and settled — `1801` OQ4 flipped to the Pact mock server, `1957` rewritten to the symmetric 4-layer model, `1939` closed as decision-resolved, `1941` refined, and the `contract`→`provider-verification` rename now has its own plan (`plans/20260624-0824-rename-contract-suite-to-provider-verification.md`). What remains is **code execution in wave order** (see "Execution waves" below).
+
+**Next = Wave 1.** Batch A parallelises across 3 fresh `/clear`-ed sessions (disjoint files):
+- **U2(java)** — `/execute-plan plans/20260623-1801-narrow-integration-tests.md` Steps 1–2 (backend-java pilot).
+- **U3(audit)** — `/execute-plan plans/20260623-1941-provider-pact-verification.md` Steps 1–2 (audit + CI ordering).
+- (U1/`1939` is already done — decision settled this session.)
+
+Then Batch B (serial, after U2-java): **U2(frontend)** — `1801` Step 3, frontend narrow-integration spec against the Pact mock server. Wave 2 (`1944` rollout, `1941` Step 3, `1957` docs, then the rename `0824` + the joint `commit-stage.md` doc pass) follows once the pilot lands green.
+
 ## Target state
 
 **North star (set by the author, 2026-06-24):** a single, **symmetric 4-layer test taxonomy** applied to the frontend *and* every backend, where **narrow-integration** and **component** differ by **scope** (single adapter vs. booted/rendered component), **not** by mocking technology. This reframes the whole cluster and supersedes the earlier 2-layer `vi.fn()` framing in `1957`.
@@ -35,11 +46,12 @@
 
 **Explicitly unchanged:** the default `$0` / zero-infra build path (Docker layers stay opt-in); the pilot→rollout split (`1801`→`1944`); provider verification staying backend-only; the repo-owned `shop/contracts/` `.pact` folder location. **Changed (not unchanged):** the frontend's current standalone `contract` suite (`npm run test:pact`) is **folded** — its render-the-UI-and-emit pact files become part of the `component` suite, and `narrow` adds emission; there is no standalone frontend layer-4 suite afterward.
 
-**Coordination consequence — sub-plan decisions that must flip (each via its *own* `/refine-plan`; NOT done in this meta-plan):**
-- **`1801` OQ4** — flip *"MSW/`vi.fn()`, not the Pact mock server"* → **Pact mock server** (narrow emits via `PactV3` + shared fixture; union with component).
-- **`1957`** — **rewrite**, not extend: drop the 2-layer `vi.fn()` "over the wire?" rule; document the symmetric 4-layer rule, the boot/render discriminator, the shared-fixture + both-emit-union design, and the stub-only opt-out.
-- **`1939`** — stub-only existence is now **verified** (above), so it **collapses** from a binary "Pact-vs-MSW" decision to documenting the **shared-fixture + both-emit union** pattern and the stub-only opt-out.
-- **NEW — suite rename `contract` → `provider-verification`** (and drop the standalone frontend layer-4 suite): cross-cutting across all 7 `component-tests.yaml`, `suiteGroups.all`, suite-pinning CI workflows, and docs. **Own task** (candidate `/create-plan`); not owned by `1801`/`1939`/`1941`/`1944`/`1957`.
+**Coordination consequence — sub-plan decisions that must flip — ✅ ALL REFINED 2026-06-24 (planning phase done; execution waves below still pending):**
+- ✅ **`1801` OQ4** — flipped *"MSW/`vi.fn()`"* → **Pact mock server** (narrow emits via `PactV3` + shared fixture; union with component). Written back to 1801 OQ4.
+- ✅ **`1957`** — **rewritten** (not extended) to the symmetric 4-layer rule, the boot/render discriminator, the shared-fixture + both-emit-union design, and the stub-only opt-out. Sequenced after 1801 Step 3 lands (docs-only).
+- ✅ **`1939`** — collapsed to a decision-resolved record: Pact mock server + shared-fixture/both-emit-union + stub-only opt-out. Closed; pattern docs owned by 1957.
+- ✅ **`1941`** — refined: `contracts/` committed (not artifact-passed), no broker by default, provider-verification follows the consumer (monolith scope confirmed by its own Step 1 audit).
+- ✅ **NEW — suite rename `contract` → `provider-verification`** (and drop the standalone frontend layer-4 suite): **plan created → `plans/20260624-0824-rename-contract-suite-to-provider-verification.md`**. Cross-cutting across all 7 `component-tests.yaml`, `suiteGroups.all`, and docs (`commit-stage.md`). **Correction:** grounding found this rename touches **NO CI workflow** — commit-stage workflows invoke the component tier with a bare `gh optivem component test run` (no `--suite`); the only `--suite contract-*` references are the *unrelated* acceptance-stage external-system suites. Not owned by `1801`/`1939`/`1941`/`1944`/`1957`.
 
 ---
 
