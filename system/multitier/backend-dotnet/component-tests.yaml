@@ -8,13 +8,17 @@ suites:
     pending: true
   - id: integration
     name: Narrow Integration
-    pending: true
+    command: dotnet test Tests --filter Category=Integration
+    sampleTest: "SavesAndReadsBackOrder"
+    requiresDocker: true
   - id: component
     name: Component
     command: dotnet test Tests
     sampleTest: "HealthEndpoint_ReturnsUp"
   - id: contract
     name: Consumer Contract (Pact)
-    pending: true
+    command: dotnet test Tests --filter "Category=Contract"
+    sampleTest: "Verify"
+    requiresDocker: false
 suiteGroups:
   all: [unit, integration, component, contract]

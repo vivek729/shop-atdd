@@ -10,11 +10,14 @@ suites:
   - id: integration
     name: Narrow Integration
     pending: true
+    # testcontainers-node setup required — see plans/20260624-0950-typescript-narrow-integration-testcontainers.md
   - id: component
     name: Component
     pending: true
   - id: contract
     name: Consumer Contract (Pact)
-    pending: true
+    command: npm run test:pact
+    sampleTest: "verifies the frontend consumer contract"
+    requiresDocker: false
 suiteGroups:
   all: [unit, integration, component, contract]

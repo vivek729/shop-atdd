@@ -1,8 +1,4 @@
-// Step 4 — Pact CONSUMER tests for the order flows.
-// These render the real pages/services against the Pact mock server, so they
-// double as the happy-path (and contracted-error) component tests: one test,
-// two jobs. Running them writes the pact into the repo-owned shop/contracts/
-// folder, which the backend provider verification replays.
+// Test taxonomy and suite boundaries: docs/atdd/test-taxonomy.md
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import path from 'node:path';
 import { PactV3, MatchersV3 } from '@pact-foundation/pact';

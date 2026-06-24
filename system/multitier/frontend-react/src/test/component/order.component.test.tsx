@@ -1,8 +1,4 @@
-// Step 3 — component tests for PURE CLIENT-SIDE states.
-// These never reach a real backend: loading spinner, network-down, and
-// client-side validation that short-circuits before any request fires.
-// They use a trivial vi.fn() fetch stub (NOT Pact) — the contract is only
-// the source of truth for stubs in the happy-path / contracted-error tests.
+// Test taxonomy and suite boundaries: docs/atdd/test-taxonomy.md
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

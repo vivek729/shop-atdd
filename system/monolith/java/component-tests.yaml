@@ -8,7 +8,9 @@ suites:
     pending: true
   - id: integration
     name: Narrow Integration
-    pending: true
+    command: .\gradlew.bat integrationTest --tests '*IntegrationTest'
+    sampleTest: "savesAndReadsBackOrder"
+    requiresDocker: true
   - id: component
     name: Component
     command: .\gradlew.bat test
@@ -17,5 +19,7 @@ suites:
   - id: contract
     name: Consumer Contract (Pact)
     pending: true
+    # Deferred — no in-process consumer; frontend-react only consumes the multitier backends.
+    # Wire once a consumer emits a .pact file targeting this monolith.
 suiteGroups:
   all: [unit, integration, component, contract]

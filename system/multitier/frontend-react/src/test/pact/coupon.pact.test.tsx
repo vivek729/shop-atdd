@@ -1,9 +1,4 @@
-// Step 4 — Pact CONSUMER tests for the coupon flows.
-// Browse is driven through the rendered AdminCoupons page (one GET on mount,
-// so it doubles as the happy-path component test). Publish is driven through
-// the coupon-service directly: the AdminCoupons submit path fires several timed
-// requests (mount-browse, post, refresh-browse), so the service call is the
-// clean single-interaction consumer test for the POST contract.
+// Test taxonomy and suite boundaries: docs/atdd/test-taxonomy.md
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import path from 'node:path';
 import { PactV3, MatchersV3 } from '@pact-foundation/pact';
