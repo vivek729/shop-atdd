@@ -1,5 +1,7 @@
 # 2026-06-24 09:50 UTC — TypeScript narrow-integration tests via testcontainers-node
 
+> 🤖 **Picked up by agent (refine)** — `Valentina_Desk` at `2026-06-24T10:25:20Z`
+
 ## TL;DR
 
 **Why:** `backend-typescript` (TypeORM) and `monolith-typescript` (raw `pg` driver) both have real DB adapters but no narrow-integration test infrastructure. The `integration` suite is `pending: true` in both `component-tests.yaml` files. The Java and .NET backends were handled in `[[20260623-1944-narrow-integration-rollout]]`; the TypeScript components were deferred here because they need the `testcontainers` npm package wired up — a one-time setup that is the same shape for both.
@@ -50,9 +52,12 @@ Discovered during the `[[20260623-1944-narrow-integration-rollout]]` pre-executi
 - [ ] **Step 6 — monolith-typescript YAML.** In `system/monolith/monolith-typescript/component-tests.yaml`: remove `pending: true`, add `command`, `sampleTest`, `requiresDocker: true`.
 - [ ] **Step 7 — Verify both.** `gh optivem component test run --suite integration` for both components. `--sample` works for each.
 
+## Resolved decisions
+
+- **NestJS TypeORM wiring → reuse the real `AppModule`.** `AppModule` already declares `TypeOrmModule.forRootAsync` with a `useFactory` that reads `POSTGRES_DB_HOST` / `POSTGRES_DB_PORT` / `POSTGRES_DB_NAME` / `POSTGRES_DB_USER` / `POSTGRES_DB_PASSWORD` from `process.env` (via `ConfigService`). So the integration test does **not** need a custom override or a hand-built `DataSource`: set those env vars to the container's values *before* bootstrapping, then `Test.createTestingModule({ imports: [AppModule] })` and the existing factory connects to the container. This exercises the real production wiring with minimal new code. (Note for Step 1: the DB-name env var is `POSTGRES_DB_NAME`, not `POSTGRES_DB`.)
+
 ## Open questions
 
-- **NestJS TypeORM override approach:** Should the integration test use a full `NestJS TestingModule` with `TypeOrmModule.forRootAsync` reading env vars, or directly instantiate a `DataSource` bypassing the module? The `TestingModule` approach is cleaner but requires more setup; the direct `DataSource` approach is simpler and closer to the Java pattern. Recommendation: start with `TestingModule` + `forRootAsync` (idiomatic NestJS), fall back to direct `DataSource` if the DI wiring gets unwieldy.
 - **`pg` Pool re-initialisation in monolith-typescript:** `src/lib/db.ts` creates the Pool at module load time. If the container starts after module import, the Pool will use stale connection details. Resolution: either lazy-initialise the Pool (read env vars at first query), or call a `resetPool()` function in `beforeAll`. Check `src/lib/db.ts` Pool initialisation on execution.
 
 ## Dependencies

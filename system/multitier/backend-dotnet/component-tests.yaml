@@ -15,10 +15,10 @@ suites:
     name: Component
     command: dotnet test Tests
     sampleTest: "HealthEndpoint_ReturnsUp"
-  - id: contract
-    name: Consumer Contract (Pact)
+  - id: provider-verification
+    name: Provider Verification (Pact)
     command: dotnet test Tests --filter "Category=Contract"
     sampleTest: "Verify"
     requiresDocker: false
 suiteGroups:
-  all: [unit, integration, component, contract]
+  all: [unit, integration, component, provider-verification]

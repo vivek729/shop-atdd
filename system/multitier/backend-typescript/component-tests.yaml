@@ -14,10 +14,10 @@ suites:
   - id: component
     name: Component
     pending: true
-  - id: contract
-    name: Consumer Contract (Pact)
+  - id: provider-verification
+    name: Provider Verification (Pact)
     command: npm run test:pact
     sampleTest: "verifies the frontend consumer contract"
     requiresDocker: false
 suiteGroups:
-  all: [unit, integration, component, contract]
+  all: [unit, integration, component, provider-verification]

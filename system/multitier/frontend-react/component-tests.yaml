@@ -15,9 +15,5 @@ suites:
     name: Component
     command: npm run test:component
     sampleTest: "NewOrder — client-side validation"
-  - id: contract
-    name: Consumer Contract (Pact)
-    command: npm run test:pact
-    sampleTest: "places an order (POST /api/orders -> 201)"
 suiteGroups:
-  all: [unit, integration, component, contract]
+  all: [unit, integration, component]

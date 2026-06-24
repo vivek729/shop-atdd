@@ -6,7 +6,7 @@ import { Verifier } from '@pact-foundation/pact';
 import * as path from 'path';
 import * as http from 'http';
 import { AddressInfo } from 'net';
-import nock = require('nock');
+import nock from 'nock';
 import { AppController } from '../../src/app.controller';
 import { AppService } from '../../src/app.service';
 import { HealthController } from '../../src/api/controller/health.controller';
@@ -50,7 +50,12 @@ describe('Backend Pact Provider Verification', () => {
         }),
         TypeOrmModule.forFeature([Order, Coupon]),
       ],
-      controllers: [AppController, HealthController, OrderController, CouponController],
+      controllers: [
+        AppController,
+        HealthController,
+        OrderController,
+        CouponController,
+      ],
       providers: [
         AppService,
         OrderService,
@@ -132,7 +137,9 @@ describe('Backend Pact Provider Verification', () => {
       stateHandlers: {
         'product BOOK-123 exists and US is taxable': async () => {
           await resetState();
-          nock(CLOCK_URL).get('/api/time').reply(200, { time: '2026-03-10T12:00:00Z' });
+          nock(CLOCK_URL)
+            .get('/api/time')
+            .reply(200, { time: '2026-03-10T12:00:00Z' });
           nock(ERP_URL)
             .get('/api/products/BOOK-123')
             .reply(200, { id: 'BOOK-123', price: 10.0 });
@@ -153,12 +160,16 @@ describe('Backend Pact Provider Verification', () => {
 
         'at least one order exists': async () => {
           await resetState();
-          await orderRepo.save(orderRepo.create({ ...sampleOrder(), orderNumber: 'ORD-HIST-1' }));
+          await orderRepo.save(
+            orderRepo.create({ ...sampleOrder(), orderNumber: 'ORD-HIST-1' }),
+          );
         },
 
         'order ORD-1 exists': async () => {
           await resetState();
-          await orderRepo.save(orderRepo.create({ ...sampleOrder(), orderNumber: 'ORD-1' }));
+          await orderRepo.save(
+            orderRepo.create({ ...sampleOrder(), orderNumber: 'ORD-1' }),
+          );
         },
 
         'no order UNKNOWN exists': async () => {

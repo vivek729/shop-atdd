@@ -5,7 +5,13 @@ export class Coupon {
   @PrimaryGeneratedColumn('identity')
   id: number;
 
-  @Column({ name: 'code', type: 'varchar', length: 255, unique: true, nullable: false })
+  @Column({
+    name: 'code',
+    type: 'varchar',
+    length: 255,
+    unique: true,
+    nullable: false,
+  })
   code: string;
 
   @Column({

@@ -24,7 +24,7 @@ flowchart TD
     shouldpublish -->|on main| publish[Publish Docker Image]
     shouldpublish -->|pull request| done([No publish])
 
-    gate --> ct["gh optivem component test run<br/>(unit · integration · component · contract)"]:::component
+    gate --> ct["gh optivem component test run<br/>(unit · integration · component · provider-verification)"]:::component
 
     publish --> summary([Summary]):::gate
     done --> summary
@@ -37,10 +37,10 @@ flowchart TD
 
 - **Gate** and **Summary** are orchestration jobs, not pipeline stages.
 - **Publish Docker Image** runs only on `main`; pull requests build the image but do not push it.
-- **`gh optivem component test run`** runs all four suites (unit · narrow integration · component · contract) via the declarative `component-tests.yaml` per component. It runs in a parallel `component-tests` job alongside `run` and gates the `summary` — failing it blocks the pipeline. Pending suites print a notice and pass; Docker-backed suites require the Docker daemon (provided on `ubuntu-latest`).
+- **`gh optivem component test run`** runs all four suites (unit · narrow integration · component · provider-verification) via the declarative `component-tests.yaml` per component. It runs in a parallel `component-tests` job alongside `run` and gates the `summary` — failing it blocks the pipeline. Pending suites print a notice and pass; Docker-backed suites require the Docker daemon (provided on `ubuntu-latest`).
 - **Narrow integration** exercises one adapter against a real dependency in isolation — no component boot, no full app start. Backends: `OrderRepository` ↔ Testcontainers-Postgres, `TaxGateway`/`ErpGateway` ↔ WireMock-in-Testcontainers. Frontend: `orderService` adapter ↔ in-process Pact mock server (no React render, no Docker). See [test taxonomy](../atdd/test-taxonomy.md) for the full four-layer model and the boot/render discriminator.
-- **Consumer → `contracts/` → provider verification flow:** the frontend `integration` + `component` suites both emit into the committed `contracts/frontend-backend.json` (union of both suites' interactions); the backend `contract` suite reads that committed file and runs provider verification. No inter-job artifact passing — the committed `.pact` is always current. `requiresDocker: false` on the backend contract suite (provider verification uses WireMock + WebApplicationFactory, not Testcontainers).
-- **"contract" in the component tier means consumer Pact** (frontend↔backend, in-process). This is distinct from the external-system contract suites in `tests.yaml` (clock/erp/tax, stub-vs-real). Both use the word "contract"; only the label in `component-tests.yaml` (`name: Consumer Contract (Pact)`) disambiguates them.
+- **Consumer → `contracts/` → provider verification flow:** the frontend `integration` + `component` suites both emit into the committed `contracts/frontend-backend.json` (union of both suites' interactions); the backend `provider-verification` suite reads that committed file and runs provider verification. No inter-job artifact passing — the committed `.pact` is always current. `requiresDocker: false` on the backend provider-verification suite (provider verification uses WireMock + WebApplicationFactory, not Testcontainers).
+- **The component-tier layer-4 suite is provider verification.** Named `Provider Verification (Pact)` with `id: provider-verification`, it runs the backend's `BackendPactVerificationTest`, which verifies the frontend consumer's committed `.pact` against the real provider. It exists **only on backends** (and the monolith) — the frontend is consumer-only and has **no** layer-4 suite; its consumer-contract emission lives in the `integration` + `component` suites. This is distinct from the external-system contract suites in `tests.yaml` (clock/erp/tax, stub-vs-real); both touch Pact/contracts, but the component-tier `provider-verification` suite is the in-process frontend↔backend provider check, not an external-system stub-vs-real comparison.
 - **Local vs CI:** `gh optivem component test run` is the command that matches the CI gate. Bare `npm test` / `./gradlew test` / `dotnet test` run a fast, Docker-light subset and intentionally run *less* than CI. Use `--suite unit` for the fast inner loop, bare `run` to match CI.
 
 ## Diagram ↔ YAML mapping
