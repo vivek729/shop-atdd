@@ -180,7 +180,30 @@ the fallback we're already living, and is fine to keep as the documented baselin
   re-investigate from scratch.
 
 ## ▶ Next executable step (resume here)
-OQ4 is resolved: local parity is the goal. Get go-ahead to run Diagnostic 1 (TS narrow-integration
-test locally, `npm run test:integration` in backend-typescript) — that single result picks the
-branch (TS passes → Java-only → Option A; both fail → Engine-29 surface → Option C/D). Diagnostics 2
-and 3 are read-only and can run anytime without go-ahead.
+
+**INVESTIGATION COMPLETE (2026-06-24).** All diagnostics run; fixes applied and verified. See
+`## Execution results` below. No further action needed on this plan.
+
+## Execution results (2026-06-24)
+
+**OQ1 (TS Testcontainers):** `npm run test:integration` in `backend-typescript` **PASSES**. The `testcontainers
+^12.0.3` npm package works fine with Engine 29 / API 1.54. Side issue found: `@testcontainers/postgresql`
+was in `package.json` but not installed — fixed by running `npm install`.
+
+**OQ2/OQ3 (raw 400 body / negotiated version):** `docker version` confirms CLI negotiates API 1.54
+successfully. The 400 was a docker-java client-side issue (H1 confirmed), not a socket/auth problem.
+
+**Java fix (Option A — already applied):** Commit `d6843172` today bumped both monolith and multitier
+`build.gradle` to `ext['testcontainers.version'] = '1.21.4'`. Verified: both Java projects' integration
+tests start PostgreSQL containers cleanly, no HTTP 400.
+
+**Java flakiness (side issue, fixed):** Multitier's `integrationTest` task was flaky — `BackendApplicationTests`
+and `OrderRepositoryIntegrationTest` both inherited a `static @Container POSTGRES` from `AbstractIntegrationTest`
+with `@Testcontainers`. One class stopped the container, the other then failed on restart. Fixed by converting
+to `@TestConfiguration + @Import(TestcontainersConfiguration.class)` — Spring context caching now ensures one
+container per test run. 3 consecutive `--rerun-tasks` passes confirm stability.
+
+**OQ5 (outside-repo smoke):** Moot — both Java and TS Testcontainers connect in-repo, confirming the
+failure was docker-java version, not repo config.
+
+**Memory updated:** `[[project_local_testcontainers_blocked]]` written with working local recipe.
