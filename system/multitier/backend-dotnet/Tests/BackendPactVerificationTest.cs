@@ -3,31 +3,57 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MyCompany.MyShop.Backend.Core.Entities;
 using MyCompany.MyShop.Backend.Data;
+using PactNet.Infrastructure.Outputters;
 using PactNet.Verifier;
 using System.Net;
 using System.Text.Json;
+using Testcontainers.PostgreSql;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace MyCompany.MyShop.Backend.Tests;
 
+/// <summary>
+/// Replays the frontend consumer contract against the in-process provider, with external systems
+/// (ERP / Tax / Clock) stubbed by in-process WireMock and provider states seeded into a
+/// Testcontainers-managed Postgres. Mirrors the Java provider-verification harness: real Postgres
+/// (so numeric / timestamptz semantics match the contract), in-process external stubs. Fails the
+/// build if the backend drifts from the contract.
+/// </summary>
 [Trait("Category", "Contract")]
-public class BackendPactVerificationTest : IDisposable
+public class BackendPactVerificationTest : IAsyncLifetime
 {
-    private readonly WireMockServer _erp;
-    private readonly WireMockServer _tax;
-    private readonly WireMockServer _clock;
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly HttpListener _stateListener;
-    private readonly Thread _stateThread;
-    private readonly int _statePort;
+    private readonly ITestOutputHelper _output;
+
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
+        .WithImage("postgres:16-alpine")
+        .WithDatabase("app")
+        .WithUsername("app")
+        .WithPassword("app")
+        .Build();
+
+    private WireMockServer _erp = null!;
+    private WireMockServer _tax = null!;
+    private WireMockServer _clock = null!;
+    private WebApplicationFactory<Program> _factory = null!;
+    private HttpListener _stateListener = null!;
+    private Thread _stateThread = null!;
+    private int _statePort;
     private AppDbContext _db = null!;
     private bool _running = true;
 
-    public BackendPactVerificationTest()
+    public BackendPactVerificationTest(ITestOutputHelper output)
     {
+        _output = output;
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+
         _erp = WireMockServer.Start();
         _tax = WireMockServer.Start();
         _clock = WireMockServer.Start();
@@ -42,7 +68,7 @@ public class BackendPactVerificationTest : IDisposable
                     services.Remove(descriptor);
 
                 services.AddDbContext<AppDbContext>(options =>
-                    options.UseInMemoryDatabase("PactTestDb"));
+                    options.UseNpgsql(_postgres.GetConnectionString()));
             });
 
             builder.UseSetting("ERP_API_URL", _erp.Url!);
@@ -50,9 +76,10 @@ public class BackendPactVerificationTest : IDisposable
             builder.UseSetting("CLOCK_API_URL", _clock.Url!);
         });
 
-        // Resolve a scoped AppDbContext from the test factory.
+        // Resolve a scoped AppDbContext from the test factory and create the schema.
         var scope = _factory.Services.CreateScope();
         _db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await _db.Database.EnsureCreatedAsync();
 
         // Start a standalone HttpListener to serve /_pact/provider-states.
         _statePort = FindFreePort();
@@ -71,22 +98,28 @@ public class BackendPactVerificationTest : IDisposable
             Path.Combine(AppContext.BaseDirectory,
                 "../../../../../../../contracts/frontend-backend.json"));
 
-        new PactVerifier("backend")
+        var config = new PactVerifierConfig
+        {
+            Outputters = new List<IOutput> { new XUnitOutput(_output) },
+        };
+
+        new PactVerifier("backend", config)
             .WithHttpEndpoint(_factory.Server.BaseAddress)
             .WithFileSource(new FileInfo(pactPath))
             .WithProviderStateUrl(new Uri($"http://127.0.0.1:{_statePort}/"))
             .Verify();
     }
 
-    public void Dispose()
+    public async Task DisposeAsync()
     {
         _running = false;
         _stateListener.Stop();
-        _db.Dispose();
+        await _db.DisposeAsync();
         _factory.Dispose();
         _erp.Stop();
         _tax.Stop();
         _clock.Stop();
+        await _postgres.DisposeAsync();
     }
 
     // --- Provider-states HTTP listener ---
@@ -221,5 +254,15 @@ public class BackendPactVerificationTest : IDisposable
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
+    }
+
+    /// <summary>Routes the Pact native verifier output to xUnit's test output.</summary>
+    private sealed class XUnitOutput : IOutput
+    {
+        private readonly ITestOutputHelper _output;
+
+        public XUnitOutput(ITestOutputHelper output) => _output = output;
+
+        public void WriteLine(string line) => _output.WriteLine(line);
     }
 }

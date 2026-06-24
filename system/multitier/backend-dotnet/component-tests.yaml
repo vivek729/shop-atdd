@@ -19,6 +19,6 @@ suites:
     name: Provider Verification (Pact)
     command: dotnet test Tests --filter "Category=Contract"
     sampleTest: "Verify"
-    requiresDocker: false
+    requiresDocker: true
 suiteGroups:
   all: [unit, integration, component, provider-verification]

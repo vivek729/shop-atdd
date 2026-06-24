@@ -7,6 +7,10 @@ import * as path from 'path';
 import * as http from 'http';
 import { AddressInfo } from 'net';
 import nock from 'nock';
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from '@testcontainers/postgresql';
 import { AppController } from '../../src/app.controller';
 import { AppService } from '../../src/app.service';
 import { HealthController } from '../../src/api/controller/health.controller';
@@ -35,16 +39,29 @@ describe('Backend Pact Provider Verification', () => {
   let dataSource: DataSource;
   let orderRepo: Repository<Order>;
   let couponRepo: Repository<Coupon>;
+  let postgres: StartedPostgreSqlContainer;
 
   beforeAll(async () => {
     nock.enableNetConnect('127.0.0.1');
+
+    // Real Postgres via Testcontainers (mirrors the Java harness) so numeric / timestamptz
+    // semantics match the contract. External systems stay in-process via nock.
+    postgres = await new PostgreSqlContainer('postgres:16-alpine')
+      .withDatabase('app')
+      .withUsername('app')
+      .withPassword('app')
+      .start();
 
     const moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
+          type: 'postgres',
+          host: postgres.getHost(),
+          port: postgres.getPort(),
+          username: postgres.getUsername(),
+          password: postgres.getPassword(),
+          database: postgres.getDatabase(),
           entities: [Order, Coupon],
           synchronize: true,
         }),
@@ -92,13 +109,14 @@ describe('Backend Pact Provider Verification', () => {
     dataSource = moduleRef.get(DataSource);
     orderRepo = dataSource.getRepository(Order);
     couponRepo = dataSource.getRepository(Coupon);
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await app.close();
     nock.cleanAll();
     nock.restore();
-  });
+    await postgres.stop();
+  }, 60_000);
 
   const resetState = async () => {
     nock.cleanAll();
