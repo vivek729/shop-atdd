@@ -18,8 +18,9 @@ export default defineConfig({
     include: [
       'src/test/component/**/*.{test,spec}.{ts,tsx}',
       'src/test/pact/**/*.{test,spec}.{ts,tsx}',
+      'src/test/integration/**/*.{test,spec}.{ts,tsx}',
     ],
-    // Drop the base's component/pact exclusions; keep only the standard ignores.
+    // Drop the base's component/pact/integration exclusions; keep only the standard ignores.
     exclude: [...configDefaults.exclude],
   },
 });

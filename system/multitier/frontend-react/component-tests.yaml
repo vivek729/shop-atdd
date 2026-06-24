@@ -9,7 +9,8 @@ suites:
     sampleTest: "test harness"
   - id: integration
     name: Narrow Integration
-    pending: true
+    command: npm run test:integration
+    sampleTest: "places an order via orderService directly"
   - id: component
     name: Component
     command: npm run test:component

@@ -4,7 +4,7 @@ import { fetchJson } from '../common';
 import type { PlaceOrderRequest, PlaceOrderResponse, ViewOrderDetailsResponse, BrowseOrderHistoryResponse } from '../types/api.types';
 import type { Result } from '../types/result.types';
 
-class OrderService {
+export class OrderService {
   private readonly baseUrl: string;
 
   constructor(baseUrl: string = '/api/orders') {

@@ -6,11 +6,12 @@ suites:
   - id: unit
     name: Unit
     command: .\gradlew.bat test
-    sampleTest: "contextLoads"
-    requiresDocker: true
+    sampleTest: "onePlusOne"
   - id: integration
     name: Narrow Integration
-    pending: true
+    command: .\gradlew.bat integrationTest --tests '*IntegrationTest'
+    sampleTest: "savesAndReadsBackOrder"
+    requiresDocker: true
   - id: component
     name: Component
     command: .\gradlew.bat componentTest --tests 'com.mycompany.myshop.backend.component.*'

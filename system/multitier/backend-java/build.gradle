@@ -33,11 +33,17 @@ sourceSets {
 		compileClasspath += sourceSets.main.output
 		runtimeClasspath += sourceSets.main.output
 	}
+	integrationTest {
+		compileClasspath += sourceSets.main.output
+		runtimeClasspath += sourceSets.main.output
+	}
 }
 
 configurations {
 	componentTestImplementation.extendsFrom testImplementation
 	componentTestRuntimeOnly.extendsFrom testRuntimeOnly
+	integrationTestImplementation.extendsFrom testImplementation
+	integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 repositories {
@@ -97,6 +103,15 @@ tasks.register('componentTest', Test) {
 	group = 'verification'
 	testClassesDirs = sourceSets.componentTest.output.classesDirs
 	classpath = sourceSets.componentTest.runtimeClasspath
+	useJUnitPlatform()
+	shouldRunAfter tasks.named('test')
+}
+
+tasks.register('integrationTest', Test) {
+	description = 'Runs narrow-integration tests against real Postgres via Testcontainers (requires Docker). Opt-in; not part of `build`.'
+	group = 'verification'
+	testClassesDirs = sourceSets.integrationTest.output.classesDirs
+	classpath = sourceSets.integrationTest.runtimeClasspath
 	useJUnitPlatform()
 	shouldRunAfter tasks.named('test')
 }
