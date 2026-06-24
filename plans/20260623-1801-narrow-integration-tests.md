@@ -38,39 +38,12 @@ What we get out of this — the goals and deliverables:
 
 ## ▶ Next executable step (resume here)
 
-**Step 2 — Java pilot (backend-java).** Add a dedicated `integrationTest` Gradle
-source set (parallel to `componentTest`) with a simple `SimpleArithmeticTest` in the
-existing `test` source set (1 + 1 = 2, no Docker) and an `OrderRepositoryIntegrationTest`
-in `src/integrationTest/` extending `AbstractIntegrationTest` (save + read back via
-real Postgres). Wire `backend-java/component-tests.yaml`: `integration` suite gets
-`command: .\gradlew.bat integrationTest`, `requiresDocker: true`, `sampleTest`, `pending`
-removed. The `unit` suite loses `requiresDocker: true`. Verify with
-`gh optivem component test run --suite integration --component backend`.
+**Step 6 — Docs** (Wave 2, joint pass with 1941 Step 4 on `docs/pipeline/commit-stage.md`). Owned by the final Batch B doc pass in Wave 2 of the meta-plan. Do not execute standalone.
 
 ## Steps
 
-- [ ] **Step 1 — Decide scope + per-stack "edge".** Resolve Open questions: which
-  components are in the first pass (recommend pilot = backend-java + frontend-react,
-  mirroring plan `1154`), and the concrete edge each test exercises (repo↔Postgres,
-  HTTP client↔stub, etc.). Confirm the Java unit suite's existing
-  `requiresDocker`/`contextLoads` boundary vs. a distinct narrow-integration suite.
-- [ ] **Step 2 — Java pilot (backend-java).** Add a `*IntegrationTest` extending
-  `AbstractIntegrationTest` (e.g. an order repository against real Postgres). Wire the
-  `integration` suite in `system/multitier/backend-java/component-tests.yaml`:
-  `pending` removed, `command` with an explicit `--tests '*IntegrationTest'` positive
-  filter, `requiresDocker: true`, `sampleTest`. Verify locally.
-- [ ] **Step 3 — Frontend pilot (frontend-react).** Add a narrow-integration spec
-  (e.g. the API client against a stubbed HTTP server) under an explicit dir/script.
-  Add `npm run test:integration` (or equivalent) + wire the suite (positive include,
-  `sampleTest`), remove `pending`. Verify locally (no Docker).
-- [ ] **Step 4 — Run the pilots through `--suite integration` and the `all` gate;**
-  confirm `--sample` and the multi-component fan-out group correctly.
-- [ ] **Step 5 — Roll out to remaining in-scope components** (backend-dotnet,
-  backend-typescript, monolith ×3) using the same shape; leave any still-genuinely-
-  empty levels `pending` rather than faking tests.
-- [ ] **Step 6 — Docs.** Note the narrow-integration level's meaning/boundary where
-  the component-test docs already describe the pyramid (`docs/pipeline/commit-stage.md`
-  and/or component READMEs).
+- [ ] **Step 5 — Roll out to remaining in-scope components** — ⏳ Deferred to `plans/20260623-1944-narrow-integration-rollout.md` (Wave 2).
+- [ ] **Step 6 — Docs.** Note the narrow-integration level in `docs/pipeline/commit-stage.md` — joint pass with `1941` Step 4 (Wave 2 Batch B).
 
 ## Decisions (resolved 2026-06-23)
 

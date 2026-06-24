@@ -15,14 +15,19 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 1 — Audit first. Read the other backends' `component-tests.yaml` and `src/componentTest` (or equivalent) to check whether provider verification exists there. The rule is decided (see Decisions OQ1: *provider verification follows the consumer*); this step confirms the concrete per-component list. It is a research step, not a mechanical edit. Once the gap list is known, Step 3 becomes executable.
+**Step 3 — Add missing provider verification tests** for backend-dotnet and backend-typescript (Wave 2). Monoliths confirmed deferred (no consumer). See audit findings below.
+
+## Audit findings (Wave 1 — 2026-06-24)
+
+- **backend-dotnet**: `contract` suite `pending: true`, no provider verification test — **needs it** (frontend-react is the consumer).
+- **backend-typescript**: `contract` suite `pending: true`, no provider verification test — **needs it** (same consumer).
+- **monolith-java / monolith-dotnet / monolith-typescript**: `contract` suite `pending: true`, no in-process consumer — ⏳ deferred (mark with reason when wiring Wave 2).
+- **contracts/**: committed at repo root (`contracts/frontend-backend.json`), CI ordering is correct (backends read committed copy, no race).
 
 ## Steps
 
-- [ ] Step 1 — Audit all backends for provider verification. Applying the *provider-verification-follows-the-consumer* rule (Decisions OQ1), confirm the concrete per-component list. For each of: backend-dotnet, backend-typescript, monolith-java, monolith-dotnet, monolith-typescript — check whether a provider Pact verification test exists and is wired into the `contract` suite in `component-tests.yaml`, and whether the component has a consumer that emits a `.pact` against it.
-- [ ] Step 2 — Confirm CI ordering. Check the GitHub Actions workflow to verify the backend provider verification job reads the committed `contracts/` copy (Decisions OQ2 — no inter-job artifact passing). Confirm the frontend consumer suite has regenerated/committed the union `.pact` before provider verification reads it. Fix any ordering gap.
-- [ ] Step 3 — Add missing provider verification tests for any backends identified in Step 1 (or explicitly mark them deferred with a reason if they have no in-process/frontend consumer emitting a `.pact` to verify).
-- [ ] Step 4 — Docs. Add a short section to `docs/pipeline/commit-stage.md` (or equivalent) explaining the consumer → committed `contracts/` folder → provider verification flow.
+- [ ] Step 3 — Add provider verification tests for backend-dotnet (PactNet) and backend-typescript (@pact-foundation/pact Verifier). Wire `contract` suite in each `component-tests.yaml`. Explicitly mark monolith ×3 deferred-with-reason.
+- [ ] Step 4 — Docs. Add a short section to `docs/pipeline/commit-stage.md` explaining the consumer → committed `contracts/` → provider verification flow (joint pass with `1801` Step 6).
 
 ## Decisions (resolved 2026-06-24)
 

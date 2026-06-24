@@ -1,7 +1,5 @@
 # 2026-06-24 06:53 UTC — Plan coordination meta-plan: narrow-integration cluster (v2, +frontend boundary)
 
-🤖 **Picked up by agent** — `ValentinaLaptop` at `2026-06-24T08:47:52Z`
-
 ## TL;DR
 
 **Why:** Every component declares a `pending` narrow-integration suite in its `component-tests.yaml` — the pyramid layer that proves a single adapter talks to a real dependency (Postgres via Testcontainers; HTTP via Pact mock server) has zero tests. Provider-side Pact verification gaps and the frontend test-layer boundary doc are also untracked.
@@ -10,9 +8,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**This is a self-driving parent.** Run `/execute-plan` against *this file* and it executes the cluster for you — you never need to open the sub-plans yourself. The executor handles the low-level wave knowledge: it reads the **Wave status** tracker below, runs the **current** wave per the **Execution protocol**, then stops at that wave's exit gate and updates the tracker so the *next* `/execute-plan` on this file resumes at the next wave. Keep running the same command; it walks the waves.
+**Wave 1 is pushed and awaiting CI.** Once the `integration` suites for backend-java and frontend-react are green in CI, re-run `/execute-plan plans/20260624-0653-meta-narrow-integration-cluster.md` to start Wave 2 (rollout + provider tests + frontend docs).
 
-**Current position:** planning phase complete (all sub-plans refined 2026-06-24); **next = Wave 1** (see Wave status).
+**Current position:** Wave 1 pushed (2026-06-24); **next = wait for CI green, then Wave 2** (see Wave status).
 
 ## Execution protocol (how `/execute-plan` drives this parent)
 
@@ -32,8 +30,8 @@ This means a single `/execute-plan <this file>` advances **one wave** (as far as
 ## Wave status
 
 - **Wave 0 — planning/refine:** ✅ done (2026-06-24) — all sub-plans refined, OQ4 flipped, rename plan `0824` created, decisions settled.
-- **Wave 1 — backend-java pilot + provider-verification audit + frontend narrow-integration:** ⬜ **next**. Units: U2(java) `1801` Steps 1–2; U3(audit) `1941` Steps 1–2 (Batch A, parallel); then U2(frontend) `1801` Step 3 (Batch B). **Exit gate:** push + `1801` `integration` suites (Java + frontend) green in CI.
-- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** ⛔ blocked until Wave 1 exit gate met. Units: U4 `1944`; U3(complete) `1941` Step 3; U5 `1957`; rename `0824`; then the joint `docs/pipeline/commit-stage.md` pass (`1801` Step 6 + `1941` Step 4). **Exit gate:** push + full pyramid green in CI.
+- **Wave 1 — backend-java pilot + provider-verification audit + frontend narrow-integration:** ⏳ **awaiting-CI** (pushed 2026-06-24). Units done: U2(java) `1801` Steps 1–3; U3(audit) `1941` Steps 1–2. **Exit gate:** `1801` `integration` suites (Java + frontend) green in CI.
+- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** ⛔ blocked until Wave 1 CI gate green. Units: U4 `1944`; U3(complete) `1941` Step 3; U5 `1957`; rename `0824`; then the joint `docs/pipeline/commit-stage.md` pass (`1801` Step 6 + `1941` Step 4). **Exit gate:** push + full pyramid green in CI.
 
 ## Target state
 
