@@ -4,7 +4,6 @@ using Xunit;
 
 namespace MyCompany.MyShop.Backend.Tests.Integration;
 
-[Trait("Category", "Integration")]
 public class OrderRepositoryIntegrationTest : AbstractIntegrationTest
 {
     [Fact]

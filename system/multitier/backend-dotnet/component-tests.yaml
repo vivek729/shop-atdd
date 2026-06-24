@@ -5,19 +5,20 @@ testFilter: --filter DisplayName~<test>
 suites:
   - id: unit
     name: Unit
-    pending: true
+    command: dotnet test Tests --filter "FullyQualifiedName~MyCompany.MyShop.Backend.Tests.Unit"
+    sampleTest: "OnePlusOne"
   - id: integration
     name: Narrow Integration
-    command: dotnet test Tests --filter Category=Integration
+    command: dotnet test Tests --filter "FullyQualifiedName~MyCompany.MyShop.Backend.Tests.Integration"
     sampleTest: "SavesAndReadsBackOrder"
     requiresDocker: true
   - id: component
     name: Component
-    command: dotnet test Tests
+    command: dotnet test Tests --filter "FullyQualifiedName~MyCompany.MyShop.Backend.Tests.Component"
     sampleTest: "HealthEndpoint_ReturnsUp"
   - id: provider-verification
     name: Provider Verification (Pact)
-    command: dotnet test Tests --filter "Category=Contract"
+    command: dotnet test Tests --filter "FullyQualifiedName~MyCompany.MyShop.Backend.Tests.Contract"
     sampleTest: "Verify"
     requiresDocker: true
 suiteGroups:

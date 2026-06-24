@@ -83,8 +83,10 @@ jobs:
         working-directory: system/multitier/backend-dotnet
 
       # === Run Unit Tests ===
+      # Unit only — integration/component/contract live in their own namespaces and run in the
+      # component-tests job (they need Docker). Mirrors Java's `./gradlew test` (unit source set).
       - name: Run Unit Tests
-        run: dotnet test
+        run: dotnet test --filter "FullyQualifiedName~MyCompany.MyShop.Backend.Tests.Unit"
         working-directory: system/multitier/backend-dotnet
 
       # === Run Linter ===

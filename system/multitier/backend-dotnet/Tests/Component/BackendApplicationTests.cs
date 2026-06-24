@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MyCompany.MyShop.Backend.Data;
 using Xunit;
 
-namespace MyCompany.MyShop.Backend.Tests;
+namespace MyCompany.MyShop.Backend.Tests.Component;
 
 public class BackendApplicationTests : IClassFixture<WebApplicationFactory<Program>>
 {

@@ -14,7 +14,7 @@ using WireMock.Server;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace MyCompany.MyShop.Backend.Tests;
+namespace MyCompany.MyShop.Backend.Tests.Contract;
 
 /// <summary>
 /// Replays the frontend consumer contract against the in-process provider, with external systems
@@ -22,8 +22,10 @@ namespace MyCompany.MyShop.Backend.Tests;
 /// Testcontainers-managed Postgres. Mirrors the Java provider-verification harness: real Postgres
 /// (so numeric / timestamptz semantics match the contract), in-process external stubs. Fails the
 /// build if the backend drifts from the contract.
+///
+/// <para>Test-layer separation is by namespace (the .NET equivalent of Java's source sets):
+/// suites select with <c>--filter "FullyQualifiedName~...Tests.Contract"</c>.</para>
 /// </summary>
-[Trait("Category", "Contract")]
 public class BackendPactVerificationTest : IAsyncLifetime
 {
     private readonly ITestOutputHelper _output;

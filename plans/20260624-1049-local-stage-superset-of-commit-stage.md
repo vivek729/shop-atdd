@@ -1,5 +1,7 @@
 # 2026-06-24 10:49 UTC — Make the `local` stage a superset of the commit stage
 
+> 🤖 **Picked up by agent (refine)** — `Valentina_Desk` at `2026-06-24T10:51:53Z`
+
 ## TL;DR
 
 **Why:** The meta-prerelease run on `d1fc8bb2` had every `run / local (...)` job
@@ -47,12 +49,12 @@ config's `local` job must mirror the commit checks of the project(s) under it:
 | monolith-dotnet | system/monolith/dotnet | `dotnet test` | `dotnet format MyCompany.MyShop.Monolith.sln --verify-no-changes` | `gh optivem component test setup` / `run` |
 | monolith-typescript | system/monolith/typescript | `npm test` | `npm run lint` | `gh optivem component test setup` / `run` |
 | multitier-java | backend-java **+ frontend-react** | be: `./gradlew test` (fe: none) | be: `./gradlew checkstyleMain`; fe: `npm run lint` | be: `... --component backend`; fe: `... --component frontend` |
-| multitier-dotnet | backend-dotnet (+ frontend-react¹) | `dotnet test` | `dotnet format MyCompany.MyShop.Backend.slnx --verify-no-changes` | `... --component backend` |
-| multitier-typescript | backend-typescript (+ frontend-react¹) | `npm test` | `npm run lint` | `... --component backend` |
+| multitier-dotnet | backend-dotnet **+ frontend-react** | be: `dotnet test` (fe: none) | be: `dotnet format MyCompany.MyShop.Backend.slnx --verify-no-changes`; fe: `npm run lint` | be: `... --component backend`; fe: `... --component frontend` |
+| multitier-typescript | backend-typescript **+ frontend-react** | be: `npm test` (fe: none) | be: `npm run lint`; fe: `npm run lint` | be: `... --component backend`; fe: `... --component frontend` |
 
-¹ Frontend handling depends on **OQ-2** below.
-Frontend-react has **no unit-test step** in its commit-stage (build + lint +
-component only).
+Per resolved **OQ-2(b)**, frontend-react lint + component run in **all three**
+multitier `local` configs. Frontend-react has **no unit-test step** in its
+commit-stage (build + lint + component only).
 
 ## ▶ Next executable step (resume here)
 
@@ -79,9 +81,9 @@ the diff before touching the other five.
   backend commit-stage commands, `working-directory: system/multitier/backend-<lang>`,
   `if: inputs.architecture == 'multitier' && inputs.language == '<lang>'`.
   Component step uses `--component backend`.
-- [ ] **Step 4 — frontend-react.** Add `npm run lint` + `--component frontend`
-  per **OQ-2** (either every multitier config, or pinned to `multitier-java`).
-  `working-directory: system/multitier/frontend-react`. No unit step.
+- [ ] **Step 4 — frontend-react.** Add `npm run lint` + `--component frontend` in
+  **every** multitier `local` config (java, dotnet, typescript) per resolved
+  **OQ-2(b)**. `working-directory: system/multitier/frontend-react`. No unit step.
 - [ ] **Step 5 — ordering & fail-fast.** Place lint + unit (cheap, no Docker)
   ahead of `gh optivem system start` so they fail fast. Component placement per
   **OQ-1**.
@@ -104,34 +106,40 @@ the diff before touching the other five.
    architecture/language conditions the existing `local` compile steps already
    use — consistent with how `local` already inlines per-config compile.
 
+## Resolved decisions
+
+- **OQ-1 — Component-test placement = option (a): before `system start`** (user,
+  2026-06-24). In the `local` job, run lint + unit + component **before** `gh
+  optivem system start`, so the cheap checks fail fast and there is no port clash
+  with the real+stub stack. Assumes the component harness stands up on a bare
+  runner with no prior `system start` — consistent with how the commit-stage runs
+  component today (no `system start` there either). Step 6's probe still confirms
+  this; if it fails, fall back to (b) tear-down-then-component. Rejected: (b) run
+  after the sample with a `system stop` first (later failure, more steps); (c)
+  keep component commit-stage-only (gives up a gate that actually broke).
+- **OQ-2 — Frontend redundancy = option (b): run in all three multitier configs**
+  (user, 2026-06-24). Mirror frontend-react's `npm run lint` + `--component
+  frontend` in **every** multitier `local` config (java, dotnet, typescript), not
+  just one. This is a true superset — consistent with the existing frontend-compile
+  duplication across the three multitier configs — and keeps each config's `local`
+  self-contained (a green `multitier-dotnet` local independently proves the
+  frontend it ships). Accepts running frontend lint + component 3× vs 1× in commit
+  as the cost of that guarantee. Rejected: (a) pin to `multitier-java` only (cheaper
+  but leaves `multitier-dotnet`/`-typescript` local blind to frontend regressions).
+- **OQ-3 — Wiring = option (a): inline now, composite action as follow-up** (user,
+  2026-06-24). Ship the lint + unit + component checks **inline** in
+  `_prerelease-pipeline.yml` to close the green-local ⟹ green-commit gap
+  immediately, consistent with how `local` already inlines per-config compile, and
+  staying entirely in `shop`. Mitigate interim drift with a source-pointer comment
+  on each inlined block naming its origin `*-commit-stage.yml`. File a **follow-up
+  plan** to extract compile + lint + unit + component into a reusable composite
+  action in `optivem/actions` that both `local` and each `*-commit-stage.yml` call
+  (zero drift, single source of truth, also absorbing the existing compile-step
+  duplication). Rejected for now: (b) build the composite action first — correct
+  long-term, but a larger cross-repo change that would block this fix.
+
 ## Open questions
 
-- **OQ-1 — Component-test placement / port clash.** The commit-stage runs
-  component tests in a job that does **not** `gh optivem system start`; the `local`
-  job **does** bring up the real+stub stack. Running `gh optivem component test
-  setup` while that stack is up risks **port collisions**. Options: (a) run lint +
-  unit + component **before** `system start` (fast-fail, no clash) — *recommended*,
-  pending confirmation the component harness stands up cleanly with no prior
-  stack; (b) run component after the system-test sample but tear the stack down
-  first; (c) keep component in commit-stage only and have `local` mirror just lint
-  + unit. *Recommend (a).* Needs a probe: does `gh optivem component test
-  setup/run` work on a bare runner (no `system start`)?
-- **OQ-2 — Frontend redundancy.** Frontend-react's commit-stage runs **once**
-  total, but `local` compiles frontend in **every** multitier config. Mirroring
-  that runs frontend lint + component **3×** across multitier `local` configs vs
-  1× in commit. Options: (a) pin frontend checks to **`multitier-java`** local
-  only — matches "run once", less wasteful — *recommended*; (b) run in all three
-  multitier configs — a true superset, consistent with existing frontend-compile
-  duplication, but 3× the frontend cost. *Recommend (a).*
-- **OQ-3 — Wiring: inline vs shared composite action.** Inline (this plan's
-  default) is consistent with how `local` already inlines compile, stays entirely
-  in `shop`, but **can drift** from the commit-stage workflows over time — the very
-  problem we are fixing. Alternative: extract compile+lint+unit+component into a
-  reusable **composite action in `optivem/actions`** that *both* `local` and each
-  `*-commit-stage.yml` call — zero drift, single source of truth, but more work and
-  touches the sibling repo. *Recommend:* ship inline now to close the gap; file a
-  follow-up plan for the composite-action refactor (which should also absorb the
-  existing compile-step duplication).
 - **OQ-4 — Legacy sample interaction.** `local` already runs a legacy system-test
   sample (`skip-acceptance-legacy` gate). The new checks are SHA/source-level
   (not config-version specific), so they run once regardless of latest/legacy — no
