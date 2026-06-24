@@ -1,7 +1,5 @@
 # 2026-06-24 12:21 UTC — Symmetric `gh optivem` tier taxonomy (kill ambiguous `test` and ambiguous `compile`)
 
-🤖 **Picked up by agent** — `Valentina_Desk` at `2026-06-24T13:22:29Z`
-
 ## TL;DR
 
 **Why:** The `gh optivem` command surface names its two test tiers on two different
@@ -135,19 +133,29 @@ are for-all aggregates (**OQ-B** / **OQ-E**).
   is a `--component` flag (two-axis model, OQ-F).
 
 ### Phase 1 — gh-optivem CLI
-- [ ] Re-parent: `newTestCmd` → registered as `system-test`; `component test` → `component-test`
-  (flatten the `component` parent). Update `Use:`, `Short`, `Long`, `Example` strings.
-- [ ] Add the `component-test compile` verb (folded in from plan 1203 — OQ-C), so the
-  component tier carries the same `setup | run | compile` set as `system-test`.
-- [ ] Update the bare-`compile` walk per OQ-B to span all three tiers (system + component-test
-  + system-test), and re-route the 7 commit-stage `Compile Code` steps plan 1203 owned.
-- [ ] Update `_test.go` command-tree assertions and any golden help output.
-- [ ] Cut a gh-optivem release (hard rename, no aliases — OQ-A). The shop call-site rewrite
-  (Phase 2) must land together with consumers picking up this release; a stale call site
-  breaks until flipped, so do not merge Phase 2 piecemeal.
+**Code complete (committed 2026-06-24).** Re-parent → `system-test`; flatten `component test` →
+top-level `component-test`; new `component-test compile` verb driven by `compileCommands:` in each
+`component-tests.yaml` (OQ-C addendum); bare `compile` now walks system → component-test →
+system-test; new bare `test` aggregate (component-test → system start → system-test run → system
+stop, with `--assume-running`). `go build` + `go vet` + full `go test ./...` green; `gh optivem
+test run` now fails loud ("unknown command"). **Blast radius beyond the plan's original list (also
+fixed):** the embedded ATDD orchestrator — `internal/atdd/process/process-flow.yaml` (the
+`setup-tests` / `compile-tests` / `run-tests` command strings) and `command.go`'s
+`isTestRun` prefix match — plus user-facing remediation labels in `verify_classify.go`; the CLI
+issues these to itself, so the hard rename would have broken the orchestrator without them.
+- [ ] **Cut a gh-optivem release** (hard rename, no aliases — OQ-A). ⚠️ **User action — outward-facing.**
+  The shop call-site rewrite (Phase 2) must land together with consumers picking up this release;
+  a stale call site breaks until flipped, so do not merge Phase 2 piecemeal.
 
 ### Phase 2 — shop call sites
-- [ ] Rewrite the 15 workflows + 0916-wave workflows to the new verbs. `actionlint` each.
+- [ ] Rewrite the 15 workflows + 0916-wave workflows to the new verbs (`gh optivem test …` →
+  `system-test …`; `component test …` → `component-test …`). `actionlint` each.
+- [ ] Populate `compileCommands:` in all 7 `component-tests.yaml` (OQ-C addendum — the CLI verb is
+  live but no-ops until the YAML lists commands), and route the 7 commit-stage `Compile Code`
+  steps to `gh optivem component-test compile [--component <c>]`.
+- [ ] Confirm the acceptance-stage workflows pass `--assume-running` (or don't call the bare `test`
+  aggregate) so its `system start` doesn't clash with the explicit `system start` they already run
+  (OQ-E execution caveat).
 - [ ] Update `docs/pipeline/acceptance-stage.md`, `CLAUDE.md`, `CONTRIBUTING.md`.
 
 ### Phase 3 — Verify
@@ -191,6 +199,21 @@ are for-all aggregates (**OQ-B** / **OQ-E**).
   flip again. The 0916 gating wave layers on top afterward against the now-final names. Plan 1203
   is therefore subsumed here (its component-tier compile verb is no longer a separate landing);
   close it out pointing at this plan. [[feedback_plan_over_parallel_tickets]]
+  - **OQ-C addendum — compile source is `compileCommands:` in YAML, NOT Go (overrides plan 1203
+    OQ2).** *Decided (with author, execution 2026-06-24):* the `component-test compile` verb runs
+    a `compileCommands:` list (a sibling of `setupCommands:`) from each component's
+    `component-tests.yaml`, rather than extending the Go `compiler.commandsFor(lang)` table as
+    1203 OQ2 proposed. Rationale: the component-test runner is *already* language-agnostic —
+    `component-test run` / `setup` execute raw shell strings from the YAML — so the per-language
+    knowledge belongs in each component's own config (a Java component lists its `compileTestClasses
+    compileIntegrationTestClasses compileComponentTestClasses` task set; .NET a `dotnet build`),
+    keeping the tool language-agnostic and dissolving 1203's OQ3 (Java task form) / OQ5
+    (frontend-react) into per-component YAML data. The one tradeoff — `component-test compile`
+    reads YAML while `system`/`system-test compile` stay Go-dispatched — mirrors reality (component
+    test *source sets* are genuinely per-component) and is acceptable for a net-new verb. The CLI
+    capability landed this session; **populating `compileCommands:` in the 7 shop
+    `component-tests.yaml` files is Phase 2** (a component with no `compileCommands:` is skipped, so
+    the bare `compile` aggregate never regresses).
 
 - **OQ-D — Hyphenated sibling tier nouns.** *Decided (refine, 2026-06-24):* **hyphenated
   siblings** `system-test` / `component-test`, not nested (`system test`) and not concatenated
@@ -256,12 +279,22 @@ are for-all aggregates (**OQ-B** / **OQ-E**).
 
 ## ▶ Next executable step (resume here)
 
-**Refined 2026-06-24 — all open questions resolved.** Ready to execute: run `/execute-plan` on
-this file. Start with **Phase 1 (gh-optivem CLI)** — re-parent to `system-test` / `component-test`,
-add `component-test compile` (folded in from 1203 — OQ-C), generalize the bare `compile` walk and
-add the bare `test` aggregate with `--assume-running` (OQ-E), update `_test.go` assertions, cut a
-hard-rename release (no aliases — OQ-A). Then **Phase 2** rewrites the shop call sites in lockstep
-with that release, and **Phase 3** gates on `actionlint` + a workspace-wide grep for stragglers.
+**Phase 1 gh-optivem code is committed (2026-06-24); the rename is functionally complete and the
+full Go test suite is green.** The single remaining Phase 1 item is the **gh-optivem release cut**
+— an outward-facing user action, not an agent edit. Then Phase 2 + Phase 3 run together against
+that release.
+
+Concretely, next session:
+1. **(User)** Cut the gh-optivem release (hard rename, no aliases). Phase 2 must land with consumers
+   picking it up — do not merge Phase 2 piecemeal.
+2. **Phase 2 (shop):** rewrite the 15 + 0916-wave workflows to `system-test` / `component-test`;
+   populate `compileCommands:` in the 7 `component-tests.yaml` and route the `Compile Code` steps to
+   `gh optivem component-test compile`; pass `--assume-running` where the workflow already manages the
+   system; update `docs/pipeline/acceptance-stage.md`, `CLAUDE.md`, `CONTRIBUTING.md`.
+3. **Phase 3:** `actionlint` every changed workflow + one green CI run per pipeline; workspace-wide
+   grep for residual `gh optivem test ` / bare `gh optivem compile` (hard-rename straggler gate).
+
+Resume with `/clear` then `/execute-plan plans/20260624-1221-symmetric-gh-optivem-tier-noun-taxonomy.md`.
 
 Related plans: [[20260624-1203-compile-component-and-test-sources-via-gh-optivem]] is **subsumed
 here** (its component-tier compile verb is folded in — OQ-C); close it pointing at this plan.
