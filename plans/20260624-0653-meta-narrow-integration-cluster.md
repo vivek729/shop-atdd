@@ -1,5 +1,41 @@
 # 2026-06-24 06:53 UTC — Plan coordination meta-plan: narrow-integration cluster (v2, +frontend boundary)
 
+## Target state
+
+**North star (set by the author, 2026-06-24):** a single, **symmetric 4-layer test taxonomy** applied to the frontend *and* every backend, where **narrow-integration** and **component** differ by **scope** (single adapter vs. booted/rendered component), **not** by mocking technology. This reframes the whole cluster and supersedes the earlier 2-layer `vi.fn()` framing in `1957`.
+
+| # | Layer | **Frontend** | **Backend** (Java / .NET / TS) |
+|---|---|---|---|
+| 1 | **Unit** | pure logic (`1+1`), no I/O | pure logic (`1+1`), no I/O |
+| 2 | **Narrow integration** | one adapter (`orderService`) ↔ **Pact mock server**; **no** React render | one seam: repo ↔ **Testcontainers-Postgres**, *or* `TaxGateway`/`ErpGateway` ↔ **WireMock-in-Testcontainers**; **no** app boot |
+| 3 | **Component** | full UI render ↔ **Pact mock server** | full service boot, hit the **REST API**; **Postgres** real (Testcontainers) + **ERP/Tax** mocked (WireMock-in-Testcontainers) |
+| 4 | **Contract / provider verification** | **NONE** (frontend is consumer-only) | verify the backend satisfies the **frontend consumer's** `.pact` |
+
+**The discriminator (the rule the docs must state):** *does the test boot/render the real component?* Yes → **component**; a single adapter called directly → **narrow integration**. The mocking stack (Pact mock server / WireMock / Testcontainers) is **orthogonal** to this line — both middle layers share it.
+
+**Frontend contract mechanics** (verified against the installed `@pact-foundation/pact` v13 + `@pact-foundation/pact-core`):
+- Interaction **structure** (URLs, JSON request/response shapes + matchers) lives in **one shared fixture** (`src/test/contracts/*.ts`) as **parameterized builders**; each suite supplies only **data points**.
+- **Both** the narrow-integration and component suites **emit** interactions into the single `frontend→backend` contract via `PactV3.executeTest` (component renders the UI; narrow drives `orderService` directly). The contract is the **union** of both suites' interactions. Because both build from the shared fixture, identical interactions **merge idempotently**; **narrow integration MAY add interactions the UI never exercises** (e.g. cancel/deliver) — these simply append.
+- **Operational note:** the emitting suites must run **together** (merge write-mode) when (re)generating the contract, or a partial run can drop interactions. ("Exactly one emitter" is **not** a Pact rule — `coupon.pact` + `order.pact` already both emit today; the real constraint is *one definition per `description`+state*, which the shared fixture guarantees.)
+- **Stub-only mode** (mock server with **no** `.pact` written — low-level `pact-core` `createMockServer`/`cleanupMockServer`, never `writePactFile`) stays **available as an opt-out** for a narrow test that should deliberately not touch the contract. It is **not** the default.
+- **No** separate consumer-contract suite (emission is distributed across narrow + component, as `coupon`/`order` are today) and **no Docker** on the frontend (the Pact mock server is an in-process FFI server).
+
+**Backend mechanics:**
+- Narrow-integration + component **require Docker** (Testcontainers-Postgres and WireMock-in-Testcontainers are real containers) → both are **opt-in / off the default `$0` path**, per the repo's opt-in-component-layer convention. Local Testcontainers is currently blocked here (Docker Engine 29) → **CI-verified**.
+- **ERP + Tax are real outbound HTTP systems** (`ErpGateway`, `TaxGateway` in all three backends; e.g. `TaxGateway` does `GET ${tax.url}/api/countries/{country}`) → WireMock has genuine targets; this layer is **present-tense**, not aspirational.
+- Provider verification already exists (`BackendPactVerificationTest`); `1941` extends it to the other backends.
+
+**What the developer/student observes when done:** every component exposes the same four suites (`unit` / `integration` / `component` / `contract`) via `gh optivem component test run --suite <name>`. The frontend's `integration` + `component` run **Docker-free** against a Pact mock server and jointly produce one `frontend-backend` contract; the backends' `integration` + `component` run against Testcontainers-Postgres + WireMock and are **opt-in/Docker-gated**; the backend `contract` suite verifies the frontend's contract. One canonical doc states the symmetric 4-layer rule and the boot/render discriminator.
+
+**Explicitly unchanged:** the default `$0` / zero-infra build path (Docker layers stay opt-in); the pilot→rollout split (`1801`→`1944`); provider verification staying backend-only; the repo-owned `contracts/` folder location; the existing `coupon`/`order` Pact files (they remain emitters under the union model).
+
+**Coordination consequence — sub-plan decisions that must flip (each via its *own* `/refine-plan`; NOT done in this meta-plan):**
+- **`1801` OQ4** — flip *"MSW/`vi.fn()`, not the Pact mock server"* → **Pact mock server** (narrow emits via `PactV3` + shared fixture; union with component).
+- **`1957`** — **rewrite**, not extend: drop the 2-layer `vi.fn()` "over the wire?" rule; document the symmetric 4-layer rule, the boot/render discriminator, the shared-fixture + both-emit-union design, and the stub-only opt-out.
+- **`1939`** — stub-only existence is now **verified** (above), so it **collapses** from a binary "Pact-vs-MSW" decision to documenting the **shared-fixture + both-emit union** pattern and the stub-only opt-out.
+
+---
+
 **Scope arguments:** first = `20260623-1801`, last = (open — from `1801` onwards).
 **Plans analysed:** 5 in-scope executable, 1 in-scope coordination artifact (the prior meta-plan), 1 referenced-only.
 
@@ -42,7 +78,8 @@
 - **1939 → 1801**: soft/decision edge. Gates 1801 **Step 3** (frontend pilot) only, not Step 2 (Java). 1801 has a provisional MSW default → "settle before the frontend step," not "blocks the whole plan."
 - **1801 → 1944**: hard edge. 1944 cannot start until the 1801 pilot pattern is established.
 - **1941**: no dependency edge to the cluster; only a soft doc collision with 1801 — see Conflict #1.
-- **1939 → 1957** and **1801(Step 3) → 1957**: soft/sequencing edges (new). 1957's boundary doc should describe the final 3-layer frontend picture (component `vi.fn()` / narrow-integration stub / Pact contract). Writing it before the integration layer exists and before its stub is chosen produces a 2-layer doc that must be revised. See Consolidation #3. These are *sequencing* recommendations, not hard gates — the plans don't cross-reference each other (see Needs-decision is intentionally empty; the choice is resolved below).
+- **1939 → 1957** and **1801(Step 3) → 1957**: soft/sequencing edges. 1957's boundary doc must describe the **symmetric 4-layer** picture from the Target state (unit / narrow-integration / component / contract), **not** the old 2-layer `vi.fn()` rule. Writing it before the integration layer exists produces a doc that must be revised. See Consolidation #3. These are *sequencing* recommendations, not hard gates — the plans don't cross-reference each other.
+  > **Reframed by Target state (2026-06-24):** the earlier "3-layer (component `vi.fn()` / narrow stub / Pact contract)" picture is superseded. Both the frontend narrow-integration **and** component suites use the **Pact mock server** and **both emit** into one contract (the union); they differ by boot/render scope, not by stub mechanism.
 
 ## Conflicts
 
@@ -57,11 +94,10 @@
 - `20260623-1944` owns exactly that 5-component rollout.
 - **Why it's not a real conflict:** 1801's OQ1 decision scopes the pilot to backend-java + frontend-react and assigns the rollout to 1944. Step 5 is vestigial. Resolved in Consolidation #1.
 
-### 3. Frontend test-layer documentation — coordination conflict (new)
-- `20260623-1957` documents a **2-layer** frontend boundary with a binary rule: *"does a request go over the wire?"* — No → component file (`vi.fn()` stub, no server); Yes → Pact file (real mock server).
-- `20260623-1801` Step 3 (with the stub chosen by `20260623-1939`) introduces a **third** frontend layer: the `integration` (narrow) suite. Depending on 1939's decision, that layer uses either a Pact mock server (real server → collides with 1957's "Yes → Pact" branch) or MSW/`vi.fn()` (no server → collides with 1957's "No → component" branch). **Either way, the binary rule as written in 1957 is incomplete the moment the integration suite exists.**
-- **Why coordination (not hard):** no shared *file* edit (1957 touches the three existing test-file headers + a new `docs/atdd/` page; 1801 Step 3 adds a *new* integration spec + `package.json` + `component-tests.yaml`). The collision is on the *concept the doc describes*, not on bytes. Whichever lands first dictates the other's mechanical content: if 1957 lands first it must be revised once the layer arrives; if the layer lands first 1957 is written once, correctly.
-- **Resolution (recommended):** sequence 1957 **after** 1939's stub decision and the 1801 frontend pilot (Step 3) so the boundary doc is authored once as a 3-layer rule. See Consolidation #3. There is also a minor doc-home overlap (1957 → new `docs/atdd/` page; 1801 Step 6 → `docs/pipeline/commit-stage.md`): the executor of 1957 should cross-link to the commit-stage pyramid note rather than restate it.
+### 3. Frontend test-layer documentation — coordination conflict (reframed by Target state)
+- `20260623-1957` documents a **2-layer** frontend boundary with a binary rule: *"does a request go over the wire?"* — No → component file (`vi.fn()` stub, no server); Yes → Pact file (real mock server). **This premise is now wrong** per the Target state: the frontend component suite uses the **Pact mock server**, not a `vi.fn()` stub, and a third (narrow-integration) layer also uses it. The "over the wire?" binary cannot tell narrow from component because **both** go over the wire.
+- **Resolution (set by Target state):** `1957` is a **rewrite, not an extension** — it must document the **symmetric 4-layer** rule (unit / narrow / component / contract) and the **boot/render discriminator** (single adapter = narrow; booted/rendered = component; both use the Pact mock server). It is sequenced **after** the 1801 frontend pilot lands so it is authored once, correctly. Minor doc-home overlap stands: 1957 → new `docs/atdd/` page cross-links to the `docs/pipeline/commit-stage.md` pyramid note rather than restating it.
+- **Why coordination (not hard):** still no shared *file* edit (1957 touches the existing test-file headers + a new `docs/atdd/` page; 1801 Step 3 adds a *new* integration spec + `package.json` + `component-tests.yaml`). The collision is on the *concept the doc describes*. The Target state resolves the concept; `1957`'s own `/refine-plan` pass must rewrite its body to match.
 
 ## Consolidation findings (decided)
 
@@ -74,11 +110,11 @@
 - 1939 is a pure decision input feeding 1801's frontend stub choice (OQ4).
 - **Resolution (recommended): keep separate; resolve 1939 before 1801 Step 3.** Run `/refine-plan plans/20260623-1939-…` to settle Pact-mock-server-vs-MSW, write the result back to 1801 OQ4, then execute 1801 Step 3 against the settled choice. **Why:** 1939 is cheap research with no code touch; settling it first avoids reworking the frontend pilot. 1801 Step 2 (Java) does not wait on it.
 
-### 3. `20260623-1957` ⇄ `20260623-1939` + `20260623-1801` (frontend) — re-order, write the doc once
-- 1957 documents the frontend test-layer boundary as a 2-layer rule; 1939 + 1801 Step 3 add a third (narrow-integration) frontend layer whose stub mechanism 1939 decides.
-- **Resolution (recommended): re-order — execute 1957 after 1939's decision and the 1801 frontend pilot land.** No merge, no plan edit. The executor then writes the boundary doc as a 3-layer rule (component `vi.fn()` / narrow-integration stub / Pact contract) in one pass, and points the three test-file headers at it. **Why:** authoring 1957 first yields a doc that is provably stale on the day the integration suite ships — a guaranteed rewrite. Sequencing it after costs nothing (it's documentation-only, gated on nothing else) and removes the rework.
-- **Alternative considered:** land 1957 now as a 2-layer doc (Wave 1, parallel) and revise it when the integration layer arrives. Rejected — it doubles the authoring work and risks the interim doc being copied/cited before revision in a teaching repo.
-- **Alternative considered:** merge 1957 into 1801 Step 6. Rejected — 1957 targets a `docs/atdd/` frontend page; 1801 Step 6 targets `docs/pipeline/commit-stage.md`. Different homes, different audiences; cross-link instead of merge.
+### 3. `20260623-1957` ⇄ `20260623-1939` + `20260623-1801` (frontend) — rewrite to the symmetric 4-layer model, write the doc once
+- 1957 currently documents a **2-layer** rule; the Target state replaces it with the **symmetric 4-layer** taxonomy in which the frontend component suite uses the **Pact mock server** (not `vi.fn()`) and a narrow-integration layer joins it.
+- **Resolution (set by Target state): re-order *and* re-aim.** Execute 1957 **after** the 1801 frontend pilot lands, and have its `/refine-plan` pass **rewrite** the body to: (a) the symmetric 4-layer rule, (b) the boot/render discriminator, (c) the **shared-fixture + both-emit-union** contract design, (d) the stub-only opt-out, then point the test-file headers at the canonical `docs/atdd/` page. **Why:** authoring the old 2-layer doc first yields a doc provably stale the day the integration suite ships; sequencing after costs nothing (documentation-only).
+- **Alternative considered:** land 1957 now as a 2-layer `vi.fn()` doc and revise later. Rejected — wrong on arrival per the Target state, and risks the stale doc being copied/cited in a teaching repo.
+- **Alternative considered:** merge 1957 into 1801 Step 6. Rejected — 1957 targets a `docs/atdd/` frontend page; 1801 Step 6 targets `docs/pipeline/commit-stage.md`. Different homes/audiences; cross-link instead of merge.
 
 ## Execution units (post-consolidation)
 
@@ -97,12 +133,12 @@ The wave plan operates on these units, not on raw plan files. `20260623-1955` (p
 ### Wave 1 — start now
 
 **Batch A (parallel-safe — 3 independent agent sessions, disjoint files):**
-- **U1 — `20260623-1939`**: settle the integration-suite stub mechanism (`/refine-plan`). Research-only, fastest; finish before U2's frontend step and before U5.
+- **U1 — `20260623-1939`**: ~~settle the stub mechanism~~ — **direction already set by Target state (Pact mock server) and stub-only existence verified.** U1 collapses to documenting the **shared-fixture + both-emit-union** pattern + the stub-only opt-out (`/refine-plan`). Research-only, fastest; finish before U2's frontend step and before U5.
 - **U2(java) — `20260623-1801` Steps 1–2 (+ Java portion of 4)**: backend-java pilot. Owns `backend-java/component-tests.yaml`, gradle `integrationTest` source set, Java tests. Disjoint from U1/U3.
 - **U3(audit) — `20260623-1941` Steps 1–2**: audit the other backends' provider verification + confirm CI ordering. Read-mostly; touches the *contract* suites / CI — disjoint from U2.
 
 **Batch B (serial — after U1 lands):**
-- **U2(frontend) — `20260623-1801` Step 3 (+ frontend portion of 4)**: frontend-react narrow-integration spec, built against the stub U1 chose. One session.
+- **U2(frontend) — `20260623-1801` Step 3 (+ frontend portion of 4)**: frontend-react narrow-integration spec, built against the **Pact mock server** via `PactV3` + the shared interaction fixture, emitting into the **union** contract (per Target state; requires flipping 1801 OQ4 first). One session.
 
 > U1, U2(java), U3-audit genuinely parallelise — three fresh sessions, no shared files.
 > Do **not** start U2(frontend) before U1's decision is written back to 1801 OQ4, or you
@@ -113,7 +149,7 @@ The wave plan operates on these units, not on raw plan files. `20260623-1955` (p
 **Batch A (parallel-safe — 3 independent agent sessions, disjoint files):**
 - **U4 — `20260623-1944`**: roll the pilot pattern out to the 5 remaining components. Its own OQ (one PR per component vs one PR for all 5) decides whether this is 1 session or up to 5 parallel sessions on disjoint `component-tests.yaml` files.
 - **U3(complete) — `20260623-1941` Step 3**: add any missing provider-verification tests found in the Wave-1 audit. Touches *contract* suites — disjoint from U4's *integration* suites.
-- **U5 — `20260623-1957`**: write the frontend test-layer boundary doc, now as a **3-layer** rule (the narrow-integration layer landed in Wave 1, its stub chosen by U1). Touches the three existing frontend test-file headers + a new `docs/atdd/` page — disjoint from U4 and U3.
+- **U5 — `20260623-1957`**: **rewrite** the frontend test-layer boundary doc as the **symmetric 4-layer** rule (unit / narrow / component / contract) with the **boot/render discriminator** and the shared-fixture + both-emit-union design (the narrow-integration layer landed in Wave 1). Touches the existing frontend test-file headers + a new `docs/atdd/` page — disjoint from U4 and U3.
 
 **Batch B (serial — single final doc pass, after both feature bodies land):**
 - **`20260623-1801` Step 6 + `20260623-1941` Step 4** together in one session on `docs/pipeline/commit-stage.md` (resolves Conflict #1). U5's `docs/atdd/` page cross-links here rather than duplicating the pyramid note.
