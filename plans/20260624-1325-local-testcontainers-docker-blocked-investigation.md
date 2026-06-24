@@ -44,6 +44,48 @@ baked into the cloned student path (per [[feedback_templates_propagate_cost_to_s
 (CI-only)** survives as the documented fallback baseline and the student-facing reality, but is no
 longer the target for the maintainer box. No production/app code changes — this is test-infra only.
 
+## Feasibility assessment (maintainer read, 2026-06-24 — confirm via diagnostics)
+
+**Verdict: very likely feasible, probably cheap.** The failure shape is diagnostic, not a dead end.
+`docker` CLI works but the Testcontainers client gets HTTP **400** from `/info`. A 400 (not
+connection-refused, not 404) means the client *reaches* the engine and the engine *rejects the
+request* — the textbook signature of API-version drift, not a broken socket/auth/environment.
+
+**Why optimistic:** Engine **29.5.2 / API 1.54, built 2026-05-20** (very new) vs Java
+**docker-java 3.4.x**, which predates Engine 29. Old client + new engine + 400-on-`/info` is exactly
+what a client that needs bumping looks like. The TS `testcontainers` npm (^12.0.3) is recent and
+drives its own HTTP client that likely already negotiates 1.54 fine — which is why OQ1 is the fork.
+
+**Confidence (rough):**
+- **~70% — Option A (Java-only docker-java/Testcontainers bump).** Clean, one dependency change,
+  ~an afternoon. The most likely world: TS passes locally, Java fails.
+- **~25% — Option C (alternative local runtime: WSL2 socket / Colima / Podman).** If *both* clients
+  fail it's the Engine-29 surface; a one-time maintainer setup step, still very feasible.
+- **~5%** — something weirder (named-pipe quirk H2, or a repo-config issue OQ5 flushes out).
+
+**The whole branch hinges on one untested data point (OQ1):** run `npm run test:integration` in
+backend-typescript once.
+- TS **passes**, Java **fails** → docker-java version problem → **Option A** (bump Java only).
+- **Both fail** → Engine-29 API surface → **Option C** (alt runtime) over **D** (engine downgrade).
+
+The two read-only confirmations (raw `/info` 400 body over the pipe; Testcontainers debug logging to
+see the negotiated API version) need no go-ahead and only confirm the mechanism — they don't move the
+branch. Only Diagnostic 1 (the TS test) needs explicit go-ahead per the ask-before-local-Docker rule.
+
+## Handoff state (for whoever picks this up next)
+
+- **OQ4 is resolved** (local parity IS the goal) — see `## Resolved decisions`. Diagnostics are now
+  worth running; the plan points at a real fix (A/C/D), not CI-only.
+- **Nothing here is committed yet.** At handoff the working tree had three unrelated threads dirty:
+  this plan file (untracked), prior-session plan `...1308...` edits, an unrelated
+  `ValidationProblemFilter.cs` (.NET) WIP, and backend-typescript component/pact suite changes
+  (`package.json`/lock, `place-order.component.spec.ts`, `component-harness.ts`). A full `git add -A`
+  sweep would mix all three — decide commit scope deliberately. Per
+  [[feedback_no_paths_flag_on_commit_script]] the academy convention is full `git add -A` while
+  surfacing unrelated mods, so the safest move is to commit the plan + 1308 together and leave the
+  .NET and TS-suite WIP for their own commits, or get explicit confirmation to sweep everything.
+- **Resume at `## ▶ Next executable step`** below.
+
 ## What we know (facts, not hypotheses)
 
 - **Environment**: Docker Desktop 4.75.0, Engine **29.5.2**, **API 1.54** (min supported 1.40),

@@ -130,8 +130,5 @@ Java harness and sidesteps fetch-interception fragility entirely. (A routine sep
   fixed in `4b279b32`; .NET commit stage is now **green**.
 - The TS suites can't run locally (Testcontainers/Docker blocked — see [20260624-1325](20260624-1325-local-testcontainers-docker-blocked-investigation.md)); CI is the only gate, hence the bug-per-CI-run cadence.
 
-## ▶ Next executable step (resume here)
-Commit + push Bug 3 fix (needs user go-ahead). Watch the triggered commit stage: expect Component
-(8/8) and Provider Verification both green, then image build/push. If Provider Verification still
-fails, it'll be the *next* masked issue (the contract's actual interaction assertions) — read that
-log and iterate.
+## DONE (2026-06-24 ~13:36 UTC) ✅
+Commit `0b428162` (Bug 3 fix) → commit-stage run [28102357643](https://github.com/optivem/shop/actions/runs/28102357643) is **fully green**: Unit, Narrow Integration, **Component**, **Provider Verification (Pact)**, Linter, Sonar, and Docker build/push all ✓. Both target suites pass; the multitier-backend-typescript image published. The .NET stage is green too (content-type fix). All three bugs resolved. Plan complete.
