@@ -53,6 +53,7 @@ jobs:
       packages: write
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      GH_OPTIVEM_CONFIG: gh-optivem-multitier-dotnet.yaml
     outputs:
       image-digest-url: ${{ steps.digest-url.outputs.digest-url }}
     steps:
@@ -82,12 +83,30 @@ jobs:
         run: dotnet build
         working-directory: system/multitier/backend-dotnet
 
-      # === Run Unit Tests ===
-      # Unit only — integration/component/contract live in their own namespaces and run in the
-      # component-tests job (they need Docker). Mirrors Java's `./gradlew test` (unit source set).
+      # === Run Test Pyramid (gates the image) ===
+      # Suites are selected from system/multitier/backend-dotnet/component-tests.yaml via the
+      # gh-optivem CLI, so the suite→command mapping has a single source of truth. They run
+      # in pyramid order ahead of Build/Push, so a red suite blocks the Docker image.
+      # One setup covers every suite (it runs the component's suite-agnostic setupCommands).
+      - name: Install gh-optivem CLI Extension
+        uses: optivem/actions/install-gh-optivem@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Up Component Test Harness
+        run: gh optivem component test setup --component backend
+
       - name: Run Unit Tests
-        run: dotnet test --filter "FullyQualifiedName~MyCompany.MyShop.Backend.Tests.Unit"
-        working-directory: system/multitier/backend-dotnet
+        run: gh optivem component test run --component backend --suite unit
+
+      - name: Run Narrow Integration Tests
+        run: gh optivem component test run --component backend --suite integration
+
+      - name: Run Component Tests
+        run: gh optivem component test run --component backend --suite component
+
+      - name: Run Provider Verification (Pact)
+        run: gh optivem component test run --component backend --suite provider-verification
 
       # === Run Linter ===
       - name: Run Linter

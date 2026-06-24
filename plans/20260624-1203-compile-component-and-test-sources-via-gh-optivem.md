@@ -109,12 +109,24 @@ both means touching each workflow twice. See OQ4 (coordination with the 0916 wav
   B regardless). Coordinates cleanly with OQ4: land the CLI verb first, then a single wave edit
   applies gating + the CLI compile call together.
 
+- **OQ2 → Reuse the existing compile architecture; do NOT add a `compileCommands` field to
+  `component-tests.yaml`.** Codebase check (2026-06-24) showed `gh optivem` already has a compile
+  surface whose per-language command is centralized in `internal/build/compiler/commandsFor(lang)`
+  — *not* stored as a YAML string (`system compile` / `test compile` / bare `compile` all dispatch
+  from there). The Java gap is literally that function returning `compileJava compileTestJava`
+  (main + unit only). So both plan-OQ2 options were inconsistent: a `compileCommands` list in
+  `component-tests.yaml` (or folding it into `setupCommands`) would create a **second** home for
+  the compile command, the opposite of single-source-of-truth. *Resolution:* (a) extend the
+  `compiler` package so it also compiles the component's integration/component test source sets,
+  and (b) expose it as a **tier-scoped compile verb** — `gh optivem component-test compile`, a
+  sibling of `component-test run`/`setup` and parallel to `system compile` / `system-test compile`.
+  The verb's final (symmetric) name comes from the naming follow-up
+  [[20260624-1221-symmetric-gh-optivem-tier-noun-taxonomy]]; land that rename first (OQ4/OQ-C) so
+  the workflows are rewritten to the final verb once. Then (c) route the 7 workflows' raw
+  `Compile Code` step to the CLI compile verb, closing the single-source gap by *using* the
+  existing compile home rather than inventing a new one.
+
 ## Open questions
-- **OQ2 — (if B) config shape.** A dedicated `compileCommands:` list + a `compile` verb, or fold
-  the compile command into the existing suite-agnostic `setupCommands`? *Recommend:* a dedicated
-  `compileCommands` + `compile` verb — `setup` is harness prep (pre-warm), compile is a distinct
-  phase; keeping them separate mirrors mainstream lifecycle CLIs (the same rationale `run` vs
-  `setup` already follow).
 - **OQ3 — Java task form.** `compile*Java` tasks vs `*Classes` tasks (the latter also process
   resources)? *Recommend:* `*Classes` (matches what the suite tasks actually depend on).
 - **OQ4 — Coordinate with plan 0916's propagation wave.** 0916 Phase 2 still edits the same 7

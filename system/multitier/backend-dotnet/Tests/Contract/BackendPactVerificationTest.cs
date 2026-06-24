@@ -1,6 +1,10 @@
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using MyCompany.MyShop.Backend.Core.Entities;
 using MyCompany.MyShop.Backend.Data;
 using PactNet.Infrastructure.Outputters;
@@ -23,6 +27,20 @@ namespace MyCompany.MyShop.Backend.Tests.Contract;
 /// (so numeric / timestamptz semantics match the contract), in-process external stubs. Fails the
 /// build if the backend drifts from the contract.
 ///
+/// <para>The provider is hosted on a real Kestrel TCP port (not the in-memory <c>TestServer</c>):
+/// PactNet's verifier is the native Rust <c>libpact_ffi</c>, which sends real HTTP over a socket,
+/// so it cannot reach an in-memory test server. This mirrors the Java harness, which boots the app
+/// with <c>webEnvironment = RANDOM_PORT</c> for the same reason.</para>
+///
+/// <para>The external-system URLs and <c>EXTERNAL_SYSTEM_MODE=stub</c> are passed as process
+/// environment variables because that is how the gateways read them (env var first, config
+/// fallback second). <c>stub</c> mode is required so <c>ClockGateway</c> calls the WireMock clock
+/// instead of returning <c>DateTime.UtcNow</c> — the contract's time-sensitive states (e.g. the
+/// New Year blackout) depend on a controllable clock. This mirrors the Java harness's
+/// <c>external.system-mode=stub</c> + <c>erp.url</c>/<c>tax.url</c>/<c>clock.url</c> properties.
+/// The Pact suite runs in its own <c>dotnet test</c> process, so mutating env vars is isolated;
+/// they are restored on dispose regardless.</para>
+///
 /// <para>Test-layer separation is by namespace (the .NET equivalent of Java's source sets):
 /// suites select with <c>--filter "FullyQualifiedName~...Tests.Contract"</c>.</para>
 /// </summary>
@@ -40,12 +58,14 @@ public class BackendPactVerificationTest : IAsyncLifetime
     private WireMockServer _erp = null!;
     private WireMockServer _tax = null!;
     private WireMockServer _clock = null!;
-    private WebApplicationFactory<Program> _factory = null!;
+    private KestrelWebApplicationFactory _factory = null!;
     private HttpListener _stateListener = null!;
     private Thread _stateThread = null!;
     private int _statePort;
     private AppDbContext _db = null!;
     private bool _running = true;
+
+    private readonly Dictionary<string, string?> _savedEnv = new();
 
     public BackendPactVerificationTest(ITestOutputHelper output)
     {
@@ -60,23 +80,15 @@ public class BackendPactVerificationTest : IAsyncLifetime
         _tax = WireMockServer.Start();
         _clock = WireMockServer.Start();
 
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-                if (descriptor != null)
-                    services.Remove(descriptor);
+        // The gateways read these from environment variables first (config is only a fallback), so
+        // setting them via WebApplicationFactory config alone would not take effect. stub mode makes
+        // ClockGateway call the WireMock clock rather than DateTime.UtcNow.
+        SetEnv("EXTERNAL_SYSTEM_MODE", "stub");
+        SetEnv("ERP_API_URL", _erp.Url!);
+        SetEnv("TAX_API_URL", _tax.Url!);
+        SetEnv("CLOCK_API_URL", _clock.Url!);
 
-                services.AddDbContext<AppDbContext>(options =>
-                    options.UseNpgsql(_postgres.GetConnectionString()));
-            });
-
-            builder.UseSetting("ERP_API_URL", _erp.Url!);
-            builder.UseSetting("TAX_API_URL", _tax.Url!);
-            builder.UseSetting("CLOCK_API_URL", _clock.Url!);
-        });
+        _factory = new KestrelWebApplicationFactory(_postgres.GetConnectionString());
 
         // Resolve a scoped AppDbContext from the test factory and create the schema.
         var scope = _factory.Services.CreateScope();
@@ -106,7 +118,7 @@ public class BackendPactVerificationTest : IAsyncLifetime
         };
 
         new PactVerifier("backend", config)
-            .WithHttpEndpoint(_factory.Server.BaseAddress)
+            .WithHttpEndpoint(new Uri(_factory.ServerAddress))
             .WithFileSource(new FileInfo(pactPath))
             .WithProviderStateUrl(new Uri($"http://127.0.0.1:{_statePort}/"))
             .Verify();
@@ -122,6 +134,19 @@ public class BackendPactVerificationTest : IAsyncLifetime
         _tax.Stop();
         _clock.Stop();
         await _postgres.DisposeAsync();
+        RestoreEnv();
+    }
+
+    private void SetEnv(string key, string value)
+    {
+        _savedEnv[key] = Environment.GetEnvironmentVariable(key);
+        Environment.SetEnvironmentVariable(key, value);
+    }
+
+    private void RestoreEnv()
+    {
+        foreach (var (key, value) in _savedEnv)
+            Environment.SetEnvironmentVariable(key, value);
     }
 
     // --- Provider-states HTTP listener ---
@@ -256,6 +281,81 @@ public class BackendPactVerificationTest : IAsyncLifetime
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
+    }
+
+    /// <summary>
+    /// Hosts the provider on a real Kestrel server bound to a free loopback port, so PactNet's
+    /// native verifier can reach it over a real socket. The default <see cref="WebApplicationFactory{TEntryPoint}"/>
+    /// uses an in-memory <c>TestServer</c> with no listening port, which the native verifier cannot
+    /// reach. Follows the documented ASP.NET Core "test with a real Kestrel server" pattern: build
+    /// the TestServer host, then re-build the same configured host using Kestrel and start it.
+    /// </summary>
+    private sealed class KestrelWebApplicationFactory : WebApplicationFactory<Program>
+    {
+        private readonly string _dbConnectionString;
+        private IHost? _kestrelHost;
+
+        public KestrelWebApplicationFactory(string dbConnectionString)
+        {
+            _dbConnectionString = dbConnectionString;
+        }
+
+        /// <summary>The real <c>http://127.0.0.1:&lt;port&gt;</c> address Kestrel bound to.</summary>
+        public string ServerAddress
+        {
+            get
+            {
+                EnsureServer();
+                return ClientOptions.BaseAddress.ToString();
+            }
+        }
+
+        private void EnsureServer()
+        {
+            if (_kestrelHost is null)
+                using (CreateDefaultClient()) { }
+        }
+
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+                if (descriptor != null)
+                    services.Remove(descriptor);
+
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseNpgsql(_dbConnectionString));
+            });
+        }
+
+        protected override IHost CreateHost(IHostBuilder builder)
+        {
+            // Build the TestServer host first, before switching the builder to Kestrel.
+            var testHost = builder.Build();
+
+            // Re-build the same configured host on Kestrel, bound to a free loopback port.
+            builder.ConfigureWebHost(webHostBuilder =>
+                webHostBuilder.UseKestrel().UseUrls("http://127.0.0.1:0"));
+            _kestrelHost = builder.Build();
+            _kestrelHost.Start();
+
+            // Publish the dynamically-assigned Kestrel address so ServerAddress / clients use it.
+            var addresses = _kestrelHost.Services.GetRequiredService<IServer>()
+                .Features.Get<IServerAddressesFeature>();
+            ClientOptions.BaseAddress = addresses!.Addresses.Select(a => new Uri(a)).Last();
+
+            testHost.Start();
+            return testHost;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+                _kestrelHost?.Dispose();
+        }
     }
 
     /// <summary>Routes the Pact native verifier output to xUnit's test output.</summary>

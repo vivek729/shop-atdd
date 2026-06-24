@@ -43,6 +43,20 @@ is the `contracts/README.md` revision plus confirming the false-green failure mo
 — the consumer-CI-push CI workflow + cross-repo auth, and any broker infra — is **gated behind multi-repo
 scaffolding actually existing** and is deferred to that point (Step 6), so it is not part of doing this now.
 
+**Execution risk & scope (what's safe to do now):**
+- **Low-risk, execute now — Steps 1, 4, 5 (documentation).** Confirm the false-green, evaluate CI-artifact,
+  and revise `contracts/README.md`. Single markdown file, no code, doesn't compile, reversible. One caveat:
+  `contracts/README.md` is live teaching material that the scaffolder copies into generated repos, so the
+  default-mechanism change is real guidance — but it is framed as the *forward-looking target*, which is
+  honest since multi-repo does not exist yet.
+- **Premature / blocked — defer Steps 2, 6.** consumer-CI-push CI + scaffolder support need separate
+  `*-frontend`/`*-backend` repos and cross-repo auth that do not exist today (confirmed monorepo). Design only;
+  do not wire or "test" plumbing that can't be exercised.
+- **Do not run locally — Step 3 (broker spike).** Standing up Postgres + the OSS broker via Docker hits the
+  no-self-initiated-local-docker rule and local Docker/Testcontainers is already flaky on this machine; it is
+  opt-in anyway. Keep it as a write-up.
+- **Recommended scope for `/execute-plan` now:** README revision (Steps 1, 4, 5) only; leave 2/3/6 deferred.
+
 ## Outcomes
 
 - A chosen **default $0 multi-repo mechanism** that eliminates the false-green (recommendation:
