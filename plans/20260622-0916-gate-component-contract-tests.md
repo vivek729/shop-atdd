@@ -1,5 +1,7 @@
 # 2026-06-22 09:16 UTC — Gate the test pyramid in EVERY commit-stage `run` job via `gh optivem component test run --suite`
 
+> 🤖 **Picked up by agent** — `Valentina_Desk` at `2026-06-24T11:52:15Z`
+
 > **Redrafted 2026-06-24.** Original draft proposed moving raw `./gradlew componentTest`
 > / `npm run test:*` into `run`, scoped to two workflows. Superseded twice: (1) the
 > suite→command mapping now lives in each project's **`component-tests.yaml`** and
@@ -62,9 +64,13 @@ Checkout → Should-Publish? → Compile
 
 ## ▶ Next executable step (resume here)
 
-Resolve **OQ1** (route `unit` through the CLI too, or keep the existing direct call?) and
-**OQ2** (Linter/Sonar position). Then apply **Step 1 (backend-java pilot)** and show the
-diff. **Do not start Step 2 (the wave) until the user confirms the pilot.**
+**At the CONFIRMATION GATE.** Open questions are resolved (OQ1 route unit via CLI — verified
+safe, the CLI runs the identical `./gradlew test` so jacoco/Sonar reuse is preserved; OQ2
+Linter/Sonar after the test block; OQ4 one setup per job — verified; OQ3 coverage stays
+unit-only). **Step 1 (backend-java pilot) edits are applied** to
+`.github/workflows/multitier-backend-java-commit-stage.yml` and pass `actionlint`, but are
+**uncommitted**. Next: get user OK to commit + push so CI runs, confirm the run is green, then
+get explicit sign-off before starting **Step 2 (the propagation wave)**.
 
 ## Steps
 
