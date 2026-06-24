@@ -1,138 +1,160 @@
-# 2026-06-22 09:16 UTC — Promote component + contract tests to gating commit-stage steps
+# 2026-06-22 09:16 UTC — Gate the test pyramid in EVERY commit-stage `run` job via `gh optivem component test run --suite`
+
+> **Redrafted 2026-06-24.** Original draft proposed moving raw `./gradlew componentTest`
+> / `npm run test:*` into `run`, scoped to two workflows. Superseded twice: (1) the
+> suite→command mapping now lives in each project's **`component-tests.yaml`** and
+> `gh optivem component test run --suite <id>` is the canonical selector; (2) user expanded
+> scope (2026-06-24) — **backend-java is the pilot; once confirmed, propagate to ALL 7
+> commit-stage workflows.** The `20260622-0846-...reconcile` baseline is committed
+> (`f7975dcf`, `8b708074`).
 
 ## TL;DR
 
-**Why:** Today the real component + consumer-Pact contract suites run in a
-**separate, non-gating `component-contract-tests` job** (parallel to `run`), so a
-failing component or contract test does **not** block the Docker image
-build/push. User decision (2026-06-22): these suites **should gate** — a broken
-component/contract test must stop the commit stage and the image from shipping.
+**Why:** Today the in-process suites (unit / narrow-integration / component /
+provider-verification) run in a **separate, parallel `component-tests` job** that does
+**not** block the Docker image. `run` (which builds and pushes the image) only
+`needs: check`, so a broken suite reds the workflow **but the image still ships**. User
+decision (2026-06-22, reaffirmed + scope-expanded 2026-06-24): the pyramid **must gate the
+image**, **uniformly across every commit stage**.
 
-**End result:** In the two workflows that have real component/contract tests
-(`multitier-backend-java`, `multitier-frontend-react`), the suites run **inside
-the gating `run` job** in their canonical pipeline slots, the redundant separate
-job is removed, and the docs/diagram/README that currently say "opt-in, does not
-gate" are updated to match.
+**End result:** In **all 7 commit-stage workflows**, the suites run **inside the gating
+`run` job**, in test-pyramid order, **ahead of Build/Push**, each invoked as
+`gh optivem component test run [--component <c>] --suite <id>`. The redundant separate
+`component-tests` job is deleted everywhere. Suite definitions already exist in every
+`component-tests.yaml` — no test code moves. **Rollout is pilot-first:** land backend-java,
+get user sign-off, then propagate the identical pattern to the other 6.
 
-## ⚠️ Supersedes / conflicts with the in-flight reconcile plan
+**Not in conflict with the "opt-in" memory:** "opt-in / off the default build" means off a
+*cloning student's* local `./gradlew build` / `npm test`. CI explicitly invoking the suites
+to gate the image is compatible. The cost memory is about Pact **Broker/PactFlow infra** —
+not Testcontainers/WireMock ($0, zero-standing-infra) in CI.
+[[feedback_component_pact_layer_opt_in]] [[feedback_templates_propagate_cost_to_students]]
 
-This reverses decisions in **`20260622-0846-commit-stage-diagram-yaml-reconcile.md`**
-(currently *picked up by agent `ValentinaLaptop`*). Before executing, decide how
-the two plans interact — do not run them against each other blindly:
+## The suites already exist (every `component-tests.yaml`)
 
-- That plan **Step 4** fixes the component/contract stubs by **skipping** them
-  (`if: false`, "pending"). For `backend-java` + `frontend-react` those slots are
-  now **filled with real gating tests instead** — the skip treatment no longer
-  applies to those two workflows (it still applies to monolith ×3 and the
-  .NET/TS backends, which have no real tests).
-- That plan **Step 2b / diagram** draws the component/contract layer as an
-  **optional dashed, non-gating parallel branch** in `docs/pipeline/commit-stage.md`.
-  Gating means redrawing those as **inline gating stages** (at least for the
-  where-wired-up case).
-- The README, the workflow comment blocks, and that plan's "Decisions" all
-  document **"opt-in, does not gate."** All three need updating (see Step 4).
+| Workflow | `--component` | Suites (pyramid order) |
+|---|---|---|
+| `monolith-java` | _(none)_ | unit, integration, component, provider-verification |
+| `monolith-dotnet` | _(none)_ | unit, integration, component, provider-verification |
+| `monolith-typescript` | _(none)_ | unit, integration, component, provider-verification |
+| `multitier-backend-java` _(pilot)_ | `backend` | unit, integration, component, provider-verification |
+| `multitier-backend-dotnet` | `backend` | unit, integration, component, provider-verification |
+| `multitier-backend-typescript` | `backend` | unit, integration, component, provider-verification |
+| `multitier-frontend-react` | `frontend` | unit, integration, component _(consumer — no provider-verification)_ |
 
-> **Note:** this plan may need to be refined again once the `...0846...` reconcile
-> plan finishes — its final stub-skipping / diagram / grouping-comment changes
-> could shift the baseline these steps build on. Re-check this plan against the
-> committed state of the two multitier workflows before executing.
+`requiresDocker` varies per suite/project (see each yaml) — the Docker daemon on GitHub
+ubuntu runners covers Testcontainers/WireMock; no extra `buildx` needed for the test steps.
 
-## Scope
+> ⚠️ **Stub reality:** several suites currently point at placeholder tests (e.g. backend-java
+> `unit` → `SimpleArithmeticTest` "onePlusOne"). Gating them is still correct — it locks the
+> pyramid in place so that as real tests replace stubs they are **already gated**. Confirm
+> each suite is green in the existing `component-tests` job before deleting that job.
 
-**In scope — the only two workflows with real component/contract tests:**
-- `.github/workflows/multitier-frontend-react-commit-stage.yml`
-  (`npm run test:component`, `npm run test:pact`)
-- `.github/workflows/multitier-backend-java-commit-stage.yml`
-  (`./gradlew componentTest` — covers component + Pact in the `componentTest`
-  source set)
+## Target `run` pipeline (applies to all 7)
 
-**Out of scope — stubs stay pending (handled by the reconcile plan's `if: false`):**
-- `monolith-{java,dotnet,typescript}-commit-stage.yml`
-- `multitier-backend-{dotnet,typescript}-commit-stage.yml`
-- These have no real component/contract tests to gate.
+```
+Checkout → Should-Publish? → Compile
+  → Unit → Narrow Integration → Component → Provider Verification   ← NEW gating block
+  → Linter → Sonar → Build image → Push image
+```
+
+(Frontend: same, minus Provider Verification.)
 
 ## ▶ Next executable step (resume here)
 
-Resolve **Open Question 1** (Java step granularity — one `componentTest` step vs
-two) and **Open Question 4** (how this interacts with the in-flight reconcile
-plan — pause it, or let it own monolith/.NET/TS while this owns the two multitier
-workflows). Then apply Step 1 (frontend-react) as the pilot and show the diff
-before touching Java or the docs.
+Resolve **OQ1** (route `unit` through the CLI too, or keep the existing direct call?) and
+**OQ2** (Linter/Sonar position). Then apply **Step 1 (backend-java pilot)** and show the
+diff. **Do not start Step 2 (the wave) until the user confirms the pilot.**
 
 ## Steps
 
-- [ ] **Step 1 — frontend-react: make component + contract gating.** In the `run`
-  job, replace the two TODO stub steps with the real commands (add
-  `working-directory: system/multitier/frontend-react`):
-  - `Run Component Tests` → `npm run test:component`
-  - `Run Contract Tests` → `npm run test:pact`
-  Then **delete** the separate `component-contract-tests` job and its comment
-  block (it re-did checkout + setup-node + `npm ci` only to run the same two
-  commands). Position is unchanged: after Compile, before Linter → Sonar →
-  Docker, so a failure gates the build/push.
-- [ ] **Step 2 — backend-java: make component + contract gating.** Move
-  `./gradlew componentTest` into the `run` job and delete the separate
-  `component-contract-tests` job + comment. **Decide granularity (OQ1):** either
-  one step `Run Component + Contract Tests` running `componentTest`, or two steps
-  via test filtering to keep the diagram's separate Component/Contract boxes.
-  Note: this adds **Testcontainers-Postgres (Docker)** to the gating path — see
-  Risks.
-- [ ] **Step 3 — diagram.** Update `docs/pipeline/commit-stage.md`: the
-  component/contract stages move from the dashed non-gating opt-in branch onto
-  the **main gating line** (for the where-wired-up case). Reconcile wording with
-  the 0846 plan's Step 2b so the two don't fight.
-- [ ] **Step 4 — docs/comments reframe.** Update the "does not gate" language:
-  - `system/multitier/frontend-react/README.md` — the "Optional: in-process
-    component & contract tests" section (reframe per OQ2 outcome).
-  - The removed workflow comment blocks (handled by Steps 1–2).
-  - Add a cross-reference / superseding note to
-    `20260622-0846-commit-stage-diagram-yaml-reconcile.md`.
-- [ ] **Step 5 — verify.** Lint the two workflows; run `npm run test:component`
-  + `npm run test:pact` locally for frontend, and `./gradlew componentTest` for
-  Java, to confirm they pass as gating steps (ask before any system-test run —
-  memory rule). Confirm Docker is available for the Java Testcontainers path.
+### Phase 1 — Pilot
+
+- [ ] **Step 1 — backend-java: gate the suites in `run`.** In the `run` job, after
+  `Compile Code`, add (job already has Setup Java + Gradle):
+  - `Install gh-optivem CLI Extension` (`optivem/actions/install-gh-optivem@v1`)
+  - `Set Up Component Test Harness` → `gh optivem component test setup --component backend`
+  - `Run Narrow Integration Tests` → `gh optivem component test run --component backend --suite integration`
+  - `Run Component Tests` → `... --suite component`
+  - `Run Provider Verification (Pact)` → `... --suite provider-verification`
+  Keep the existing `Run Unit Tests: ./gradlew test` (OQ1). Order per OQ2. Then **delete** the
+  separate `component-tests` job and drop it from `summary`'s `needs`. Verify with
+  `actionlint`; rely on CI for the Docker suites
+  ([[project_local_testcontainers_blocked]]).
+- [ ] **CONFIRMATION GATE** — show the user the backend-java diff + a green CI run. **Get
+  explicit sign-off before Phase 2.** ([[feedback_ask_before_commit]])
+
+### Phase 2 — Propagation wave (only after sign-off)
+
+- [ ] **Step 2 — propagate the identical pattern to the other 6 commit stages.** For each,
+  insert the CLI install + `component test setup` (+ `--component backend|frontend` where the
+  multitier ones use it; monolith uses none) and the per-project `--suite` steps in pyramid
+  order ahead of Build/Push, then delete the separate `component-tests` job + its `summary`
+  need. One workflow per unit of work:
+  - [ ] `multitier-frontend-react` — suites: unit, integration, component (no provider-verification)
+  - [ ] `multitier-backend-dotnet` — unit, integration, component, provider-verification
+  - [ ] `multitier-backend-typescript` — unit, integration, component, provider-verification
+  - [ ] `monolith-java` — unit, integration, component, provider-verification
+  - [ ] `monolith-dotnet` — unit, integration, component, provider-verification
+  - [ ] `monolith-typescript` — unit, integration, component, provider-verification
+  Each replaces the 0846 reconcile's `if: false` stub steps for that workflow.
+  *Note:* frontend `run` runs no tests today → this gates its unit/integration/component for
+  the first time.
+
+### Phase 3 — Docs & diagram
+
+- [ ] **Step 3 — diagram.** `docs/pipeline/commit-stage.md`: move the component/contract
+  layer from the dashed non-gating opt-in branch onto the **main gating line**
+  (Unit → Integration → Component → Provider Verification → Build), now the rule for *all*
+  workflows. Reconcile with the 0846 plan's Step 2b.
+- [ ] **Step 4 — docs/comments reframe.** Update "does not gate" language:
+  `system/multitier/frontend-react/README.md`; any removed-job comment blocks; confirm each
+  `component-tests.yaml` opt-in framing still reads correctly (suites stay off the *local*
+  default build; CI gates them — say so).
+- [ ] **Step 5 — verify all.** `actionlint` every changed workflow. Cannot verify Docker
+  suites locally ([[project_local_testcontainers_blocked]]); rely on CI. Ask before any
+  local system-test/stack run ([[feedback_ask_before_local_system_tests]]). Consider
+  `./compile-all.sh` is irrelevant here (YAML only) — verification is actionlint + a green CI
+  run per workflow.
 
 ## Decisions
 
-1. **Gate the component + contract suites** (user, 2026-06-22) — overrides the
-   prior "opt-in, non-gating" design for the two multitier workflows that have
-   real tests.
-2. **Scope to where real tests exist** — only `frontend-react` + `backend-java`.
-   Monolith and .NET/TS backends keep pending/skipped stubs.
-3. **Remove the separate `component-contract-tests` job** rather than keep it
-   alongside — gating in `run` makes it redundant duplicate work.
+1. **Gate the test pyramid in `run`** (user, 2026-06-22 / reaffirmed 2026-06-24) — failing
+   suite blocks the image.
+2. **Uniform across ALL 7 commit stages** (user, 2026-06-24) — not just the two multitier
+   workflows. Pilot backend-java, then propagate.
+3. **Select via `gh optivem component test run --suite <id>`**, not raw build-tool commands —
+   `component-tests.yaml` is the single source of truth; consistent across languages.
+4. **Delete the separate `component-tests` job everywhere** — gating in `run` makes it
+   redundant.
+5. **Provider verification is its own gating step** (`provider-verification` suite) — already
+   split by package filter; frontend omits it (consumer side).
+6. **Pilot-first rollout with a confirmation gate** — no wave until the backend-java pilot is
+   signed off green.
 
 ## Open questions
 
-- **Q1 — Java step granularity.** `componentTest` is one Gradle task covering
-  both component and Pact tests. One gating step (`Run Component + Contract
-  Tests`) or two (split by test filter to match the diagram's separate boxes)?
-  *Recommend:* one step; rename to match, accept the diagram showing them merged
-  for Java.
-- **Q2 — Should the *local* default also run them?** CI would gate via
-  `npm run test:component`/`test:pact` and `./gradlew componentTest`, but local
-  `npm test` / `./gradlew test` still **exclude** them — so devs don't run
-  locally what CI now blocks on. Keep that split (dormant locally, gating in CI),
-  or fold them into the local default too so dev experience matches the gate?
-  *Recommend:* decide explicitly — the split is surprising.
-- **Q3 — Testcontainers cost in the gate (Java).** Moving `componentTest` into
-  `run` adds Docker-based Postgres startup to **every** commit/PR, and a flaky
-  Testcontainers start would now block image publish. Acceptable, or keep Java
-  non-gating while only frontend gates? *Recommend:* accept, but flag the
-  flake-blocks-publish risk.
-- **Q4 — Interaction with the 0846 reconcile plan.** It's mid-execution. Options:
-  (a) pause it, fold this in, resume; (b) let 0846 own monolith/.NET/TS stub
-  skipping while this plan owns the two multitier workflows. *Recommend:* (b),
-  with an explicit hand-off note in both plans.
-- **Q5 — Provider-side Pact verification.** Gating the *consumer* pact generation
-  (frontend) + component is one half. Is the **provider** verification (Java
-  backend verifying the contract in `contracts/`) wired into CI and should it
-  also gate? Out of scope here unless confirmed needed.
+- **OQ1 — route `unit` through the CLI?** Backends already run `./gradlew test` (Sonar reuses
+  its jacoco). Keep the direct call for backends (preserve jacoco reuse) and route only the
+  Docker suites via CLI; for frontend use `--suite unit` (no unit step there today).
+  *Recommend:* per-language as stated — but pick one convention and apply it uniformly in the
+  wave.
+- **OQ2 — Linter/Sonar position.** *Recommend:* Compile → test block → Linter → Sonar → Build
+  (pyramid contiguous, fails fast before slower Sonar).
+- **OQ3 — Sonar coverage scope.** Keep unit-only for now; folding integration/component
+  coverage into Sonar is a separate change.
+- **OQ4 — `component test setup` once per job.** Confirm a single setup covers all suites in
+  the job. *Recommend:* one setup step before the first suite.
 
 ## Risks
 
-- **Testcontainers in the gate** (Java) — see Q3; flaky DB startup blocks publish.
-- **Lost parallelism** — the suites ran concurrently with build/push; now serial
-  in `run`, slightly longer gate wall-clock.
-- **Doc drift if Step 4 is skipped** — README + diagram + 0846 plan still claim
-  "opt-in, does not gate," which would now be false.
+- **Testcontainers/WireMock in the gate** — flaky Docker startup now blocks image publish
+  across every workflow. Use existing retry wrappers where the CLI exposes them; accept the
+  trade-off.
+- **Stub suites gating** — gating placeholder tests is intended, but a currently-red suite
+  starts blocking immediately. Confirm green in the existing job before deleting it
+  (per-workflow).
+- **Lost parallelism** — suites ran concurrently with build/push; now serial in `run`.
+- **Wave blast radius** — touches all 7 workflows. Pilot + confirmation gate contains it; do
+  one workflow per commit so a regression is bisectable.
+- **Doc drift if Steps 3–4 skipped** — README + diagram still claim "opt-in, does not gate."
