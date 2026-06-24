@@ -104,8 +104,14 @@ both means touching each workflow twice. See OQ4 (coordination with the 0916 wav
   replaces. B-only gives single source of truth from day one and edits each of the 7 workflows
   exactly once (vs. twice for A→B). The one tradeoff — workflows can't adopt the verb until a
   gh-optivem release ships it — is a sequencing matter, not a blocker (the release was needed for
-  B regardless). Coordinates cleanly with OQ4: land the CLI verb first, then a single wave edit
-  applies gating + the CLI compile call together.
+  B regardless).
+
+  **Update (2026-06-24): the "single wave" coordination is moot.** Plan 0916's gating wave has
+  already shipped and the plan was deleted (commit `9d6f5caf`, "all phases landed"). The 7
+  commit-stage workflows have therefore *already* been edited once (for gating), so adopting the
+  CLI compile verb is now unavoidably a **second** edit to the same compile/test region. That is a
+  sunk cost, not a blocker — B remains the chosen path; it simply no longer rides along with 0916.
+  See revised OQ4.
 
 - **OQ2 → Reuse the existing compile architecture; do NOT add a `compileCommands` field to
   `component-tests.yaml`.** Codebase check (2026-06-24) showed `gh optivem` already has a compile
@@ -127,25 +133,31 @@ both means touching each workflow twice. See OQ4 (coordination with the 0916 wav
 ## Open questions
 - **OQ3 — Java task form.** `compile*Java` tasks vs `*Classes` tasks (the latter also process
   resources)? *Recommend:* `*Classes` (matches what the suite tasks actually depend on).
-- **OQ4 — Coordinate with plan 0916's propagation wave.** 0916 Phase 2 still edits the same 7
-  workflows' compile/test region. *Recommend:* **decide OQ1 before the 0916 wave runs** so each
-  workflow is edited once — if Option B is chosen, land the CLI verb first, then the 0916 wave
-  applies the gating steps *and* the CLI compile call together. [[feedback_plan_over_parallel_tickets]]
+- **OQ4 — ~~Coordinate with plan 0916's propagation wave.~~ RESOLVED / MOOT.** 0916 has already
+  shipped (all phases landed; plan deleted in commit `9d6f5caf`), so its gating steps are already
+  in the 7 commit-stage workflows. The "edit each workflow once by folding compile into the 0916
+  wave" optimization is no longer available — adopting the CLI compile verb is a standalone second
+  edit to those workflows. No coordination remains; proceed with Option B independently once the
+  gh-optivem release ships. [[feedback_plan_over_parallel_tickets]]
 - **OQ5 — `frontend-react`.** Confirm whether the frontend even has a separable compile step and
   test-source coverage gap; it may be out of scope.
 
 ## Risks
 - **CLI release coupling (Option B):** workflows can't adopt the compile verb until a gh-optivem
   release ships it — sequence the release ahead of the workflow edits.
-- **Double-edit churn:** doing A then B touches each workflow's compile step twice unless folded
-  into the 0916 wave (OQ4).
+- **Double-edit churn:** the 7 workflows were already edited once by 0916's (now-shipped) gating
+  wave, so adopting the CLI compile verb is a second edit regardless (the fold-into-0916 option is
+  gone — see OQ4). Doing A *then* B would add a third. Going straight to B (OQ1) keeps it to that
+  one remaining edit.
 - **Over-compiling:** widening Java compile adds a little wall-clock, but it's strictly cheaper
   than discovering the same error after Testcontainers startup.
 
 ## ▶ Next executable step (resume here)
 
-This plan is **draft, awaiting refinement** — the next move is a `/refine-plan` pass to resolve
-**OQ1–OQ5** (especially OQ1 A/B/A→B and OQ4 coordination with plan 0916's wave), then verify the
-Phase 0 per-language reality. Do **not** start editing workflows until OQ1 + OQ4 are settled, so
-the 7 commit-stage workflows are edited the minimum number of times. Related:
-[[20260622-0916-gate-component-contract-tests]] (sibling — same workflows, suite execution).
+This plan is **draft, awaiting refinement** — OQ1, OQ2, and OQ4 are now resolved (Option B;
+reuse the existing `compiler` package; 0916 coordination is moot). The remaining open questions
+are **OQ3** (Java task form) and **OQ5** (`frontend-react` scope), plus the Phase 0 per-language
+coverage verification. The hard blocker before any workflow edit is sequencing: land the verb
+rename in [[20260624-1221-symmetric-gh-optivem-tier-noun-taxonomy]], then ship the gh-optivem
+compile verb release, then route the 7 workflows to it. Plan 0916 (gating, same workflows) has
+already shipped and been deleted — no longer a live dependency.
