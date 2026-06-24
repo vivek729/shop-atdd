@@ -64,31 +64,25 @@ Checkout → Should-Publish? → Compile
 
 ## ▶ Next executable step (resume here)
 
-**At the CONFIRMATION GATE.** Open questions are resolved (OQ1 route unit via CLI — verified
-safe, the CLI runs the identical `./gradlew test` so jacoco/Sonar reuse is preserved; OQ2
-Linter/Sonar after the test block; OQ4 one setup per job — verified; OQ3 coverage stays
-unit-only). **Step 1 (backend-java pilot) edits are applied** to
-`.github/workflows/multitier-backend-java-commit-stage.yml` and pass `actionlint`, but are
-**uncommitted**. Next: get user OK to commit + push so CI runs, confirm the run is green, then
-get explicit sign-off before starting **Step 2 (the propagation wave)**.
+**Phase 1 pilot is DONE and green (`5d8db666`, run `28096815510`).** Next is **Step 2 — the
+propagation wave** to the other 6 commit-stage workflows, **but it needs the user's explicit
+go** and a coordination decision first: a sibling plan
+[[20260624-1203-compile-component-and-test-sources-via-gh-optivem]] proposes routing
+**compilation** through the CLI too, touching the **same 7 workflows' compile/test region**. To
+avoid editing each workflow twice, **settle that plan's OQ1/OQ4 before running this wave** — if
+its Option B is chosen, land the CLI compile verb first, then this wave applies the gating steps
+*and* the CLI compile call together. Otherwise, run Step 2 as written (gating only).
 
 ## Steps
 
-### Phase 1 — Pilot
+### Phase 1 — Pilot ✅ DONE
 
-- [ ] **Step 1 — backend-java: gate the suites in `run`.** In the `run` job, after
-  `Compile Code`, add (job already has Setup Java + Gradle):
-  - `Install gh-optivem CLI Extension` (`optivem/actions/install-gh-optivem@v1`)
-  - `Set Up Component Test Harness` → `gh optivem component test setup --component backend`
-  - `Run Narrow Integration Tests` → `gh optivem component test run --component backend --suite integration`
-  - `Run Component Tests` → `... --suite component`
-  - `Run Provider Verification (Pact)` → `... --suite provider-verification`
-  Keep the existing `Run Unit Tests: ./gradlew test` (OQ1). Order per OQ2. Then **delete** the
-  separate `component-tests` job and drop it from `summary`'s `needs`. Verify with
-  `actionlint`; rely on CI for the Docker suites
-  ([[project_local_testcontainers_blocked]]).
-- [ ] **CONFIRMATION GATE** — show the user the backend-java diff + a green CI run. **Get
-  explicit sign-off before Phase 2.** ([[feedback_ask_before_commit]])
+Step 1 (backend-java) landed in `5d8db666`: the four suites (unit/integration/component/
+provider-verification) now run via `gh optivem component test run --suite` inside the gating
+`run` job ahead of Build/Push, the parallel `component-tests` job is deleted, and OQ1 (unit via
+CLI), OQ2 (Linter/Sonar after the block) + OQ4 (one setup) are resolved. Confirmed green:
+workflow_dispatch run `28096815510` passed end-to-end (pyramid + Build and Push). Awaiting the
+user's explicit go for the Phase 2 wave.
 
 ### Phase 2 — Propagation wave (only after sign-off)
 

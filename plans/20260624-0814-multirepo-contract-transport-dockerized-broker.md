@@ -68,28 +68,33 @@ to revise `contracts/README.md` (and any scaffolder/CI follow-on).
   scaffolder or CI-workflow support (e.g. the cross-repo push workflow), capture that as concrete edits or a
   further plan — do not bake broker infra into the default path.
 
-## Open questions
+## Resolved decisions
 
-Each carries a recommendation (`→`).
+- **Default $0 multi-repo mechanism → consumer-CI-push.** It is the git-only option that best mimics the
+  Pact Broker's pull model: the provider always verifies *the contract the consumer just produced*, which
+  eliminates the false-green. It also keeps local provider-verification working (the pact physically lands in
+  the provider repo, so the backend verifies offline). CI-artifact hand-off was rejected as default because
+  it loses local offline verification; manual-duplicate is demoted to the explicitly-compromised fallback.
+  Mainstream industry practice for this transport is actually a **Pact Broker** (publish + webhook + pull +
+  `can-i-deploy`) — consumer-CI-push is the deliberate $0 approximation, and the broker is carried as the
+  labelled opt-in production answer (see the broker decision below).
 
-- **Default $0 multi-repo mechanism?** consumer-CI-push vs CI-artifact vs manual-duplicate.
-  → **Recommend consumer-CI-push** — git-only, $0, no standing infra, and (unlike manual duplication)
-  eliminates the false-green because the provider always verifies the contract the consumer just pushed.
-  Manual duplication stays documented only as the explicitly-compromised fallback.
-- **Dockerized OSS broker: ephemeral or persistent — or neither, for the teaching default?**
-  → **Recommend: neither on the default path.** Present the persistent self-hosted broker as the
-  **opt-in production answer** (it's where `can-i-deploy` and the compatibility matrix actually live); call
-  out that an ephemeral CI-only broker is a demo, not a workflow. Keep cost/infra off the default per
-  `feedback_templates_propagate_cost_to_students`.
-- **Cross-repo push auth?** PAT vs GitHub App vs `GITHUB_TOKEN` (can't push to another repo by default).
-  → **Recommend: a scoped GitHub App / fine-grained PAT**, documented as the one piece of setup the
-  multi-repo $0 mode requires — and surfaced as such (not hidden).
-- **Does the gh-optivem scaffolder support a multi-repo layout today, or is this forward-looking?**
-  → **Confirm during Step 1.** If multi-repo scaffolding isn't built yet, this plan documents the *target*
-  transport so it's designed-in when it lands, rather than retrofitted.
-- **Teach `can-i-deploy`?** It's the broker's headline feature and free on the OSS broker.
-  → **Recommend: yes, as part of the opt-in broker lesson** — it's the concrete payoff that explains *why*
-  you'd adopt a broker over the git mechanisms.
+- **Dockerized OSS broker → persistent when adopted, but neither on the default path.** The default scaffold
+  stays $0 + zero-infra (`feedback_templates_propagate_cost_to_students`), so no broker is wired in. When the
+  broker *is* taught as the opt-in production answer it must be **persistent** — that is where `can-i-deploy`
+  and the compatibility matrix actually live. An ephemeral CI-only broker throws away the cross-run history
+  that justifies a broker, so it is documented as a demo, not a workflow.
+- **Cross-repo push auth → scoped GitHub App (fine-grained PAT as the simpler alternative).** `GITHUB_TOKEN`
+  cannot push to another repo by default; the mainstream cross-repo-automation choice is a scoped GitHub App
+  (short-lived installation tokens). This is documented as the one explicit setup step the multi-repo $0 mode
+  requires — surfaced, not hidden.
+- **Scaffolder multi-repo support → forward-looking (confirmed).** The repo is a monorepo today
+  (`system/multitier/{backend-java,frontend-react}` in one repo); `contracts/README.md` already describes the
+  `*-frontend`/`*-backend` split as a target, but no separate repos exist. This plan therefore documents the
+  *target* transport so it is designed-in when multi-repo scaffolding lands, rather than retrofitted.
+- **Teach `can-i-deploy` → yes, inside the opt-in broker lesson.** It is the broker's headline payoff and the
+  concrete reason to adopt a broker over the git mechanisms, so it belongs in the broker lesson rather than
+  the $0 default path.
 
 ## Out of scope
 
