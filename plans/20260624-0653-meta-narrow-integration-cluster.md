@@ -8,9 +8,9 @@
 
 ## ▶ Next executable step (resume here)
 
-**Wave 1 is pushed and awaiting CI.** Once the `integration` suites for backend-java and frontend-react are green in CI, re-run `/execute-plan plans/20260624-0653-meta-narrow-integration-cluster.md` to start Wave 2 (rollout + provider tests + frontend docs).
+**Wave 2 is ready to start.** Wave 1 CI gate is green (backend-java + frontend-react `integration` suites both passed, 2026-06-24). Re-run `/execute-plan plans/20260624-0653-meta-narrow-integration-cluster.md` to execute Wave 2 (rollout + provider tests + frontend docs).
 
-**Current position:** Wave 1 pushed (2026-06-24); **next = wait for CI green, then Wave 2** (see Wave status).
+**Current position:** Wave 1 ✅ done (2026-06-24); **next = Wave 2** (see Wave status).
 
 ## Execution protocol (how `/execute-plan` drives this parent)
 
@@ -30,8 +30,8 @@ This means a single `/execute-plan <this file>` advances **one wave** (as far as
 ## Wave status
 
 - **Wave 0 — planning/refine:** ✅ done (2026-06-24) — all sub-plans refined, OQ4 flipped, rename plan `0824` created, decisions settled.
-- **Wave 1 — backend-java pilot + provider-verification audit + frontend narrow-integration:** ⏳ **awaiting-CI** (pushed 2026-06-24). Units done: U2(java) `1801` Steps 1–3; U3(audit) `1941` Steps 1–2. **Exit gate:** `1801` `integration` suites (Java + frontend) green in CI.
-- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** ⛔ blocked until Wave 1 CI gate green. Units: U4 `1944`; U3(complete) `1941` Step 3; U5 `1957`; rename `0824`; then the joint `docs/pipeline/commit-stage.md` pass (`1801` Step 6 + `1941` Step 4). **Exit gate:** push + full pyramid green in CI.
+- **Wave 1 — backend-java pilot + provider-verification audit + frontend narrow-integration:** ✅ done (2026-06-24) — integration suites green in CI (backend-java + frontend-react). Also fixed: `integrationTest/resources/application-test.yml` added (Flyway); gh-optivem v1.6.41 released (component command).
+- **Wave 2 — rollout + provider tests + frontend docs + suite rename:** 🟡 ready to start. Units: U4 `1944`; U3(complete) `1941` Step 3; U5 `1957`; rename `0824`; then the joint `docs/pipeline/commit-stage.md` pass (`1801` Step 6 + `1941` Step 4). **Exit gate:** push + full pyramid green in CI.
 
 ## Target state
 
