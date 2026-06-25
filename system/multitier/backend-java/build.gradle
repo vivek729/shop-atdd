@@ -26,12 +26,15 @@ java {
 	}
 }
 
-// Opt-in component + Pact contract test layer, kept off the default `test`/`build` so the
-// template's default build stays fast and Docker-light. Run with `./gradlew componentTest`.
+// Opt-in test layers, kept off the default `test`/`build` so the template's build stays fast and Docker-light.
 sourceSets {
 	componentTest {
 		compileClasspath += sourceSets.main.output
 		runtimeClasspath += sourceSets.main.output
+	}
+	contractTest {
+		compileClasspath += sourceSets.componentTest.output + sourceSets.main.output
+		runtimeClasspath += sourceSets.componentTest.output + sourceSets.main.output
 	}
 	integrationTest {
 		compileClasspath += sourceSets.main.output
@@ -42,6 +45,8 @@ sourceSets {
 configurations {
 	componentTestImplementation.extendsFrom testImplementation
 	componentTestRuntimeOnly.extendsFrom testRuntimeOnly
+	contractTestImplementation.extendsFrom componentTestImplementation
+	contractTestRuntimeOnly.extendsFrom componentTestRuntimeOnly
 	integrationTestImplementation.extendsFrom testImplementation
 	integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
@@ -102,12 +107,21 @@ tasks.withType(Test).configureEach {
 }
 
 tasks.register('componentTest', Test) {
-	description = 'Runs in-process component + Pact contract tests (requires Docker). Opt-in; not part of `build`.'
+	description = 'Runs in-process component tests (requires Docker). Opt-in; not part of `build`.'
 	group = 'verification'
 	testClassesDirs = sourceSets.componentTest.output.classesDirs
 	classpath = sourceSets.componentTest.runtimeClasspath
 	useJUnitPlatform()
 	shouldRunAfter tasks.named('test')
+}
+
+tasks.register('contractTest', Test) {
+	description = 'Runs Pact provider-verification contract tests (requires Docker). Opt-in; not part of `build`.'
+	group = 'verification'
+	testClassesDirs = sourceSets.contractTest.output.classesDirs
+	classpath = sourceSets.contractTest.runtimeClasspath
+	useJUnitPlatform()
+	shouldRunAfter tasks.named('componentTest')
 }
 
 tasks.register('integrationTest', Test) {
