@@ -19,7 +19,7 @@ public class TaxGateway
         _taxUrl = Environment.GetEnvironmentVariable("TAX_API_URL") ?? configuration["Tax:Url"] ?? "http://localhost:9001/tax";
     }
 
-    public async Task<TaxDetailsResponse?> GetTaxDetailsAsync(string country)
+    public virtual async Task<TaxDetailsResponse?> GetTaxDetailsAsync(string country)
     {
         var url = $"{_taxUrl}/api/countries/{Uri.EscapeDataString(country)}";
 

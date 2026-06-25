@@ -20,7 +20,7 @@ public class ClockGateway
         _clockUrl = Environment.GetEnvironmentVariable("CLOCK_API_URL") ?? configuration["Clock:Url"] ?? "http://localhost:9001/clock";
     }
 
-    public async Task<DateTime> GetCurrentTimeAsync()
+    public virtual async Task<DateTime> GetCurrentTimeAsync()
     {
         if (_externalSystemMode == "real")
         {

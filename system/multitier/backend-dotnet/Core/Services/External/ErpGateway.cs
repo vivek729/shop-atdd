@@ -19,7 +19,7 @@ public class ErpGateway
         _erpUrl = Environment.GetEnvironmentVariable("ERP_API_URL") ?? configuration["Erp:Url"] ?? "http://localhost:9001/erp";
     }
 
-    public async Task<ProductDetailsResponse?> GetProductDetailsAsync(string sku)
+    public virtual async Task<ProductDetailsResponse?> GetProductDetailsAsync(string sku)
     {
         var url = $"{_erpUrl}/api/products/{Uri.EscapeDataString(sku)}";
 
@@ -47,7 +47,7 @@ public class ErpGateway
         }
     }
 
-    public async Task<GetPromotionResponse> GetPromotionDetailsAsync()
+    public virtual async Task<GetPromotionResponse> GetPromotionDetailsAsync()
     {
         var url = $"{_erpUrl}/api/promotion";
 

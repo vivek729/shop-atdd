@@ -24,7 +24,7 @@ public class CouponService
         _clockGateway = clockGateway;
     }
 
-    public async Task<decimal> GetDiscountAsync(string? couponCode)
+    public virtual async Task<decimal> GetDiscountAsync(string? couponCode)
     {
         if (string.IsNullOrWhiteSpace(couponCode))
         {
@@ -58,7 +58,7 @@ public class CouponService
         return coupon.DiscountRate;
     }
 
-    public async Task IncrementUsageCountAsync(string couponCode)
+    public virtual async Task IncrementUsageCountAsync(string couponCode)
     {
         var coupon = await _dbContext.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode);
         if (coupon != null)
