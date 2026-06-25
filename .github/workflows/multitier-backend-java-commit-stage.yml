@@ -122,7 +122,7 @@ jobs:
 
       # === Run Linter ===
       - name: Run Linter
-        run: ./gradlew checkstyleMain
+        run: ./gradlew checkstyleMain checkstyleTest
         working-directory: system/multitier/backend-java
 
       # === Run Static Code Analysis ===
