@@ -90,9 +90,7 @@ not at the consumer's gate before merge. The git mechanism has no pre-merge
 Pact Broker's **`can-i-deploy`** provides — this limitation is the deliberate
 reason to graduate to the opt-in broker.
 
-> **Note:** this mechanism is **forward-looking** — the current repo is a
-> monorepo, so consumer-CI-push is designed-in for when multi-repo scaffolding
-> lands rather than retrofitted.
+> **Note:** In the multitier multirepo scaffold, this step is wired by `gh optivem init`.
 
 ## Multi-repo options
 

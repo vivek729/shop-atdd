@@ -113,6 +113,29 @@ jobs:
       - name: Run Component Tests
         run: gh optivem component-test run --component frontend --suite component
 
+      # === Push Contract to Backend Repo ===
+      - name: Push contract to backend repo
+        if: |
+          steps.check-on-main.outputs.on-branch == 'true' &&
+          endsWith(github.repository, '-frontend')
+        env:
+          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+        run: |
+          BACKEND_REPO="${GITHUB_REPOSITORY%-frontend}-backend"
+          git clone --depth=1 "https://x-access-token:${REPO_TOKEN}@github.com/${BACKEND_REPO}.git" /tmp/backend-repo
+          mkdir -p /tmp/backend-repo/contracts
+          cp contracts/frontend-backend.json /tmp/backend-repo/contracts/frontend-backend.json
+          cd /tmp/backend-repo
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add contracts/frontend-backend.json
+          if git diff --cached --quiet; then
+            echo "No contract changes to push."
+          else
+            git commit -m "chore: update pact contract from frontend consumer CI"
+            git push
+          fi
+
       # === Run Linter ===
       - name: Run Linter
         run: npm run lint
