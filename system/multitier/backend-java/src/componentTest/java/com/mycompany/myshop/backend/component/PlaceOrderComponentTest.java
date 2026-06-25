@@ -20,25 +20,6 @@ import org.springframework.http.ResponseEntity;
  */
 class PlaceOrderComponentTest extends AbstractComponentTest {
 
-    private PlaceOrderRequest orderRequest(String sku, int quantity, String country, String couponCode) {
-        var request = new PlaceOrderRequest();
-        request.setSku(sku);
-        request.setQuantity(quantity);
-        request.setCountry(country);
-        request.setCouponCode(couponCode);
-        return request;
-    }
-
-    private ViewOrderDetailsResponse placeAndFetch(PlaceOrderRequest request) {
-        ResponseEntity<PlaceOrderResponse> placed =
-            restTemplate.postForEntity("/api/orders", request, PlaceOrderResponse.class);
-        assertThat(placed.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(placed.getBody()).isNotNull();
-
-        String orderNumber = placed.getBody().getOrderNumber();
-        return restTemplate.getForObject("/api/orders/" + orderNumber, ViewOrderDetailsResponse.class);
-    }
-
     @Test
     void computesTotalsFromPricePromotionAndTax() {
         stubClock("2026-03-10T12:00:00Z");
@@ -107,5 +88,24 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
             "/api/orders", orderRequest("MISSING-1", 1, "US", null), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    private PlaceOrderRequest orderRequest(String sku, int quantity, String country, String couponCode) {
+        var request = new PlaceOrderRequest();
+        request.setSku(sku);
+        request.setQuantity(quantity);
+        request.setCountry(country);
+        request.setCouponCode(couponCode);
+        return request;
+    }
+
+    private ViewOrderDetailsResponse placeAndFetch(PlaceOrderRequest request) {
+        ResponseEntity<PlaceOrderResponse> placed =
+            restTemplate.postForEntity("/api/orders", request, PlaceOrderResponse.class);
+        assertThat(placed.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(placed.getBody()).isNotNull();
+
+        String orderNumber = placed.getBody().getOrderNumber();
+        return restTemplate.getForObject("/api/orders/" + orderNumber, ViewOrderDetailsResponse.class);
     }
 }
