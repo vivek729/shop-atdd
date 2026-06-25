@@ -35,7 +35,7 @@ class OrderControllerIntegrationTest {
     private OrderService orderService;
 
     @Test
-    void placeOrder_returnsCreated() throws Exception {
+    void placeOrderReturnsCreated() throws Exception {
         var response = new PlaceOrderResponse();
         response.setOrderNumber("ORD-001");
         when(orderService.placeOrder(any())).thenReturn(response);
@@ -49,7 +49,7 @@ class OrderControllerIntegrationTest {
     }
 
     @Test
-    void placeOrder_missingRequiredFields_returnsUnprocessableEntity() throws Exception {
+    void placeOrderMissingRequiredFieldsReturnsUnprocessableEntity() throws Exception {
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
@@ -57,7 +57,7 @@ class OrderControllerIntegrationTest {
     }
 
     @Test
-    void browseOrderHistory_returnsOk() throws Exception {
+    void browseOrderHistoryReturnsOk() throws Exception {
         var response = new BrowseOrderHistoryResponse();
         response.setOrders(List.of());
         when(orderService.browseOrderHistory(null)).thenReturn(response);
@@ -67,7 +67,7 @@ class OrderControllerIntegrationTest {
     }
 
     @Test
-    void getOrder_returnsOk() throws Exception {
+    void getOrderReturnsOk() throws Exception {
         var response = new ViewOrderDetailsResponse();
         response.setOrderNumber("ORD-001");
         response.setOrderTimestamp(Instant.parse("2026-03-10T12:00:00Z"));
@@ -91,7 +91,7 @@ class OrderControllerIntegrationTest {
     }
 
     @Test
-    void getOrder_notFound_returnsNotFound() throws Exception {
+    void getOrderNotFoundReturnsNotFound() throws Exception {
         when(orderService.getOrder("UNKNOWN"))
             .thenThrow(new NotExistValidationException("Order UNKNOWN not found"));
 
@@ -100,13 +100,13 @@ class OrderControllerIntegrationTest {
     }
 
     @Test
-    void cancelOrder_returnsNoContent() throws Exception {
+    void cancelOrderReturnsNoContent() throws Exception {
         mockMvc.perform(post("/api/orders/ORD-001/cancel"))
             .andExpect(status().isNoContent());
     }
 
     @Test
-    void deliverOrder_returnsNoContent() throws Exception {
+    void deliverOrderReturnsNoContent() throws Exception {
         mockMvc.perform(post("/api/orders/ORD-001/deliver"))
             .andExpect(status().isNoContent());
     }

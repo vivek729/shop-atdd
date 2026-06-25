@@ -44,7 +44,7 @@ class ErpGatewayIntegrationTest {
     }
 
     @Test
-    void getProductDetails_returnsDetails_whenFound() {
+    void getProductDetailsReturnsDetailsWhenFound() {
         stubFor(get("/api/products/BOOK-123")
             .willReturn(okJson("{\"id\":\"BOOK-123\",\"price\":10.00}")));
 
@@ -56,7 +56,7 @@ class ErpGatewayIntegrationTest {
     }
 
     @Test
-    void getProductDetails_returnsEmpty_whenNotFound() {
+    void getProductDetailsReturnsEmptyWhenNotFound() {
         stubFor(get("/api/products/UNKNOWN")
             .willReturn(aResponse().withStatus(404)));
 
@@ -64,7 +64,7 @@ class ErpGatewayIntegrationTest {
     }
 
     @Test
-    void getProductDetails_throwsOnServerError() {
+    void getProductDetailsThrowsOnServerError() {
         stubFor(get("/api/products/BAD-SKU")
             .willReturn(aResponse().withStatus(500).withBody("Internal Server Error")));
 
@@ -74,7 +74,7 @@ class ErpGatewayIntegrationTest {
     }
 
     @Test
-    void getPromotionDetails_returnsPromotion() {
+    void getPromotionDetailsReturnsPromotion() {
         stubFor(get("/api/promotion")
             .willReturn(okJson("{\"promotionActive\":true,\"discount\":0.15}")));
 
@@ -85,7 +85,7 @@ class ErpGatewayIntegrationTest {
     }
 
     @Test
-    void getPromotionDetails_throwsOnServerError() {
+    void getPromotionDetailsThrowsOnServerError() {
         stubFor(get("/api/promotion")
             .willReturn(aResponse().withStatus(503).withBody("Service Unavailable")));
 
