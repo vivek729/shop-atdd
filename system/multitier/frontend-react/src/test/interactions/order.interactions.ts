@@ -19,8 +19,11 @@ export function placeOrderInteraction({ sku, quantity, country, couponCode }: Pl
     ? `a place-order request for ${sku} qty ${quantity} from ${country} with coupon ${couponCode}`
     : `a place-order request for ${sku} qty ${quantity} from ${country}`;
 
+  const states: { description: string }[] = [{ description: `product ${sku} exists and ${country} is taxable` }];
+  if (couponCode) states.push({ description: `coupon ${couponCode} exists` });
+
   return {
-    states: [{ description: `product ${sku} exists and ${country} is taxable` }],
+    states,
     uponReceiving: label,
     withRequest: {
       method: 'POST',

@@ -72,6 +72,11 @@ class BackendPactVerificationTest extends AbstractComponentTest {
         couponRepository.save(new Coupon("SAVE10", new BigDecimal("0.20"), null, null, 100, 0));
     }
 
+    @State("coupon SAVE10 exists")
+    void couponSave10Exists() {
+        couponRepository.save(new Coupon("SAVE10", new BigDecimal("0.20"), null, null, 100, 0));
+    }
+
     @State("no coupon SAVE10 exists yet")
     void noCouponSave10Exists() {
         // No-op: the base @BeforeEach empties the DB, so no SAVE10 coupon exists. The handler

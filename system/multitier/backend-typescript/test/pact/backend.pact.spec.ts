@@ -98,6 +98,24 @@ describe('Backend Pact Provider Verification', () => {
           );
         },
 
+        'coupon SAVE10 exists': async () => {
+          await harness.resetState();
+          harness.stubClock('2026-03-10T12:00:00Z');
+          harness.stubProduct('BOOK-123', 10.0);
+          harness.stubPromotion(false, 1.0);
+          harness.stubTax('US', 0.1);
+          await harness.couponRepo.save(
+            harness.couponRepo.create({
+              code: 'SAVE10',
+              discountRate: 0.2,
+              usageLimit: 100,
+              usedCount: 0,
+              validFrom: null,
+              validTo: null,
+            }),
+          );
+        },
+
         'no coupon SAVE10 exists yet': async () => {
           await harness.resetState();
           // DB is empty after resetState.

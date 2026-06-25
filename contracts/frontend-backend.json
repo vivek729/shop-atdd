@@ -316,6 +316,9 @@
       "providerStates": [
         {
           "name": "product BOOK-123 exists and US is taxable"
+        },
+        {
+          "name": "coupon SAVE10 exists"
         }
       ],
       "request": {

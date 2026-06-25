@@ -3,7 +3,7 @@ setupCommands:
     command: .\gradlew.bat --version
 compileCommands:
   - name: Compile production + test source sets
-    command: .\gradlew.bat compileJava compileTestJava compileIntegrationTestJava compileComponentTestJava
+    command: .\gradlew.bat compileJava compileTestJava compileIntegrationTestJava compileComponentTestJava compileContractTestJava
 testFilter: --tests '*.<test>'
 suites:
   - id: unit
@@ -22,7 +22,7 @@ suites:
     requiresDocker: true
   - id: provider-verification
     name: Provider Verification (Pact)
-    command: .\gradlew.bat componentTest --tests 'com.mycompany.myshop.backend.contract.*'
+    command: .\gradlew.bat contractTest --tests 'com.mycompany.myshop.backend.contract.*'
     sampleTest: "verify"
     requiresDocker: true
 suiteGroups:

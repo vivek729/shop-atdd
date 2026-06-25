@@ -226,6 +226,21 @@ public class BackendPactVerificationTest : IAsyncLifetime
                 _db.SaveChanges();
                 break;
 
+            case "coupon SAVE10 exists":
+                StubClock("2026-03-10T12:00:00Z");
+                StubProduct("BOOK-123", "10.00");
+                StubPromotion(false, "1.0");
+                StubTax("US", "0.10");
+                _db.Coupons.Add(new Coupon
+                {
+                    Code = "SAVE10",
+                    DiscountRate = 0.20m,
+                    UsageLimit = 100,
+                    UsedCount = 0,
+                });
+                _db.SaveChanges();
+                break;
+
             case "no coupon SAVE10 exists yet":
                 break; // cleared in ResetState
         }
@@ -342,9 +357,13 @@ public class BackendPactVerificationTest : IAsyncLifetime
             _kestrelHost.Start();
 
             // Publish the dynamically-assigned Kestrel address so ServerAddress / clients use it.
+            // Replace any all-interfaces binding (0.0.0.0) with loopback: 0.0.0.0 is not a
+            // valid connection target on Windows, causing the PactNet verifier to fail.
             var addresses = _kestrelHost.Services.GetRequiredService<IServer>()
                 .Features.Get<IServerAddressesFeature>();
-            ClientOptions.BaseAddress = addresses!.Addresses.Select(a => new Uri(a)).Last();
+            ClientOptions.BaseAddress = addresses!.Addresses
+                .Select(a => new Uri(a.Replace("://0.0.0.0:", "://127.0.0.1:", StringComparison.Ordinal)))
+                .Last();
 
             testHost.Start();
             return testHost;

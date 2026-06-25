@@ -9,5 +9,3 @@ class ErpSmokeTest extends BaseScenarioDslTest {
         scenario.assume().erp().shouldBeRunning();
     }
 }
-
-
