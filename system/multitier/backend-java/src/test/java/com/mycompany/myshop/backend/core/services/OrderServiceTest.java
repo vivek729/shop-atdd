@@ -51,7 +51,7 @@ class OrderServiceTest {
     private static final Instant DEC_31_CANCEL_BLACKOUT = Instant.parse("2025-12-31T22:15:00Z");
 
     @Test
-    void placeOrder_returnsOrderNumberStartingWithOrd() {
+    void placeOrderReturnsOrderNumberStartingWithOrd() {
         givenNormalTime();
         givenProductExists("BOOK-123", new BigDecimal("10.00"));
         givenNoPromotion();
@@ -66,7 +66,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void placeOrder_throwsWhenOrderedOnYearEndBlackout() {
+    void placeOrderThrowsWhenOrderedOnYearEndBlackout() {
         when(clockGateway.getCurrentTime()).thenReturn(DEC_31_YEAR_END_BLACKOUT);
 
         var thrown = catchThrowable(() -> orderService.placeOrder(buildRequest("BOOK-123", 1, "US")));
@@ -76,7 +76,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void placeOrder_throwsWhenSkuUnknown() {
+    void placeOrderThrowsWhenSkuUnknown() {
         givenNormalTime();
         when(erpGateway.getProductDetails("UNKNOWN")).thenReturn(Optional.empty());
 
@@ -87,7 +87,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void placeOrder_throwsWhenCountryUnknown() {
+    void placeOrderThrowsWhenCountryUnknown() {
         givenNormalTime();
         givenProductExists("BOOK-123", new BigDecimal("10.00"));
         givenNoPromotion();
@@ -101,7 +101,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void deliverOrder_transitionsStatusToDelivered() {
+    void deliverOrderTransitionsStatusToDelivered() {
         var order = placedOrder("ORD-001");
         when(orderRepository.findByOrderNumber("ORD-001")).thenReturn(Optional.of(order));
 
@@ -112,7 +112,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void deliverOrder_throwsWhenOrderNotFound() {
+    void deliverOrderThrowsWhenOrderNotFound() {
         when(orderRepository.findByOrderNumber("ORD-999")).thenReturn(Optional.empty());
 
         var thrown = catchThrowable(() -> orderService.deliverOrder("ORD-999"));
@@ -121,7 +121,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void deliverOrder_throwsWhenOrderAlreadyDelivered() {
+    void deliverOrderThrowsWhenOrderAlreadyDelivered() {
         var order = placedOrder("ORD-001");
         order.setStatus(OrderStatus.DELIVERED);
         when(orderRepository.findByOrderNumber("ORD-001")).thenReturn(Optional.of(order));
@@ -133,7 +133,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void cancelOrder_transitionsStatusToCancelled() {
+    void cancelOrderTransitionsStatusToCancelled() {
         givenNormalTime();
         var order = placedOrder("ORD-001");
         when(orderRepository.findByOrderNumber("ORD-001")).thenReturn(Optional.of(order));
@@ -145,7 +145,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void cancelOrder_throwsDuringDecember31CancellationBlackout() {
+    void cancelOrderThrowsDuringDecember31CancellationBlackout() {
         when(clockGateway.getCurrentTime()).thenReturn(DEC_31_CANCEL_BLACKOUT);
 
         var thrown = catchThrowable(() -> orderService.cancelOrder("ORD-001"));
@@ -155,7 +155,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void cancelOrder_throwsWhenOrderAlreadyCancelled() {
+    void cancelOrderThrowsWhenOrderAlreadyCancelled() {
         givenNormalTime();
         var order = placedOrder("ORD-001");
         order.setStatus(OrderStatus.CANCELLED);
