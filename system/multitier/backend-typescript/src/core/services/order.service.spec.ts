@@ -17,14 +17,19 @@ const DEC_31_CANCEL_BLACKOUT = new Date('2025-12-31T22:15:00Z');
 describe('OrderService', () => {
   let service: OrderService;
   let orderRepository: jest.Mocked<Pick<Repository<Order>, 'save' | 'findOne'>>;
-  let erpGateway: jest.Mocked<Pick<ErpGateway, 'getProductDetails' | 'getPromotionDetails'>>;
+  let erpGateway: jest.Mocked<
+    Pick<ErpGateway, 'getProductDetails' | 'getPromotionDetails'>
+  >;
   let clockGateway: jest.Mocked<Pick<ClockGateway, 'getCurrentTime'>>;
   let taxGateway: jest.Mocked<Pick<TaxGateway, 'getTaxDetails'>>;
   let couponService: jest.Mocked<Pick<CouponService, 'getDiscount'>>;
 
   beforeEach(() => {
     orderRepository = { save: jest.fn(), findOne: jest.fn() };
-    erpGateway = { getProductDetails: jest.fn(), getPromotionDetails: jest.fn() };
+    erpGateway = {
+      getProductDetails: jest.fn(),
+      getPromotionDetails: jest.fn(),
+    };
     clockGateway = { getCurrentTime: jest.fn() };
     taxGateway = { getTaxDetails: jest.fn() };
     couponService = { getDiscount: jest.fn() };
@@ -47,7 +52,9 @@ describe('OrderService', () => {
       givenTaxRate('US', 0.1);
       orderRepository.save.mockResolvedValue({} as Order);
 
-      const response = await service.placeOrder(buildRequest('BOOK-123', 2, 'US'));
+      const response = await service.placeOrder(
+        buildRequest('BOOK-123', 2, 'US'),
+      );
 
       expect(response.orderNumber).toMatch(/^ORD-/);
       assertSavedOrder(response.orderNumber);
@@ -56,16 +63,18 @@ describe('OrderService', () => {
     it('throws when ordered on year-end blackout', async () => {
       clockGateway.getCurrentTime.mockResolvedValue(DEC_31_YEAR_END_BLACKOUT);
 
-      await expect(service.placeOrder(buildRequest('BOOK-123', 1, 'US'))).rejects.toThrow(
-        expect.objectContaining({ message: expect.stringContaining('December 31') }),
-      );
+      await expect(
+        service.placeOrder(buildRequest('BOOK-123', 1, 'US')),
+      ).rejects.toThrow('December 31');
     });
 
     it('throws when SKU is unknown', async () => {
       givenNormalTime();
       erpGateway.getProductDetails.mockResolvedValue(null);
 
-      const error = await service.placeOrder(buildRequest('UNKNOWN', 1, 'US')).catch((e) => e);
+      const error = await service
+        .placeOrder(buildRequest('UNKNOWN', 1, 'US'))
+        .catch((e: unknown) => e);
 
       expect(error).toBeInstanceOf(ValidationException);
       expect((error as ValidationException).fieldName).toBe('sku');
@@ -78,7 +87,9 @@ describe('OrderService', () => {
       givenNoDiscount();
       taxGateway.getTaxDetails.mockResolvedValue(null);
 
-      const error = await service.placeOrder(buildRequest('BOOK-123', 1, 'XX')).catch((e) => e);
+      const error = await service
+        .placeOrder(buildRequest('BOOK-123', 1, 'XX'))
+        .catch((e: unknown) => e);
 
       expect(error).toBeInstanceOf(ValidationException);
       expect((error as ValidationException).fieldName).toBe('country');
@@ -111,7 +122,7 @@ describe('OrderService', () => {
       orderRepository.findOne.mockResolvedValue(order);
 
       await expect(service.deliverOrder('ORD-001')).rejects.toThrow(
-        expect.objectContaining({ message: expect.stringContaining('cannot be delivered') }),
+        'cannot be delivered',
       );
     });
   });
@@ -133,7 +144,7 @@ describe('OrderService', () => {
       clockGateway.getCurrentTime.mockResolvedValue(DEC_31_CANCEL_BLACKOUT);
 
       await expect(service.cancelOrder('ORD-001')).rejects.toThrow(
-        expect.objectContaining({ message: expect.stringContaining('December 31') }),
+        'December 31',
       );
     });
 
@@ -144,7 +155,7 @@ describe('OrderService', () => {
       orderRepository.findOne.mockResolvedValue(order);
 
       await expect(service.cancelOrder('ORD-001')).rejects.toThrow(
-        expect.objectContaining({ message: expect.stringContaining('already been cancelled') }),
+        'already been cancelled',
       );
     });
   });
@@ -158,7 +169,10 @@ describe('OrderService', () => {
   }
 
   function givenNoPromotion() {
-    erpGateway.getPromotionDetails.mockResolvedValue({ promotionActive: false, discount: 1 });
+    erpGateway.getPromotionDetails.mockResolvedValue({
+      promotionActive: false,
+      discount: 1,
+    });
   }
 
   function givenNoDiscount() {
@@ -166,10 +180,18 @@ describe('OrderService', () => {
   }
 
   function givenTaxRate(_country: string, rate: number) {
-    taxGateway.getTaxDetails.mockResolvedValue({ id: 'id', countryName: 'US', taxRate: rate });
+    taxGateway.getTaxDetails.mockResolvedValue({
+      id: 'id',
+      countryName: 'US',
+      taxRate: rate,
+    });
   }
 
-  function buildRequest(sku: string, quantity: number, country: string): PlaceOrderRequest {
+  function buildRequest(
+    sku: string,
+    quantity: number,
+    country: string,
+  ): PlaceOrderRequest {
     const request = new PlaceOrderRequest();
     request.sku = sku;
     request.quantity = quantity;
