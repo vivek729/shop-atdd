@@ -1,5 +1,15 @@
 # 2026-06-25 09:13 — OSS Pact Broker as the **default** contract-distribution mechanism
 
+> **Deferred — scope blocked by infrastructure constraint (2026-06-25):**
+> An ephemeral OSS Pact Broker (Docker Compose, per CI run) works for **monorepo** because consumer
+> publish and provider verify happen inside the same run. It **cannot work for multi-repo**: each
+> provider's CI run is a separate process on a separate machine, potentially hours or days after the
+> consumer published — the ephemeral broker from that run is already gone. Multi-repo broker-as-default
+> therefore requires a **persistent, network-reachable broker** (standing infra someone hosts, patches,
+> and authenticates). Until the hosting question is resolved (teacher-hosted VPS, per-student account,
+> or other), this plan is deferred. The current file-based default remains in place for both monorepo
+> and multi-repo.
+
 > **Supersedes the decision in** `contracts/README.md` (and the resolved-then-deleted plan
 > `20260624-0814-multirepo-contract-transport-dockerized-broker.md`), which chose **file-based** as the
 > $0 default and the broker as a documented opt-in. This plan **reverses that**: the self-hosted OSS
