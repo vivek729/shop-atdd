@@ -4,7 +4,7 @@ import { fetchJson } from '../common';
 import type { PlaceOrderRequest, PlaceOrderResponse, ViewOrderDetailsResponse, BrowseOrderHistoryResponse } from '../types/api.types';
 import type { Result } from '../types/result.types';
 
-export class OrderService {
+export class OrderGateway {
   private readonly baseUrl: string;
 
   constructor(baseUrl: string = '/api/orders') {
@@ -52,4 +52,4 @@ export class OrderService {
 
 }
 
-export const orderService = new OrderService();
+export const orderService = new OrderGateway();

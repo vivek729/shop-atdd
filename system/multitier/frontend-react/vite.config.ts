@@ -22,7 +22,7 @@ export default defineConfig({
     // never opted in. They run via `npm run test:component` / `test:pact`
     // (vitest.opt-in.config.ts). Default `npm test` runs only the fast,
     // no-network unit tests at the top level of src/test (e.g. harness.test.tsx).
-    exclude: [...configDefaults.exclude, 'src/test/component/**', 'src/test/pact/**', 'src/test/integration/**'],
+    exclude: [...configDefaults.exclude, 'src/test/component/**', 'src/test/integration/**'],
   },
   publicDir: 'public',
   build: {

@@ -269,7 +269,116 @@
       }
     },
     {
+      "description": "a place-order request for BOOK-123 qty 2 from US",
+      "providerStates": [
+        {
+          "name": "product BOOK-123 exists and US is taxable"
+        }
+      ],
+      "request": {
+        "body": {
+          "country": "US",
+          "quantity": 2,
+          "sku": "BOOK-123"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "orderNumber": "ORD-1"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.orderNumber": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 201
+      }
+    },
+    {
+      "description": "a place-order request for BOOK-123 qty 2 from US with coupon SAVE10",
+      "providerStates": [
+        {
+          "name": "product BOOK-123 exists and US is taxable"
+        }
+      ],
+      "request": {
+        "body": {
+          "country": "US",
+          "couponCode": "SAVE10",
+          "quantity": 2,
+          "sku": "BOOK-123"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "orderNumber": "ORD-1"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.orderNumber": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {},
+          "status": {}
+        },
+        "status": 201
+      }
+    },
+    {
       "description": "a publish-coupon request",
+      "providerStates": [
+        {
+          "name": "no coupon SAVE10 exists yet"
+        }
+      ],
+      "request": {
+        "body": {
+          "code": "SAVE10",
+          "discountRate": 0.2
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/coupons"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "description": "a publish-coupon request for SAVE10",
       "providerStates": [
         {
           "name": "no coupon SAVE10 exists yet"

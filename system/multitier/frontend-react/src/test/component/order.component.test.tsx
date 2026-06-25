@@ -1,48 +1,141 @@
-// Test taxonomy and suite boundaries: docs/atdd/test-taxonomy.md
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import path from 'node:path';
+import { PactV3 } from '@pact-foundation/pact';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NewOrder } from '../../pages/NewOrder';
 import { OrderHistory } from '../../pages/OrderHistory';
-import { renderWithProviders } from '../test-utils';
+import { OrderDetails } from '../../pages/OrderDetails';
+import { renderWithProviders, routeApiTo } from '../test-utils';
+import {
+  placeOrderInteraction,
+  placeOrderBlackoutInteraction,
+  browseOrderHistoryInteraction,
+  viewOrderDetailsInteraction,
+  viewMissingOrderInteraction,
+} from '../interactions/order.interactions';
+
+const provider = new PactV3({
+  consumer: 'frontend',
+  provider: 'backend',
+  dir: path.resolve(process.cwd(), '../../../contracts'),
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('NewOrder — client-side validation (no request fired)', () => {
-  it('shows validation errors and never calls the backend when the form is empty', async () => {
-    const fetchSpy = vi.fn();
-    vi.stubGlobal('fetch', fetchSpy);
-    const user = userEvent.setup();
+describe('NewOrder — places an order', () => {
+  it('shows success message when order is accepted', async () => {
+    provider.addInteraction(placeOrderInteraction({ sku: 'BOOK-123', quantity: 2, country: 'US' }));
 
-    renderWithProviders(<NewOrder />);
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      const user = userEvent.setup();
+      renderWithProviders(<NewOrder />);
 
-    await user.click(screen.getByRole('button', { name: 'Place Order' }));
+      await user.type(screen.getByLabelText('SKU'), 'BOOK-123');
+      await user.type(screen.getByLabelText('Quantity'), '2');
+      await user.click(screen.getByRole('button', { name: 'Place Order' }));
 
-    expect(
-      await screen.findByText('The request contains one or more validation errors'),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/sku: SKU must not be empty/)).toBeInTheDocument();
-    expect(fetchSpy).not.toHaveBeenCalled();
+      expect(await screen.findByText(/Order Number ORD-1/)).toBeInTheDocument();
+    });
+  });
+
+  it('shows error message when order is rejected by the backend', async () => {
+    provider.addInteraction(placeOrderBlackoutInteraction());
+
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      const user = userEvent.setup();
+      renderWithProviders(<NewOrder />);
+
+      await user.type(screen.getByLabelText('SKU'), 'BOOK-123');
+      await user.type(screen.getByLabelText('Quantity'), '2');
+      await user.click(screen.getByRole('button', { name: 'Place Order' }));
+
+      expect(
+        await screen.findByText('Orders cannot be placed on December 31'),
+      ).toBeInTheDocument();
+    });
   });
 });
 
-describe('OrderHistory — client-side loading / network states', () => {
-  it('shows the loading spinner while the request is in flight', () => {
-    // fetch that never resolves keeps the hook in its loading state.
-    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})));
+describe('NewOrder — client-side validation (no request fired)', () => {
+  it('shows validation errors and never calls the backend when the form is empty', async () => {
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      const user = userEvent.setup();
+      renderWithProviders(<NewOrder />);
 
-    renderWithProviders(<OrderHistory />);
+      await user.click(screen.getByRole('button', { name: 'Place Order' }));
 
-    expect(screen.getByText('Loading orders...')).toBeInTheDocument();
+      expect(
+        await screen.findByText('The request contains one or more validation errors'),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/sku: SKU must not be empty/)).toBeInTheDocument();
+    });
+  });
+});
+
+describe('OrderHistory', () => {
+  it('shows the loading spinner while the request is in flight', async () => {
+    await provider.executeTest(async () => {
+      vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})));
+      renderWithProviders(<OrderHistory />);
+
+      expect(screen.getByText('Loading orders...')).toBeInTheDocument();
+    });
   });
 
   it('surfaces a network error when the backend is unreachable', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('connection refused'))));
+    await provider.executeTest(async () => {
+      vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('connection refused'))));
+      renderWithProviders(<OrderHistory />);
 
-    renderWithProviders(<OrderHistory />);
+      expect(await screen.findByText(/Network error/i)).toBeInTheDocument();
+    });
+  });
 
-    expect(await screen.findByText(/Network error/i)).toBeInTheDocument();
+  it('shows order history when orders are returned', async () => {
+    provider.addInteraction(browseOrderHistoryInteraction());
+
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      renderWithProviders(<OrderHistory />);
+
+      expect(await screen.findByText('ORD-1')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('OrderDetails', () => {
+  it('shows order details for an existing order', async () => {
+    provider.addInteraction(viewOrderDetailsInteraction('ORD-1'));
+
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      renderWithProviders(<OrderDetails />, {
+        routePath: '/order-details/:orderNumber',
+        initialEntry: '/order-details/ORD-1',
+      });
+
+      expect(await screen.findByLabelText('Display Order Number')).toHaveTextContent('ORD-1');
+      expect(screen.getByLabelText('Display Total Price')).toHaveTextContent('$22.00');
+    });
+  });
+
+  it('shows not-found error for a missing order', async () => {
+    provider.addInteraction(viewMissingOrderInteraction('UNKNOWN'));
+
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      renderWithProviders(<OrderDetails />, {
+        routePath: '/order-details/:orderNumber',
+        initialEntry: '/order-details/UNKNOWN',
+      });
+
+      expect(await screen.findByText('Order not found')).toBeInTheDocument();
+    });
   });
 });
