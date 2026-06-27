@@ -43,7 +43,8 @@ export function renderWithProviders(
 export function routeApiTo(baseUrl: string): void {
   const realFetch = globalThis.fetch.bind(globalThis);
   vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
-    let url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const urlFromInput = input instanceof URL ? input.href : (input as Request).url;
+    let url = typeof input === 'string' ? input : urlFromInput;
     if (url.startsWith('/')) {
       url = baseUrl.replace(/\/$/, '') + url;
     }

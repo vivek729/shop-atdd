@@ -66,7 +66,7 @@ public abstract class BaseRawTest : BaseConfigurableTest, IAsyncLifetime
         _httpObjectMapper = CreateObjectMapper();
     }
 
-    private JsonSerializerOptions CreateObjectMapper()
+    private static JsonSerializerOptions CreateObjectMapper()
     {
         return new JsonSerializerOptions
         {

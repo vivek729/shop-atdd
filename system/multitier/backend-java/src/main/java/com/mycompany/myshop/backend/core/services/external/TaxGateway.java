@@ -26,7 +26,9 @@ public class TaxGateway {
 
     public Optional<TaxDetailsResponse> getTaxDetails(String country) {
         var url = taxUrl + "/api/countries/" + country;
-        log.info("getTaxDetails - url: {}", url.replaceAll("[\r\n]", "_"));
+        if (log.isInfoEnabled()) {
+            log.info("getTaxDetails - url: {}", url.replaceAll("[\r\n]", "_"));
+        }
 
         try {
             var httpClient = HttpClient.newBuilder()

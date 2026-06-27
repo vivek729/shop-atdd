@@ -60,7 +60,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
         discountRate: String(cc.discountRate),
         validFrom: cc.validFrom,
         validTo: cc.validTo,
-        usageLimit: cc.usageLimit !== undefined ? String(cc.usageLimit) : undefined,
+        usageLimit: cc.usageLimit === undefined ? undefined : String(cc.usageLimit),
       });
     }
   }
@@ -88,7 +88,7 @@ export class ThenPublishCouponResultStage implements PromiseLike<void> {
       discountRate: String(this.discountRate),
       validFrom: this.validFrom,
       validTo: this.validTo,
-      usageLimit: this.usageLimit !== undefined ? String(this.usageLimit) : undefined,
+      usageLimit: this.usageLimit === undefined ? undefined : String(this.usageLimit),
     });
 
     if (this._expectSuccess) {

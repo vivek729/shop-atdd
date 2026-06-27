@@ -7,7 +7,7 @@ using Xunit;
 
 namespace SystemTests.Legacy.Mod03.E2eTests;
 
-public class PlaceOrderPositiveUiTest : BaseE2eTest
+public partial class PlaceOrderPositiveUiTest : BaseE2eTest
 {
     protected override async Task SetMyShopRawAsync()
     {
@@ -34,7 +34,7 @@ public class PlaceOrderPositiveUiTest : BaseE2eTest
         await shopUiPage.Locator("[aria-label=\"Place Order\"]").ClickAsync();
 
         var successMessageText = await shopUiPage.Locator("[role='alert'][data-notification-id]").TextContentAsync();
-        var match = Regex.Match(successMessageText ?? "", @"Success! Order has been created with Order Number ([\w-]+)");
+        var match = OrderSuccessRegex().Match(successMessageText ?? "");
         match.Success.ShouldBeTrue();
         var orderNumber = match.Groups[1].Value;
         orderNumber.ShouldStartWith("ORD-");
@@ -68,4 +68,7 @@ public class PlaceOrderPositiveUiTest : BaseE2eTest
 
         (await shopUiPage.Locator("[aria-label='Display Status']").TextContentAsync()).ShouldBe("PLACED");
     }
+
+    [GeneratedRegex(@"Success! Order has been created with Order Number ([\w-]+)")]
+    private static partial Regex OrderSuccessRegex();
 }

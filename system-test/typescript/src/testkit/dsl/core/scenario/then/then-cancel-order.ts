@@ -81,7 +81,7 @@ export class ThenCancelOrderResultStage implements PromiseLike<void> {
         discountRate: String(cc.discountRate),
         validFrom: cc.validFrom,
         validTo: cc.validTo,
-        usageLimit: cc.usageLimit !== undefined ? String(cc.usageLimit) : undefined,
+        usageLimit: cc.usageLimit === undefined ? undefined : String(cc.usageLimit),
       });
     }
   }

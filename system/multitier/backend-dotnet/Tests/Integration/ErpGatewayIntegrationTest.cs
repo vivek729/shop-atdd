@@ -53,14 +53,14 @@ public class ErpGatewayIntegrationTest : IClassFixture<ErpWireMockFixture>, IAsy
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    private Task StubGetJsonAsync(string path, int status, object body) =>
+    private Task<HttpResponseMessage> StubGetJsonAsync(string path, int status, object body) =>
         _adminClient.PostAsJsonAsync("/__admin/mappings", new
         {
             request = new { method = "GET", url = path },
             response = new { status, jsonBody = body }
         });
 
-    private Task StubGetStatusAsync(string path, int status) =>
+    private Task<HttpResponseMessage> StubGetStatusAsync(string path, int status) =>
         _adminClient.PostAsJsonAsync("/__admin/mappings", new
         {
             request = new { method = "GET", url = path },

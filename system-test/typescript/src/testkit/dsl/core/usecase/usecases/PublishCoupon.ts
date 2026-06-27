@@ -50,7 +50,7 @@ export class PublishCoupon extends BaseMyShopUseCase<PublishCouponResponse, Void
       discountRate: String(this._discountRate),
       validFrom: this._validFrom,
       validTo: this._validTo,
-      usageLimit: this._usageLimit !== undefined ? String(this._usageLimit) : undefined,
+      usageLimit: this._usageLimit === undefined ? undefined : String(this._usageLimit),
     };
 
     const result = await this.driver.publishCoupon(request);

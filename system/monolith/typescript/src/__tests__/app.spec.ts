@@ -1,5 +1,7 @@
+import { validationErrorResponse } from '../lib/errors';
+
 describe('MonolithApplication', () => {
   it('should be defined', () => {
-    expect(true).toBe(true);
+    expect(validationErrorResponse).toBeDefined();
   });
 });

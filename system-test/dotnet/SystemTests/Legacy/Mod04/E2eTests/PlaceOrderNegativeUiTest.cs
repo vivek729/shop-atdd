@@ -28,6 +28,6 @@ public class PlaceOrderNegativeUiTest : BaseE2eTest
         result.ShouldBeFailure();
         var error = result.Error;
         error.Message.ShouldBe("The request contains one or more validation errors");
-        error.Fields.ShouldContain(f => f.Field == "quantity" && f.Message == "Quantity must be an integer");
+        error.Fields!.ShouldContain(f => f.Field == "quantity" && f.Message == "Quantity must be an integer");
     }
 }

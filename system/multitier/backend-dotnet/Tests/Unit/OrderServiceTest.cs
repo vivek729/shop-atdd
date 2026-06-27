@@ -42,7 +42,11 @@ public class OrderServiceTest : IDisposable
         _service = new OrderService(_dbContext, _erpMock.Object, _taxMock.Object, _clockMock.Object, _couponMock.Object);
     }
 
-    public void Dispose() => _dbContext.Dispose();
+    public void Dispose()
+    {
+        _dbContext.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     [Fact]
     public async Task PlaceOrder_ReturnsOrderNumberStartingWithOrd()
