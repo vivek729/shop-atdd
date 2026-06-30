@@ -77,33 +77,33 @@ suites:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
   - id: acceptance-parallel-api
     name: latest - Acceptance Parallel (stub) - API
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=API --logger 'trx;LogFileName=parallel-api.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
-    testCountPath: TestResults/testResults.trx
+    testCountPath: TestResults/parallel-api.trx
     sampleTest: ShouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-parallel-ui
     name: latest - Acceptance Parallel (stub) - UI
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category!=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=parallel-ui.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
-    testCountPath: TestResults/testResults.trx
+    testCountPath: TestResults/parallel-ui.trx
     sampleTest: ShouldBeAbleToPlaceOrderForValidInput
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install
   - id: acceptance-isolated-api
     name: latest - Acceptance Isolated (stub) - API
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=API --logger 'trx;LogFileName=isolated-api.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
-    testCountPath: TestResults/testResults.trx
+    testCountPath: TestResults/isolated-api.trx
     sampleTest: ShouldRecordPlacementTimestamp
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
-    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=testResults.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
+    command: dotnet test --filter 'FullyQualifiedName~.Latest.AcceptanceTests&Category=isolated' -e CHANNEL=UI -e CHANNEL_MODE=static --logger 'trx;LogFileName=isolated-ui.trx' --logger 'html;LogFileName=testResults.html' --logger 'console;verbosity=detailed'
     path: SystemTests
     testReportPath: SystemTests/TestResults/testResults.html
-    testCountPath: TestResults/testResults.trx
+    testCountPath: TestResults/isolated-ui.trx
     sampleTest: ShouldRecordPlacementTimestamp
     testInstallCommands:
       - pwsh bin/Debug/net8.0/playwright.ps1 install

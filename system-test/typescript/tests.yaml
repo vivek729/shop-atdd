@@ -73,9 +73,10 @@ suites:
     env:
       CHANNEL: API
       EXTERNAL_SYSTEM_MODE: stub
+      PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/parallel-api.json
     path: .
     testReportPath: playwright-report/index.html
-    testCountPath: playwright-report/results.json
+    testCountPath: playwright-report/parallel-api.json
     sampleTest: shouldBeAbleToBrowseCoupons
   - id: acceptance-parallel-ui
     name: latest - Acceptance Parallel (stub) - UI
@@ -84,9 +85,10 @@ suites:
       CHANNEL: UI
       CHANNEL_MODE: static
       EXTERNAL_SYSTEM_MODE: stub
+      PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/parallel-ui.json
     path: .
     testReportPath: playwright-report/index.html
-    testCountPath: playwright-report/results.json
+    testCountPath: playwright-report/parallel-ui.json
     sampleTest: shouldBeAbleToBrowseCoupons
   - id: acceptance-isolated-api
     name: latest - Acceptance Isolated (stub) - API
@@ -94,9 +96,10 @@ suites:
     env:
       CHANNEL: API
       EXTERNAL_SYSTEM_MODE: stub
+      PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/isolated-api.json
     path: .
     testReportPath: playwright-report/index.html
-    testCountPath: playwright-report/results.json
+    testCountPath: playwright-report/isolated-api.json
     sampleTest: shouldBeAbleToCancelOrder
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
@@ -105,9 +108,10 @@ suites:
       CHANNEL: UI
       CHANNEL_MODE: static
       EXTERNAL_SYSTEM_MODE: stub
+      PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/isolated-ui.json
     path: .
     testReportPath: playwright-report/index.html
-    testCountPath: playwright-report/results.json
+    testCountPath: playwright-report/isolated-ui.json
     sampleTest: shouldBeAbleToCancelOrder
   - id: contract-stub
     name: latest - Contract (stub)

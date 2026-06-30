@@ -64,31 +64,31 @@ suites:
     sampleTest: shouldBeAbleToGoToClock
   - id: acceptance-parallel-api
     name: latest - Acceptance Parallel (stub) - API
-    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API
+    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=API -PtestResultsDir=test-results/parallel-api
     path: .
     testReportPath: build/reports/tests/test/index.html
-    testCountPath: build/test-results/test
+    testCountPath: build/test-results/parallel-api
     sampleTest: shouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-parallel-ui
     name: latest - Acceptance Parallel (stub) - UI
-    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static
+    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DexcludeTags=isolated -Dchannel=UI -DchannelMode=static -PtestResultsDir=test-results/parallel-ui
     path: .
     testReportPath: build/reports/tests/test/index.html
-    testCountPath: build/test-results/test
+    testCountPath: build/test-results/parallel-ui
     sampleTest: shouldBeAbleToPlaceOrderForValidInput
   - id: acceptance-isolated-api
     name: latest - Acceptance Isolated (stub) - API
-    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API
+    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=API -PtestResultsDir=test-results/isolated-api
     path: .
     testReportPath: build/reports/tests/test/index.html
-    testCountPath: build/test-results/test
+    testCountPath: build/test-results/isolated-api
     sampleTest: shouldRecordPlacementTimestamp
   - id: acceptance-isolated-ui
     name: latest - Acceptance Isolated (stub) - UI
-    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static
+    command: .\gradlew.bat test -Dversion=latest -Dtype=acceptance -DincludeTags=isolated -Dchannel=UI -DchannelMode=static -PtestResultsDir=test-results/isolated-ui
     path: .
     testReportPath: build/reports/tests/test/index.html
-    testCountPath: build/test-results/test
+    testCountPath: build/test-results/isolated-ui
     sampleTest: shouldRecordPlacementTimestamp
   - id: contract-stub
     name: latest - Contract (stub)

@@ -78,6 +78,11 @@ tasks.register('installPlaywright', JavaExec) {
 tasks.named('test') {
 	dependsOn 'installPlaywright'
 
+	def partitionDir = project.findProperty('testResultsDir') as String
+	if (partitionDir) {
+		reports.junitXml.outputLocation = layout.buildDirectory.dir(partitionDir)
+	}
+
 	filter {
 		def type               = System.getProperty('type')               // smoke | acceptance | e2e | contract
 		def version            = System.getProperty('version')            // mod02 | mod03 | ... | latest
