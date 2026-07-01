@@ -118,6 +118,7 @@ suites:
     command: npx playwright test --pass-with-no-tests --project=external-system-contract-test --workers=1 --grep-invert '@isolated' 'tests/latest/contract/.*-stub-.*\.spec\.ts'
     env:
       EXTERNAL_SYSTEM_MODE: stub
+      PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/results.json
@@ -127,6 +128,7 @@ suites:
     command: npx playwright test --pass-with-no-tests --project=external-system-contract-test --workers=1 --grep '@isolated' 'tests/latest/contract/.*-stub-.*\.spec\.ts'
     env:
       EXTERNAL_SYSTEM_MODE: stub
+      PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/results.json
@@ -136,6 +138,7 @@ suites:
     command: npx playwright test --pass-with-no-tests --project=external-system-contract-test --workers=1 'tests/latest/contract/.*-real-.*\.spec\.ts'
     env:
       EXTERNAL_SYSTEM_MODE: real
+      PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
     path: .
     testReportPath: playwright-report/index.html
     testCountPath: playwright-report/results.json
