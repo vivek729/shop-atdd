@@ -45,16 +45,6 @@ on:
         required: false
         type: string
         default: ''
-      debug-skip-tests:
-        description: 'DEBUG ONLY: bypass acceptance-stage tests and skip the acceptance-stage-legacy run, while still minting the same RC tag. Use only when iterating on the meta-prerelease pipeline plumbing — never on a real release path.'
-        required: false
-        type: boolean
-        default: false
-      gh-optivem-ref:
-        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release. Forwarded to the local stage and the acceptance / acceptance-legacy stages.'
-        required: false
-        type: string
-        default: ''
 
 permissions: {}
 
@@ -284,7 +274,6 @@ jobs:
       - name: Install gh-optivem CLI extension
         uses: optivem/actions/install-gh-optivem@v1
         with:
-          ref: ${{ inputs.gh-optivem-ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # === Component Tests (commit-stage parity) ===
@@ -405,9 +394,9 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage.yml
-          poll-interval: ${{ inputs.debug-skip-tests && '60' || '180' }}
+          poll-interval: '180'
           timeout-seconds: '7200'
-          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}", "debug-skip-tests": "${{ inputs.debug-skip-tests }}", "force-run": "true", "gh-optivem-ref": "${{ inputs.gh-optivem-ref }}"}'
+          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
       # Resolve the rc tag that actually points at the tested SHA — whether our
       # dispatched run created it or a concurrent scheduled run did. This makes
@@ -440,9 +429,9 @@ jobs:
       - uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: ${{ inputs.prefix }}-acceptance-stage-legacy.yml
-          poll-interval: ${{ inputs.debug-skip-tests && '60' || '180' }}
+          poll-interval: '180'
           timeout-seconds: '7200'
-          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}", "debug-skip-tests": "${{ inputs.debug-skip-tests }}", "force-run": "true", "gh-optivem-ref": "${{ inputs.gh-optivem-ref }}"}'
+          workflow-inputs: '{"commit-sha": "${{ inputs.commit-sha }}"}'
 
   qa-stage:
     needs: [acceptance-stage, acceptance-stage-legacy]

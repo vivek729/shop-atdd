@@ -1,7 +1,7 @@
 name: prerelease-pipeline-monolith-dotnet
 
 run-name: >-
-  prerelease-pipeline-monolith-dotnet${{ inputs.level && inputs.level != 'qa' && format(' [level:{0}]', inputs.level) || '' }}${{ inputs.skip-local-stage && ' [skip-local]' || '' }}${{ inputs.skip-commit-stage && ' [skip-commit]' || '' }}${{ inputs.skip-acceptance-legacy && ' [skip-acceptance-legacy]' || '' }}${{ inputs.debug-skip-tests && ' [debug-skip-tests]' || '' }}${{ inputs.commit-sha && ' [pinned-sha]' || '' }}
+  prerelease-pipeline-monolith-dotnet${{ inputs.level && inputs.level != 'qa' && format(' [level:{0}]', inputs.level) || '' }}${{ inputs.skip-local-stage && ' [skip-local]' || '' }}${{ inputs.skip-commit-stage && ' [skip-commit]' || '' }}${{ inputs.skip-acceptance-legacy && ' [skip-acceptance-legacy]' || '' }}${{ inputs.commit-sha && ' [pinned-sha]' || '' }}
 
 on:
   workflow_dispatch:
@@ -35,16 +35,6 @@ on:
         description: 'Git SHA to pin (leave empty for HEAD)'
         required: false
         type: string
-      debug-skip-tests:
-        description: 'DEBUG ONLY: bypass acceptance-stage tests and skip the acceptance-stage-legacy run, while still minting the same RC tag. Use only when iterating on the meta-prerelease pipeline plumbing — never on a real release path.'
-        required: false
-        type: boolean
-        default: false
-      gh-optivem-ref:
-        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release.'
-        required: false
-        type: string
-        default: ''
 
 permissions: {}
 
@@ -69,5 +59,3 @@ jobs:
       skip-commit-stage: ${{ inputs.skip-commit-stage == true }}
       skip-acceptance-legacy: ${{ inputs.skip-acceptance-legacy == true }}
       commit-sha: ${{ inputs.commit-sha }}
-      debug-skip-tests: ${{ inputs.debug-skip-tests == true }}
-      gh-optivem-ref: ${{ inputs.gh-optivem-ref }}

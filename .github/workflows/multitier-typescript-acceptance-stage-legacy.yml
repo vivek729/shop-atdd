@@ -9,21 +9,6 @@ on:
         description: 'Git SHA to test (leave empty for latest image)'
         required: false
         type: string
-      debug-skip-tests:
-        description: 'DEBUG ONLY: skip the legacy run job entirely. Use only when iterating on the meta-prerelease pipeline plumbing — never on a real release path.'
-        required: false
-        type: boolean
-        default: false
-      force-run:
-        description: 'Bypass the no-changes run gate — execute the legacy acceptance tests even when no artifacts or test/workflow changes are detected since the last RC tag. Meta-prerelease sets this so every dispatched run actually exercises the stage.'
-        required: false
-        type: boolean
-        default: false
-      gh-optivem-ref:
-        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release.'
-        required: false
-        type: string
-        default: ''
 
 permissions: {}
 
@@ -59,8 +44,8 @@ jobs:
       contents: read
       packages: read
     outputs:
-      should-run: ${{ inputs.force-run == true || steps.artifacts-changed.outputs.newer == 'true' || steps.test-changes.outputs.changed == 'true' }}
-      skip-reason: ${{ inputs.force-run != true && (steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true') && 'No new artifacts since last run AND no test/workflow changes since last RC tag.' || '' }}
+      should-run: ${{ steps.artifacts-changed.outputs.newer == 'true' || steps.test-changes.outputs.changed == 'true' }}
+      skip-reason: ${{ (steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true') && 'No new artifacts since last run AND no test/workflow changes since last RC tag.' || '' }}
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
       last-run-at: ${{ steps.last-run.outputs.timestamp }}
@@ -121,7 +106,7 @@ jobs:
 
   run:
     needs: check
-    if: needs.check.outputs.should-run == 'true' && !inputs.debug-skip-tests
+    if: needs.check.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -223,7 +208,6 @@ jobs:
       - name: Install gh-optivem CLI extension
         uses: optivem/actions/install-gh-optivem@v1
         with:
-          ref: ${{ inputs.gh-optivem-ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Test Harness

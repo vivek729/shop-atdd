@@ -1,7 +1,7 @@
 name: meta-prerelease-dry-run
 
 run-name: >-
-  meta-prerelease-dry-run${{ inputs.variant != 'all' && format(' [variant:{0}]', inputs.variant) || '' }}${{ inputs.skip-local && ' [skip-local]' || '' }}${{ inputs.skip-commit && ' [skip-commit]' || '' }}${{ inputs.skip-acceptance-legacy && ' [skip-acceptance-legacy]' || '' }}${{ inputs.gh-optivem-ref != '' && format(' [gh-optivem-ref:{0}]', inputs.gh-optivem-ref) || '' }}${{ !inputs.auto-trigger-stage && ' [no-auto-stage]' || '' }}
+  meta-prerelease-dry-run${{ inputs.variant != 'all' && format(' [variant:{0}]', inputs.variant) || '' }}${{ inputs.skip-local && ' [skip-local]' || '' }}${{ inputs.skip-commit && ' [skip-commit]' || '' }}${{ inputs.skip-acceptance-legacy && ' [skip-acceptance-legacy]' || '' }}${{ !inputs.auto-trigger-stage && ' [no-auto-stage]' || '' }}
 
 on:
   workflow_dispatch:
@@ -59,11 +59,6 @@ on:
         required: false
         type: string
         default: '14400'
-      gh-optivem-ref:
-        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release. When set, this run will NOT auto-trigger meta-prerelease-stage (it can never mint a meta-rc tag against unreleased gh-optivem).'
-        required: false
-        type: string
-        default: ''
 
 # Shared concurrency group with meta-prerelease-stage so dry-runs and whole runs
 # serialize rather than stepping on each other.
@@ -89,7 +84,6 @@ jobs:
       skip-acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}
       fail-fast: ${{ inputs.fail-fast }}
       pipeline-timeout-seconds: ${{ inputs.pipeline-timeout-seconds }}
-      gh-optivem-ref: ${{ inputs.gh-optivem-ref }}
 
   # Exercise the manifest-builder code path WITHOUT tagging — catches bugs in
   # the new manifest logic (Phase 1 of plans/20260514-0652-shop-meta-release-
@@ -133,18 +127,9 @@ jobs:
   # Fire-and-forget: on successful dry-run, dispatch the real meta-prerelease-stage.
   # Cannot trigger-and-wait because both workflows share the meta-prerelease-stage
   # concurrency group — waiting here would deadlock the stage run.
-  #
-  # Hard safety gate on `gh-optivem-ref == ''`: a run that built gh-optivem from
-  # an unreleased ref must NEVER cascade into meta-prerelease-stage, because the
-  # stage mints the meta-v*-rc tag that meta-release-stage promotes to a real
-  # release. Verifying shop against unreleased gh-optivem and then releasing
-  # would ship artifacts validated against a CLI users can't install. This is the
-  # shop-side mirror of gh-optivem forcing skip-prerelease=true under
-  # debug-shop-head. When ref is set, this job is skipped — visible in the UI and
-  # in the run-name's [gh-optivem-ref:…] segment.
   trigger-stage:
     needs: run
-    if: ${{ success() && inputs.auto-trigger-stage && inputs.gh-optivem-ref == '' }}
+    if: ${{ success() && inputs.auto-trigger-stage }}
     runs-on: ubuntu-latest
     permissions:
       actions: write

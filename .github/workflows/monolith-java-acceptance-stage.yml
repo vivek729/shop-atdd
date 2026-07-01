@@ -9,21 +9,6 @@ on:
         description: 'Git SHA to test (leave empty for latest image)'
         required: false
         type: string
-      debug-skip-tests:
-        description: 'DEBUG ONLY: bypass acceptance tests and tag the RC anyway. Produces an RC tag indistinguishable from a tested one. Use only when iterating on the meta-prerelease pipeline plumbing — never on a real release path.'
-        required: false
-        type: boolean
-        default: false
-      force-run:
-        description: 'Bypass the no-changes run gate — execute the acceptance tests even when no artifacts or test/workflow changes are detected since the last RC tag. Meta-prerelease sets this so every dispatched run actually exercises the stage.'
-        required: false
-        type: boolean
-        default: false
-      gh-optivem-ref:
-        description: 'Build & install gh-optivem from this ref (branch/tag/SHA) instead of the latest release. Empty = latest release.'
-        required: false
-        type: string
-        default: ''
 
 permissions: {}
 
@@ -148,7 +133,7 @@ jobs:
           skip-conditions: |
             [
               {"when": ${{ steps.check-tag.outputs.exists == 'true' }}, "reason": "Release in progress — version already tagged, awaiting post-release VERSION bump."},
-              {"when": ${{ inputs.force-run != true && steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
+              {"when": ${{ steps.artifacts-changed.outputs.newer != 'true' && steps.test-changes.outputs.changed != 'true' }}, "reason": "No new artifacts since last run AND no test/workflow changes since last RC tag." }
             ]
 
   run:
@@ -190,7 +175,6 @@ jobs:
 
       # === Deploy: Real External Systems ===
       - name: Simulate Deployment (Real External Systems)
-        if: ${{ !inputs.debug-skip-tests }}
         uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: acceptance
@@ -201,7 +185,6 @@ jobs:
           working-directory: docker/java/monolith
 
       - name: Wait for Systems (Simulate Deployment (Real External Systems))
-        if: ${{ !inputs.debug-skip-tests }}
         uses: optivem/actions/wait-for-endpoints@v1
         with:
           endpoints: |
@@ -216,7 +199,6 @@ jobs:
 
       # === Deploy: Stub External Systems ===
       - name: Simulate Deployment (Stub External Systems)
-        if: ${{ !inputs.debug-skip-tests }}
         uses: optivem/actions/deploy-docker-compose@v1
         with:
           environment: acceptance
@@ -227,7 +209,6 @@ jobs:
           working-directory: docker/java/monolith
 
       - name: Wait for Systems (Simulate Deployment (Stub External Systems))
-        if: ${{ !inputs.debug-skip-tests }}
         uses: optivem/actions/wait-for-endpoints@v1
         with:
           endpoints: |
@@ -242,18 +223,15 @@ jobs:
 
       # === Setup Test Harness ===
       - name: Setup Java
-        if: ${{ !inputs.debug-skip-tests }}
         uses: actions/setup-java@v5
         with:
           java-version: 21
           distribution: temurin
 
       - name: Setup Gradle
-        if: ${{ !inputs.debug-skip-tests }}
         uses: gradle/actions/setup-gradle@v6
 
       - name: Pre-warm Gradle Wrapper (retry transient CDN flakes)
-        if: ${{ !inputs.debug-skip-tests }}
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 5
@@ -261,7 +239,6 @@ jobs:
           command: cd system-test/java && ./gradlew --version
 
       - name: Cache Playwright Browsers
-        if: ${{ !inputs.debug-skip-tests }}
         id: cache-playwright
         uses: actions/cache@v5
         with:
@@ -269,10 +246,8 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('system-test/java/build.gradle') }}
 
       - name: Install gh-optivem CLI extension
-        if: ${{ !inputs.debug-skip-tests }}
         uses: optivem/actions/install-gh-optivem@v1
         with:
-          ref: ${{ inputs.gh-optivem-ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Per-suite invocations of `gh optivem system-test run`. Each suite ID below
@@ -286,44 +261,32 @@ jobs:
       # earlier in the job by the Simulate Deployment / Wait for Systems
       # steps, so no `gh optivem system start` is needed.
       - name: Setup Test Harness
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test setup
       # === Run Smoke Tests ===
       - name: smoke-stub
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite smoke-stub
       - name: smoke-real
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite smoke-real
       # === Run Acceptance Tests ===
       - name: acceptance-parallel-api
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite acceptance-parallel-api
       - name: acceptance-parallel-ui
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite acceptance-parallel-ui
       - name: acceptance-isolated-api
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite acceptance-isolated-api
       - name: acceptance-isolated-ui
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite acceptance-isolated-ui
       # === Run Contract Tests ===
       - name: contract-stub
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite contract-stub
       - name: contract-stub-isolated
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite contract-stub-isolated
       - name: contract-real
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite contract-real
       # === Run E2E Tests ===
       - name: e2e-api
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite e2e-api
       - name: e2e-ui
-        if: ${{ !inputs.debug-skip-tests }}
         run: gh optivem system-test run --suite e2e-ui
       # === Tag Release Candidate ===
       - name: Read Base System Version
@@ -374,7 +337,6 @@ jobs:
   # === Run Static Code Analysis ===
   sonar:
     needs: run
-    if: ${{ !inputs.debug-skip-tests }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
