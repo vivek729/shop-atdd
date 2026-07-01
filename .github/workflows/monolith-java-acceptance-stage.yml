@@ -65,6 +65,7 @@ jobs:
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
       last-run-at: ${{ steps.last-run.outputs.timestamp }}
+      on-branch: ${{ steps.check-on-main.outputs.on-branch }}
     steps:
       - name: Ensure Environment Variables Defined
         uses: optivem/actions/validate-env-vars-defined@v1
@@ -83,6 +84,13 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ env.COMMIT_SHA }}
+
+      # <> Should Publish RC Tag / Image Tags? <>
+      - name: Check Commit on Main
+        id: check-on-main
+        uses: optivem/actions/check-sha-on-branch@v1
+        with:
+          commit-sha: ${{ env.COMMIT_SHA }}
 
       - name: Read Base Version
         id: read-base-version
@@ -325,6 +333,7 @@ jobs:
           file: system/monolith/java/VERSION
 
       - name: Compose Prerelease Version
+        if: needs.check.outputs.on-branch == 'true'
         id: rc-version
         uses: optivem/actions/compose-prerelease-version@v1
         with:
@@ -334,6 +343,7 @@ jobs:
           prefix: monolith-java
 
       - name: Tag Docker Images for Prerelease
+        if: needs.check.outputs.on-branch == 'true'
         id: tag-images
         uses: optivem/actions/tag-docker-images@v1
         with:
@@ -344,7 +354,8 @@ jobs:
 
   # === Publish Git Tag ===
   publish-tag:
-    needs: run
+    needs: [check, run]
+    if: needs.check.outputs.on-branch == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -411,7 +422,7 @@ jobs:
         stage-name: 'Acceptance Stage'
         stage-result: ${{ needs.publish-tag.result == 'failure' && 'failure' || needs.run.result }}
         environment: acceptance
-        success-version: ${{ needs.run.outputs.version }}
+        success-version: ${{ needs.check.outputs.on-branch == 'true' && needs.run.outputs.version || 'not computed — non-main run' }}
         success-artifact-ids: ${{ needs.run.outputs.image-urls }}
         skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
         latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
