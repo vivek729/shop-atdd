@@ -47,7 +47,7 @@ jobs:
       image-digest-urls: ${{ steps.find-latest.outputs.image-digest-urls }}
       latest-updated-at: ${{ steps.find-latest.outputs.latest-updated-at }}
       last-run-at: ${{ steps.last-run.outputs.timestamp }}
-      on-branch: ${{ steps.check-on-main.outputs.on-branch }}
+      on-main: ${{ steps.check-on-main.outputs.on-branch }}
     steps:
       - name: Ensure Environment Variables Defined
         uses: optivem/actions/validate-env-vars-defined@v1
@@ -749,7 +749,7 @@ jobs:
           file: system/multitier/dotnet/VERSION
 
       - name: Compose Prerelease Version
-        if: needs.check.outputs.on-branch == 'true'
+        if: needs.check.outputs.on-main == 'true'
         id: rc-version
         uses: optivem/actions/compose-prerelease-version@v1
         with:
@@ -759,7 +759,7 @@ jobs:
           prefix: multitier-dotnet-cloud
 
       - name: Tag Docker Images for Prerelease
-        if: needs.check.outputs.on-branch == 'true'
+        if: needs.check.outputs.on-main == 'true'
         id: tag-images
         uses: optivem/actions/tag-docker-images@v1
         with:
@@ -770,7 +770,7 @@ jobs:
 
   publish-tag:
     needs: [check, promote]
-    if: needs.check.outputs.on-branch == 'true'
+    if: needs.check.outputs.on-main == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -799,7 +799,7 @@ jobs:
         stage-name: 'Acceptance Stage (Cloud Run)'
         stage-result: ${{ needs.publish-tag.result == 'failure' && 'failure' || needs.promote.result }}
         environment: acceptance
-        success-version: ${{ needs.check.outputs.on-branch == 'true' && needs.promote.outputs.version || 'not computed — non-main run' }}
+        success-version: ${{ needs.check.outputs.on-main == 'true' && needs.promote.outputs.version || 'not computed — non-main run' }}
         success-artifact-ids: ${{ needs.promote.outputs.image-urls }}
         skipped-reason: ${{ needs.preflight.outputs.skip-reason || needs.check.outputs.skip-reason }}
         latest-artifact-ids: ${{ needs.check.outputs.image-digest-urls }}
