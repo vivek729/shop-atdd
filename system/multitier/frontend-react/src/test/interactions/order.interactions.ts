@@ -95,7 +95,9 @@ export function viewOrderDetailsInteraction(
         taxAmount: decimal(2),
         totalPrice: decimal(22),
         appliedCouponCode: null,
-        status: like(status),
+        // Exact (not like): the frontend BRANCHES on this value, so the contract must fail if the
+        // backend ever stops returning this exact status — that's the drift the branch depends on.
+        status,
       },
     },
   };

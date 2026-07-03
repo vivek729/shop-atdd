@@ -427,14 +427,6 @@
                 }
               ]
             },
-            "$.status": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
             "$.subtotalPrice": {
               "combine": "AND",
               "matchers": [
@@ -572,14 +564,6 @@
                 }
               ]
             },
-            "$.status": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
             "$.subtotalPrice": {
               "combine": "AND",
               "matchers": [
@@ -710,14 +694,6 @@
               ]
             },
             "$.sku": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
-            "$.status": {
               "combine": "AND",
               "matchers": [
                 {
