@@ -69,12 +69,34 @@ describe('Backend Pact Provider Verification', () => {
           );
         },
 
-        'order ORD-1 exists': async () => {
+        'order ORD-1 is placed': async () => {
           await harness.resetState();
           await harness.orderRepo.save(
             harness.orderRepo.create({
               ...sampleOrder(),
               orderNumber: 'ORD-1',
+            }),
+          );
+        },
+
+        'order ORD-1 is cancelled': async () => {
+          await harness.resetState();
+          await harness.orderRepo.save(
+            harness.orderRepo.create({
+              ...sampleOrder(),
+              orderNumber: 'ORD-1',
+              status: OrderStatus.CANCELLED,
+            }),
+          );
+        },
+
+        'order ORD-1 is delivered': async () => {
+          await harness.resetState();
+          await harness.orderRepo.save(
+            harness.orderRepo.create({
+              ...sampleOrder(),
+              orderNumber: 'ORD-1',
+              status: OrderStatus.DELIVERED,
             }),
           );
         },

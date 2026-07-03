@@ -207,8 +207,18 @@ public class BackendPactVerificationTest : IAsyncLifetime
                 _db.SaveChanges();
                 break;
 
-            case "order ORD-1 exists":
+            case "order ORD-1 is placed":
                 _db.Orders.Add(SampleOrder("ORD-1"));
+                _db.SaveChanges();
+                break;
+
+            case "order ORD-1 is cancelled":
+                _db.Orders.Add(SampleOrder("ORD-1", OrderStatus.CANCELLED));
+                _db.SaveChanges();
+                break;
+
+            case "order ORD-1 is delivered":
+                _db.Orders.Add(SampleOrder("ORD-1", OrderStatus.DELIVERED));
                 _db.SaveChanges();
                 break;
 
@@ -270,7 +280,9 @@ public class BackendPactVerificationTest : IAsyncLifetime
                 .WithBody($"{{\"id\":\"{country}\",\"countryName\":\"{country}\",\"taxRate\":{rate}}}")
                 .WithHeader("Content-Type", "application/json"));
 
-    private static Order SampleOrder(string orderNumber) => new()
+    private static Order SampleOrder(string orderNumber) => SampleOrder(orderNumber, OrderStatus.PLACED);
+
+    private static Order SampleOrder(string orderNumber, OrderStatus status) => new()
     {
         OrderNumber = orderNumber,
         OrderTimestamp = DateTime.Parse("2026-03-10T12:00:00Z").ToUniversalTime(),
@@ -285,7 +297,7 @@ public class BackendPactVerificationTest : IAsyncLifetime
         TaxRate = 0.10m,
         TaxAmount = 2.00m,
         TotalPrice = 22.00m,
-        Status = OrderStatus.PLACED,
+        Status = status,
         AppliedCouponCode = null,
     };
 
