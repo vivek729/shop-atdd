@@ -57,9 +57,19 @@ class BackendPactVerificationTest extends AbstractComponentTest {
         orderRepository.save(sampleOrder("ORD-HIST-1"));
     }
 
-    @State("order ORD-1 exists")
-    void orderOrd1Exists() {
+    @State("order ORD-1 is placed")
+    void orderOrd1Placed() {
         orderRepository.save(sampleOrder("ORD-1"));
+    }
+
+    @State("order ORD-1 is cancelled")
+    void orderOrd1Cancelled() {
+        orderRepository.save(sampleOrder("ORD-1", OrderStatus.CANCELLED));
+    }
+
+    @State("order ORD-1 is delivered")
+    void orderOrd1Delivered() {
+        orderRepository.save(sampleOrder("ORD-1", OrderStatus.DELIVERED));
     }
 
     @State("no order UNKNOWN exists")
@@ -85,11 +95,15 @@ class BackendPactVerificationTest extends AbstractComponentTest {
     }
 
     private Order sampleOrder(String orderNumber) {
+        return sampleOrder(orderNumber, OrderStatus.PLACED);
+    }
+
+    private Order sampleOrder(String orderNumber, OrderStatus status) {
         return new Order(
             orderNumber, Instant.parse("2026-03-10T12:00:00Z"), "US",
             "BOOK-123", 2, new BigDecimal("10.00"), new BigDecimal("20.00"),
             BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("20.00"),
             new BigDecimal("0.10"), new BigDecimal("2.00"), new BigDecimal("22.00"),
-            OrderStatus.PLACED, null);
+            status, null);
     }
 }

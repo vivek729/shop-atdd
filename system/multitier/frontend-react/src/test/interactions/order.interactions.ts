@@ -1,6 +1,7 @@
 // Shared Pact interaction builders; both suites import here so interactions merge idempotently.
 import { MatchersV3 } from '@pact-foundation/pact';
 import type { V3Interaction } from '@pact-foundation/pact/src/v3/types';
+import { OrderStatus } from '../../types/api.types';
 
 const { like, eachLike, integer, decimal } = MatchersV3;
 
@@ -9,9 +10,10 @@ interface PlaceOrderParams {
   quantity: number;
   country: string;
   couponCode?: string;
+  orderNumber?: string;
 }
 
-export function placeOrderInteraction({ sku, quantity, country, couponCode }: PlaceOrderParams): V3Interaction {
+export function placeOrderInteraction({ sku, quantity, country, couponCode, orderNumber = 'ORD-1' }: PlaceOrderParams): V3Interaction {
   const body: Record<string, unknown> = { sku, quantity, country };
   if (couponCode) body.couponCode = couponCode;
 
@@ -34,7 +36,7 @@ export function placeOrderInteraction({ sku, quantity, country, couponCode }: Pl
     willRespondWith: {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
-      body: { orderNumber: like('ORD-1') },
+      body: { orderNumber: like(orderNumber) },
     },
   };
 }
@@ -66,10 +68,14 @@ export function browseOrderHistoryInteraction(): V3Interaction {
   };
 }
 
-export function viewOrderDetailsInteraction(orderNumber: string): V3Interaction {
+export function viewOrderDetailsInteraction(
+  orderNumber: string,
+  status: OrderStatus = OrderStatus.PLACED,
+): V3Interaction {
+  // Each status has its own provider state so verification seeds a real order in that state.
   return {
-    states: [{ description: `order ${orderNumber} exists` }],
-    uponReceiving: `a view-order-details request for ${orderNumber}`,
+    states: [{ description: `order ${orderNumber} is ${status.toLowerCase()}` }],
+    uponReceiving: `a view-order-details request for ${orderNumber} (${status.toLowerCase()})`,
     withRequest: { method: 'GET', path: `/api/orders/${orderNumber}` },
     willRespondWith: {
       status: 200,
@@ -89,7 +95,7 @@ export function viewOrderDetailsInteraction(orderNumber: string): V3Interaction 
         taxAmount: decimal(2),
         totalPrice: decimal(22),
         appliedCouponCode: null,
-        status: like('PLACED'),
+        status: like(status),
       },
     },
   };

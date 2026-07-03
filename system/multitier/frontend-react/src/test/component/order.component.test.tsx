@@ -7,6 +7,7 @@ import { NewOrder } from '../../pages/NewOrder';
 import { OrderHistory } from '../../pages/OrderHistory';
 import { OrderDetails } from '../../pages/OrderDetails';
 import { renderWithProviders, routeApiTo } from '../test-utils';
+import { OrderStatus } from '../../types/api.types';
 import {
   placeOrderInteraction,
   placeOrderBlackoutInteraction,
@@ -27,7 +28,7 @@ afterEach(() => {
 
 describe('NewOrder — places an order', () => {
   it('shows success message when order is accepted', async () => {
-    provider.addInteraction(placeOrderInteraction({ sku: 'BOOK-123', quantity: 2, country: 'US' }));
+    provider.addInteraction(placeOrderInteraction({ sku: 'BOOK-123', quantity: 2, country: 'US', orderNumber: 'ORD-1' }));
 
     await provider.executeTest(async (mockserver) => {
       routeApiTo(mockserver.url);
@@ -136,6 +137,58 @@ describe('OrderDetails', () => {
       });
 
       expect(await screen.findByText('Order not found')).toBeInTheDocument();
+    });
+  });
+});
+
+// The frontend BRANCHES on the exact `status` value (OrderDetails.tsx): the Cancel and
+// Deliver actions are hidden for CANCELLED/DELIVERED orders. These drive the branch through
+// the Pact mock server — each status is an interaction, so its provider state must have a
+// matching @State handler in BackendPactVerificationTest that seeds an order in that state.
+function renderOrderDetails() {
+  renderWithProviders(<OrderDetails />, {
+    routePath: '/order-details/:orderNumber',
+    initialEntry: '/order-details/ORD-1',
+  });
+}
+
+describe('OrderDetails — status gates the Cancel/Deliver actions', () => {
+  it('shows Cancel Order and Deliver Order for a PLACED order', async () => {
+    provider.addInteraction(viewOrderDetailsInteraction('ORD-1', OrderStatus.PLACED));
+
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      renderOrderDetails();
+
+      expect(await screen.findByLabelText('Display Order Number')).toHaveTextContent('ORD-1');
+      expect(screen.getByRole('button', { name: 'Cancel Order' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Deliver Order' })).toBeInTheDocument();
+    });
+  });
+
+  it('hides Cancel Order and Deliver Order for a CANCELLED order', async () => {
+    provider.addInteraction(viewOrderDetailsInteraction('ORD-1', OrderStatus.CANCELLED));
+
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      renderOrderDetails();
+
+      expect(await screen.findByLabelText('Display Order Number')).toHaveTextContent('ORD-1');
+      expect(screen.queryByRole('button', { name: 'Cancel Order' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Deliver Order' })).not.toBeInTheDocument();
+    });
+  });
+
+  it('hides Cancel Order and Deliver Order for a DELIVERED order', async () => {
+    provider.addInteraction(viewOrderDetailsInteraction('ORD-1', OrderStatus.DELIVERED));
+
+    await provider.executeTest(async (mockserver) => {
+      routeApiTo(mockserver.url);
+      renderOrderDetails();
+
+      expect(await screen.findByLabelText('Display Order Number')).toHaveTextContent('ORD-1');
+      expect(screen.queryByRole('button', { name: 'Cancel Order' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Deliver Order' })).not.toBeInTheDocument();
     });
   });
 });
