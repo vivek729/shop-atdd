@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import path from 'node:path';
 import { PactV3 } from '@pact-foundation/pact';
-import { browseCoupons, createCoupon } from '../../services/coupon-service';
-import { browseCouponsInteraction, publishCouponInteraction } from '../interactions/coupon.interactions';
-import { routeApiTo } from '../test-utils';
+import { browseCoupons, createCoupon } from '../../../services/coupon-service';
+import { browseCouponsInteraction, publishCouponInteraction } from '../../interactions/coupon.interactions';
+import { routeApiTo } from '../../test-utils';
 
 const provider = new PactV3({
   consumer: 'frontend',

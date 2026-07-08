@@ -1,0 +1,94 @@
+// UI Frontend Driver — realizes the Frontend DSL by driving the rendered UI:
+// it renders the page, fires the user's gestures through userEvent, and asserts
+// against the rendered screen. Used by the component/latest specs.
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { expect } from 'vitest';
+import { NewOrder } from '../../pages/NewOrder';
+import { OrderHistory } from '../../pages/OrderHistory';
+import { OrderDetails } from '../../pages/OrderDetails';
+import { AdminCoupons } from '../../pages/AdminCoupons';
+import { renderWithProviders, routeApiTo } from '../test-utils';
+import type { FrontendDriver, PlaceOrderGesture } from './frontend-dsl';
+
+export class UiFrontendDriver implements FrontendDriver {
+  private readonly user = userEvent.setup();
+
+  useBackend(baseUrl: string): void {
+    // Rendered components call relative /api/*; point them at the Pact mock server.
+    routeApiTo(baseUrl);
+  }
+
+  async placeOrder(gesture: PlaceOrderGesture): Promise<void> {
+    renderWithProviders(<NewOrder />);
+    await this.user.type(screen.getByLabelText('SKU'), gesture.sku);
+    await this.user.type(screen.getByLabelText('Quantity'), String(gesture.quantity));
+    await this.user.click(screen.getByRole('button', { name: 'Place Order' }));
+  }
+
+  async hasConfirmation(orderNumber: string): Promise<void> {
+    expect(await screen.findByText(new RegExp(`Order Number ${orderNumber}`))).toBeInTheDocument();
+  }
+
+  async hasError(message: string): Promise<void> {
+    expect(await screen.findByText(message)).toBeInTheDocument();
+  }
+
+  async browseOrderHistory(): Promise<void> {
+    renderWithProviders(<OrderHistory />);
+  }
+
+  async showsOrder(orderNumber: string): Promise<void> {
+    expect(await screen.findByText(orderNumber)).toBeInTheDocument();
+  }
+
+  async browseCoupons(): Promise<void> {
+    renderWithProviders(<AdminCoupons />);
+  }
+
+  async showsCoupon(code: string): Promise<void> {
+    expect(await screen.findByText(code)).toBeInTheDocument();
+  }
+
+  async viewOrderDetails(orderNumber: string): Promise<void> {
+    renderWithProviders(<OrderDetails />, {
+      routePath: '/order-details/:orderNumber',
+      initialEntry: `/order-details/${orderNumber}`,
+    });
+  }
+
+  async showsOrderDetails(orderNumber: string, totalPrice: string): Promise<void> {
+    expect(await screen.findByLabelText('Display Order Number')).toHaveTextContent(orderNumber);
+    expect(screen.getByLabelText('Display Total Price')).toHaveTextContent(totalPrice);
+  }
+
+  async showsCancelAndDeliverActions(): Promise<void> {
+    // Wait for the details to load before querying actions — otherwise we assert
+    // against the loading spinner (and tear the mock server down before the GET lands).
+    await screen.findByLabelText('Display Order Number');
+    expect(screen.getByRole('button', { name: 'Cancel Order' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Deliver Order' })).toBeInTheDocument();
+  }
+
+  async hidesCancelAndDeliverActions(): Promise<void> {
+    await screen.findByLabelText('Display Order Number');
+    expect(screen.queryByRole('button', { name: 'Cancel Order' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Deliver Order' })).not.toBeInTheDocument();
+  }
+
+  async showsNotFound(): Promise<void> {
+    expect(await screen.findByText('Order not found')).toBeInTheDocument();
+  }
+
+  publishCoupon(): Promise<void> {
+    return this.notAtUiLevel('publishCoupon');
+  }
+
+  succeeded(): Promise<void> {
+    return this.notAtUiLevel('succeeded');
+  }
+
+  private notAtUiLevel(op: string): never {
+    throw new Error(`FrontendDsl.${op} is not exercised at the component (UI) level`);
+  }
+}

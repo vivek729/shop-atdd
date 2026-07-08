@@ -3,18 +3,18 @@ import path from 'node:path';
 import { PactV3 } from '@pact-foundation/pact';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { NewOrder } from '../../pages/NewOrder';
-import { OrderHistory } from '../../pages/OrderHistory';
-import { OrderDetails } from '../../pages/OrderDetails';
-import { renderWithProviders, routeApiTo } from '../test-utils';
-import { OrderStatus } from '../../types/api.types';
+import { NewOrder } from '../../../pages/NewOrder';
+import { OrderHistory } from '../../../pages/OrderHistory';
+import { OrderDetails } from '../../../pages/OrderDetails';
+import { renderWithProviders, routeApiTo } from '../../test-utils';
+import { OrderStatus } from '../../../types/api.types';
 import {
   placeOrderInteraction,
   placeOrderBlackoutInteraction,
   browseOrderHistoryInteraction,
   viewOrderDetailsInteraction,
   viewMissingOrderInteraction,
-} from '../interactions/order.interactions';
+} from '../../interactions/order.interactions';
 
 const provider = new PactV3({
   consumer: 'frontend',

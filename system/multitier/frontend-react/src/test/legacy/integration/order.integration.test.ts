@@ -2,8 +2,8 @@
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
 import { PactV3 } from '@pact-foundation/pact';
-import { OrderGateway } from '../../services/order-service';
-import { placeOrderInteraction, browseOrderHistoryInteraction } from '../interactions/order.interactions';
+import { OrderGateway } from '../../../services/order-service';
+import { placeOrderInteraction, browseOrderHistoryInteraction } from '../../interactions/order.interactions';
 
 const provider = new PactV3({
   consumer: 'frontend',

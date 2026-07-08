@@ -16,8 +16,8 @@ export default defineConfig({
   test: {
     ...baseTest,
     include: [
-      'src/test/component/**/*.{test,spec}.{ts,tsx}',
-      'src/test/integration/**/*.{test,spec}.{ts,tsx}',
+      'src/test/legacy/**/*.{test,spec}.{ts,tsx}',
+      'src/test/latest/**/*.{test,spec}.{ts,tsx}',
     ],
     // Drop the base's component/pact/integration exclusions; keep only the standard ignores.
     exclude: [...configDefaults.exclude],

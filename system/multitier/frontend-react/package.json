@@ -12,10 +12,12 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:component": "vitest run --config vitest.opt-in.config.ts src/test/component",
+    "test:component": "vitest run --config vitest.opt-in.config.ts src/test/legacy/component src/test/latest/component",
     "test:unit": "vitest run src/test/harness.test.tsx",
     "test:pact": "vitest run --config vitest.opt-in.config.ts src/test/pact",
-    "test:integration": "vitest run --config vitest.opt-in.config.ts src/test/integration"
+    "test:integration": "vitest run --config vitest.opt-in.config.ts src/test/legacy/integration src/test/latest/integration",
+    "test:legacy": "vitest run --config vitest.opt-in.config.ts src/test/legacy",
+    "test:latest": "vitest run --config vitest.opt-in.config.ts src/test/latest"
   },
   "devDependencies": {
     "@pact-foundation/pact": "^13.2.0",
