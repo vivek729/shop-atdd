@@ -55,13 +55,13 @@ src/contractTest/…/backend/contract/BackendPactVerificationTest.java         U
 
 ## ▶ Next executable step (resume here)
 
-**Step 6 — cross-link the article** (deferred; cross-repo, in `optivem/substack`). Coordinate with substack article-sync: point the `PAID-TDD-*-contract-tests-external-systems` "before" at `component/legacy/` + `integration/legacy/`, and "after" at `component/latest/` + `integration/latest/` + the shared `support/` DSL. Concrete backend paths for the article live in **Target layout** above. Once done, this plan is fully complete — delete it (Step 8).
+**Step 6 — cross-link the article** (deferred). Point the `PAID-TDD-*-contract-tests-external-systems` article "before" at `component/legacy/` + `integration/legacy/`, and "after" at `component/latest/` + `integration/latest/` + the shared `support/` DSL. Concrete backend paths for the article live in **Target layout** above. Once done, this plan is fully complete — delete it (Step 8).
 
 ## Steps
 
 Steps 1–5 (build.gradle classpath, shared DSL+drivers, split component tests, split `ErpGatewayIntegrationTest` onto in-process WireMock, compile+checkstyle verify) and Step 7 (Postgres-harness-unify follow-up plan → `plans/20260708-1039-unify-component-integration-postgres-harness.md`) are **done** — committed in `backend-java`. Remaining:
 
-- [ ] **Step 6 — Cross-link the article — ⏳ Deferred:** cross-repo (`optivem/substack`), better handled in its own session with article-sync. "before" → `component/legacy/` + `integration/legacy/`; "after" → `component/latest/` + `integration/latest/` + the `support/` DSL.
+- [ ] **Step 6 — Cross-link the article — ⏳ Deferred:** "before" → `component/legacy/` + `integration/legacy/`; "after" → `component/latest/` + `integration/latest/` + the `support/` DSL.
 - [ ] **Step 8 — Commit via `/commit`; delete this plan.** (Blocked on Step 6 — the code is already committed; this deletes the plan once the article cross-link lands.)
 
 ## Notes
