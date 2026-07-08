@@ -37,8 +37,9 @@ sourceSets {
 		runtimeClasspath += sourceSets.componentTest.output + sourceSets.main.output
 	}
 	integrationTest {
-		compileClasspath += sourceSets.main.output
-		runtimeClasspath += sourceSets.main.output
+		// componentTest.output so integration `latest/` tests can import the shared stub DSL in support/.
+		compileClasspath += sourceSets.main.output + sourceSets.componentTest.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.componentTest.output
 	}
 }
 

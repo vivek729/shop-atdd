@@ -1,52 +1,62 @@
-package com.mycompany.myshop.backend.integration;
+package com.mycompany.myshop.backend.integration.latest;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.reset;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.dtos.external.GetPromotionResponse;
 import com.mycompany.myshop.backend.core.dtos.external.ProductDetailsResponse;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
+import com.mycompany.myshop.backend.support.ErpStubDriver;
+import com.mycompany.myshop.backend.support.ErpStubDsl;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
-@Testcontainers
+/**
+ * "After" of the external-systems contract-tests refactor at the narrow-integration layer: identical
+ * scenarios to the {@code legacy/} twin, but the ERP happy/404 stubs are declared through the shared
+ * fluent DSL under {@code support/} — the same {@link ErpStubDsl} the component {@code latest/} tests
+ * reuse. Uses the same in-process {@link WireMockServer} mechanism (no Docker). The 500/503
+ * error-injection cases have no DSL vocabulary and stay raw, matching the {@code legacy/} twin.
+ */
 class ErpGatewayIntegrationTest {
 
-    @Container
-    static GenericContainer<?> wireMock =
-        new GenericContainer<>(DockerImageName.parse("wiremock/wiremock:3.9.0"))
-            .withExposedPorts(8080)
-            .waitingFor(Wait.forHttp("/__admin/mappings").forStatusCode(200));
+    static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());
 
+    private ErpStubDsl erpStub;
     private ErpGateway erpGateway;
+
+    @BeforeAll
+    static void startWireMock() {
+        WIRE_MOCK.start();
+    }
+
+    @AfterAll
+    static void stopWireMock() {
+        WIRE_MOCK.stop();
+    }
 
     @BeforeEach
     void setUp() {
-        configureFor("localhost", wireMock.getMappedPort(8080));
-        reset();
+        WIRE_MOCK.resetAll();
+
+        erpStub = new ErpStubDsl(new ErpStubDriver(new WireMock("localhost", WIRE_MOCK.port())));
 
         erpGateway = new ErpGateway();
-        ReflectionTestUtils.setField(erpGateway, "erpUrl",
-            "http://localhost:" + wireMock.getMappedPort(8080));
+        ReflectionTestUtils.setField(erpGateway, "erpUrl", WIRE_MOCK.baseUrl());
     }
 
     @Test
     void getProductDetailsReturnsDetailsWhenFound() {
-        stubFor(get("/api/products/BOOK-123")
-            .willReturn(okJson("{\"id\":\"BOOK-123\",\"price\":10.00}")));
+        erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
 
         Optional<ProductDetailsResponse> result = erpGateway.getProductDetails("BOOK-123");
 
@@ -57,15 +67,14 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getProductDetailsReturnsEmptyWhenNotFound() {
-        stubFor(get("/api/products/UNKNOWN")
-            .willReturn(aResponse().withStatus(404)));
+        erpStub.returnsNoProduct().withSku("UNKNOWN").execute();
 
         assertThat(erpGateway.getProductDetails("UNKNOWN")).isEmpty();
     }
 
     @Test
     void getProductDetailsThrowsOnServerError() {
-        stubFor(get("/api/products/BAD-SKU")
+        WIRE_MOCK.stubFor(get("/api/products/BAD-SKU")
             .willReturn(aResponse().withStatus(500).withBody("Internal Server Error")));
 
         assertThatThrownBy(() -> erpGateway.getProductDetails("BAD-SKU"))
@@ -75,8 +84,7 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getPromotionDetailsReturnsPromotion() {
-        stubFor(get("/api/promotion")
-            .willReturn(okJson("{\"promotionActive\":true,\"discount\":0.15}")));
+        erpStub.returnsPromotion().withActive(true).withDiscount("0.15").execute();
 
         GetPromotionResponse result = erpGateway.getPromotionDetails();
 
@@ -86,7 +94,7 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getPromotionDetailsThrowsOnServerError() {
-        stubFor(get("/api/promotion")
+        WIRE_MOCK.stubFor(get("/api/promotion")
             .willReturn(aResponse().withStatus(503).withBody("Service Unavailable")));
 
         assertThatThrownBy(() -> erpGateway.getPromotionDetails())

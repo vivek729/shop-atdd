@@ -1,25 +1,41 @@
-package com.mycompany.myshop.backend.component;
+package com.mycompany.myshop.backend.component.latest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.AbstractComponentTest;
 import com.mycompany.myshop.backend.core.dtos.BrowseOrderHistoryResponse;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.support.ClockStubDriver;
+import com.mycompany.myshop.backend.support.ClockStubDsl;
+import com.mycompany.myshop.backend.support.ErpStubDriver;
+import com.mycompany.myshop.backend.support.ErpStubDsl;
+import com.mycompany.myshop.backend.support.TaxStubDriver;
+import com.mycompany.myshop.backend.support.TaxStubDsl;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 /**
- * Browse order history and view-details flows, including the 404 path for a missing order.
+ * "After" of the external-systems contract-tests refactor: identical scenarios to the {@code legacy/}
+ * twin, but the ERP / Tax / Clock stubs are declared through the shared fluent DSL under
+ * {@code support/}. Same stubbed responses, same assertions.
  */
 class OrderHistoryComponentTest extends AbstractComponentTest {
 
+    private final ErpStubDsl erpStub =
+        new ErpStubDsl(new ErpStubDriver(new WireMock("localhost", ERP.port())));
+    private final TaxStubDsl taxStub =
+        new TaxStubDsl(new TaxStubDriver(new WireMock("localhost", TAX.port())));
+    private final ClockStubDsl clockStub =
+        new ClockStubDsl(new ClockStubDriver(new WireMock("localhost", CLOCK.port())));
+
     private String placeOrder() {
-        stubClock("2026-03-10T12:00:00Z");
-        stubProduct("BOOK-123", "10.00");
-        stubPromotion(false, "1.0");
-        stubTax("US", "0.10");
+        clockStub.returnsTime("2026-03-10T12:00:00Z");
+        erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
+        erpStub.returnsPromotion().withActive(false).withDiscount("1.0").execute();
+        taxStub.returnsRate().withCountry("US").withRate("0.10").execute();
 
         var request = new PlaceOrderRequest();
         request.setSku("BOOK-123");

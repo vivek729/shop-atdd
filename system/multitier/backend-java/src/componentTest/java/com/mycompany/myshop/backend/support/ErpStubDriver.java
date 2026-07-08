@@ -1,0 +1,39 @@
+package com.mycompany.myshop.backend.support;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
+
+/**
+ * Low-level ERP stub driver: registers WireMock mappings against a supplied {@link WireMock} client.
+ * Wrapping a client (rather than a {@code WireMockServer}) lets one driver type point at either the
+ * in-process component-test server or the in-process narrow-integration server. The URLs and JSON
+ * bodies are byte-identical to {@code AbstractComponentTest}'s {@code stub*} helpers, so switching a
+ * test to the DSL is behaviour-neutral.
+ */
+public class ErpStubDriver {
+
+    private final WireMock wireMock;
+
+    public ErpStubDriver(WireMock wireMock) {
+        this.wireMock = wireMock;
+    }
+
+    public void stubProduct(String sku, String price) {
+        wireMock.register(get(urlEqualTo("/api/products/" + sku))
+            .willReturn(okJson("{\"id\":\"" + sku + "\",\"price\":" + price + "}")));
+    }
+
+    public void stubProductMissing(String sku) {
+        wireMock.register(get(urlEqualTo("/api/products/" + sku))
+            .willReturn(aResponse().withStatus(404)));
+    }
+
+    public void stubPromotion(boolean active, String discount) {
+        wireMock.register(get(urlEqualTo("/api/promotion"))
+            .willReturn(okJson("{\"promotionActive\":" + active + ",\"discount\":" + discount + "}")));
+    }
+}

@@ -1,7 +1,5 @@
 # 2026-07-08 09:02:00 UTC — Backend external-systems tests: legacy/latest split (component + narrow-integration), shared stub DSL
 
-🤖 **Picked up by agent** — `Valentina_Desk` at `2026-07-08T09:32:04Z`
-
 > **Provider-side mirror** of the frontend contract-tests refactor (`fad5d866`). Splits the **backend external-systems tests** — the ones that stub the ERP/tax external systems with WireMock — into `legacy` (raw WireMock) / `latest` (shared stub DSL), across **both** the component and the narrow-integration layers. Matches the `PAID-TDD-*-contract-tests-external-systems` article drafts.
 
 ## TL;DR
@@ -57,18 +55,14 @@ src/contractTest/…/backend/contract/BackendPactVerificationTest.java         U
 
 ## ▶ Next executable step (resume here)
 
-**Step 1 — `build.gradle`:** add `sourceSets.componentTest.output` to `integrationTest`'s compile+runtime classpath. Then **Step 2** build the 6 `support/` DSL+driver classes. Gate: `./gradlew componentTestClasses` compiles.
+**Step 6 — cross-link the article** (deferred; cross-repo, in `optivem/substack`). Coordinate with substack article-sync: point the `PAID-TDD-*-contract-tests-external-systems` "before" at `component/legacy/` + `integration/legacy/`, and "after" at `component/latest/` + `integration/latest/` + the shared `support/` DSL. Concrete backend paths for the article live in **Target layout** above. Once done, this plan is fully complete — delete it (Step 8).
 
 ## Steps
 
-- [ ] **Step 1 — `build.gradle`:** `integrationTest { compileClasspath/runtimeClasspath += sourceSets.main.output + sourceSets.componentTest.output }`. Nothing else changes (task names, tags, verifier, deps all as-is; integrationTest already has its own wiremock dep).
-- [ ] **Step 2 — Shared DSL + drivers** in `componentTest/…/support/` (6 classes, decision #4). Byte-identical mappings to `AbstractComponentTest`'s `stub*` helpers.
-- [ ] **Step 3 — Split component tests** (`PlaceOrderComponentTest`, `OrderHistoryComponentTest`) into `component/legacy/` (raw `ERP/TAX/CLOCK.stubFor(...)` inlined) + `component/latest/` (DSL via `new ErpStubDsl(new ErpStubDriver(new WireMock("localhost", ERP.port())))`). `git rm` the originals. Leave `AbstractComponentTest` helpers intact.
-- [ ] **Step 4 — Split `ErpGatewayIntegrationTest`** into `integration/legacy/` + `integration/latest/`, BOTH switched to an in-process `WireMockServer` (drop the container; decision #6). Happy/404 shapes via DSL in `latest/`; the 500/503 error-injection tests stay raw in both. `git rm` the original.
-- [ ] **Step 5 — Verify (compile + style; Docker not available locally):** `./gradlew componentTestClasses integrationTestClasses contractTestClasses checkstyleComponentTest checkstyleIntegrationTest checkstyleContractTest`. Full run relies on CI (see `project_local_testcontainers_blocked`). Verifier behaviour unchanged.
-- [ ] **Step 6 — Cross-link the article** (coordinate with substack article-sync): "before" → `legacy/`, "after" → `latest/` + the DSL.
-- [ ] **Step 7 — Follow-up plan:** create `plans/…-unify-component-integration-postgres-harness.md` (decision #8 — unify the component singleton-container vs integration `@ServiceConnection` Postgres mechanism; touches the shared harness + verifier, do deliberately).
-- [ ] **Step 8 — Commit via `/commit`; delete this plan.**
+Steps 1–5 (build.gradle classpath, shared DSL+drivers, split component tests, split `ErpGatewayIntegrationTest` onto in-process WireMock, compile+checkstyle verify) and Step 7 (Postgres-harness-unify follow-up plan → `plans/20260708-1039-unify-component-integration-postgres-harness.md`) are **done** — committed in `backend-java`. Remaining:
+
+- [ ] **Step 6 — Cross-link the article — ⏳ Deferred:** cross-repo (`optivem/substack`), better handled in its own session with article-sync. "before" → `component/legacy/` + `integration/legacy/`; "after" → `component/latest/` + `integration/latest/` + the `support/` DSL.
+- [ ] **Step 8 — Commit via `/commit`; delete this plan.** (Blocked on Step 6 — the code is already committed; this deletes the plan once the article cross-link lands.)
 
 ## Notes
 
