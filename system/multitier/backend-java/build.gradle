@@ -28,28 +28,37 @@ java {
 
 // Opt-in test layers, kept off the default `test`/`build` so the template's build stays fast and Docker-light.
 sourceSets {
-	componentTest {
+	// Shared stub drivers/DSLs (support/), consumed by every opt-in test layer. Its own source set
+	// so contract/integration tests depend only on the helpers, not on the whole componentTest suite.
+	testSupport {
 		compileClasspath += sourceSets.main.output
 		runtimeClasspath += sourceSets.main.output
 	}
+	componentTest {
+		compileClasspath += sourceSets.main.output + sourceSets.testSupport.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.testSupport.output
+	}
 	contractTest {
-		compileClasspath += sourceSets.componentTest.output + sourceSets.main.output
-		runtimeClasspath += sourceSets.componentTest.output + sourceSets.main.output
+		// componentTest.output because the Pact verifier reuses AbstractComponentTest's harness.
+		compileClasspath += sourceSets.componentTest.output + sourceSets.testSupport.output + sourceSets.main.output
+		runtimeClasspath += sourceSets.componentTest.output + sourceSets.testSupport.output + sourceSets.main.output
 	}
 	integrationTest {
-		// componentTest.output so integration `latest/` tests can import the shared stub DSL in support/.
-		compileClasspath += sourceSets.main.output + sourceSets.componentTest.output
-		runtimeClasspath += sourceSets.main.output + sourceSets.componentTest.output
+		// testSupport.output so integration `latest/` tests can import the shared stub DSL in support/.
+		compileClasspath += sourceSets.main.output + sourceSets.testSupport.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.testSupport.output
 	}
 }
 
 configurations {
-	componentTestImplementation.extendsFrom testImplementation
-	componentTestRuntimeOnly.extendsFrom testRuntimeOnly
+	testSupportImplementation.extendsFrom testImplementation
+	testSupportRuntimeOnly.extendsFrom testRuntimeOnly
+	componentTestImplementation.extendsFrom testSupportImplementation
+	componentTestRuntimeOnly.extendsFrom testSupportRuntimeOnly
 	contractTestImplementation.extendsFrom componentTestImplementation
 	contractTestRuntimeOnly.extendsFrom componentTestRuntimeOnly
-	integrationTestImplementation.extendsFrom testImplementation
-	integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+	integrationTestImplementation.extendsFrom testSupportImplementation
+	integrationTestRuntimeOnly.extendsFrom testSupportRuntimeOnly
 }
 
 repositories {
@@ -78,12 +87,12 @@ dependencies {
 	testImplementation 'org.flywaydb:flyway-database-postgresql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// Component + Pact contract layer only (inherits the testImplementation deps above).
-	componentTestImplementation 'org.wiremock:wiremock-standalone:3.9.2'
-	componentTestImplementation 'au.com.dius.pact.provider:junit5spring:4.6.14'
+	// Shared stub helpers (support/) need WireMock; declared once here and inherited by the
+	// component, contract, and integration layers via the testSupportImplementation extendsFrom chain.
+	testSupportImplementation 'org.wiremock:wiremock-standalone:3.9.2'
 
-	// Narrow integration layer only (inherits the testImplementation deps above).
-	integrationTestImplementation 'org.wiremock:wiremock-standalone:3.9.2'
+	// Pact contract layer only (inherits the testSupport + test deps above).
+	componentTestImplementation 'au.com.dius.pact.provider:junit5spring:4.6.14'
 }
 
 tasks.named('test') {
