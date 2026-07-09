@@ -1,7 +1,5 @@
 package com.mycompany.myshop.backend.component.latest.harness;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.mycompany.myshop.backend.AbstractComponentTest;
 import org.junit.jupiter.api.Test;
 
@@ -12,17 +10,16 @@ import org.junit.jupiter.api.Test;
  * boots and serves (random port/real socket, Testcontainers Postgres migrated and reachable, HTTP
  * round-trips work), with no compose.
  *
- * <p>{@code browseCoupons()} folds the {@code 200 OK} + non-null-body assertions into the DSL, so the
- * test itself only asserts the fresh-boot empty list. Because it goes through the DSL, this twin also
- * lightly exercises {@code BackendDsl}/{@code BackendDriver}; the {@code legacy/} restTemplate twin
- * remains the dependency-light pure-infra canary.
+ * <p>Hits the dedicated liveness endpoint ({@code GET /health}) rather than a feature endpoint, so
+ * the canary depends only on the harness being up — not on the coupon feature. This is the SUT-side
+ * mirror of the system-test's {@code assume().myShop().shouldBeRunning()}, which resolves to the same
+ * {@code /health} probe. {@code checkHealth()} folds the {@code 200 OK} + {@code status: UP}
+ * assertions into the DSL; the {@code legacy/} restTemplate twin remains the dependency-light canary.
  */
 class HarnessSmokeTest extends AbstractComponentTest {
 
     @Test
     void bootsInProcessAndServesHttp() {
-        var coupons = backend.browseCoupons();
-
-        assertThat(coupons.getCoupons()).isEmpty();
+        backend.checkHealth();
     }
 }

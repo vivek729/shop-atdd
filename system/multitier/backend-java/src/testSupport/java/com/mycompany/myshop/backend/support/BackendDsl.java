@@ -7,6 +7,7 @@ import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
 import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
 import java.math.BigDecimal;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
@@ -55,6 +56,17 @@ public class BackendDsl {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         return response.getBody();
+    }
+
+    /**
+     * Hits the dedicated liveness endpoint ({@code GET /health}) and asserts {@code 200 OK} with
+     * {@code status: UP} — the SUT-side equivalent of the system-test's {@code myShop().shouldBeRunning()}.
+     * Used by the harness smoke test so the canary depends on the liveness probe, not a feature endpoint.
+     */
+    public void checkHealth() {
+        var response = driver.checkHealth();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsEntry("status", "UP");
     }
 
     public final class PlaceOrder {
