@@ -23,13 +23,14 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
 
     @Test
     void computesTotalsFromPricePromotionAndTax() {
-        clockStub.returnsTime("2026-03-10T12:00:00Z");
+        clockStub.returnsTime("2026-03-10T12:00:00Z").execute();
         erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
         erpStub.returnsPromotion().withActive(false).withDiscount("1.0").execute();
         taxStub.returnsRate().withCountry("US").withRate("0.10").execute();
 
-        var order = backend.placeOrder()
+        var placed = backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingSuccess();
+        var order = backend.viewOrder(placed.getOrderNumber());
 
         assertThat(order.getBasePrice()).isEqualByComparingTo("20.00");      // 10.00 x 2
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("20.00");  // no promo, no coupon
@@ -41,13 +42,14 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
 
     @Test
     void appliesActivePromotionDiscount() {
-        clockStub.returnsTime("2026-03-10T12:00:00Z");
+        clockStub.returnsTime("2026-03-10T12:00:00Z").execute();
         erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
         erpStub.returnsPromotion().withActive(true).withDiscount("0.9").execute();
         taxStub.returnsRate().withCountry("US").withRate("0.10").execute();
 
-        var order = backend.placeOrder()
+        var placed = backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingSuccess();
+        var order = backend.viewOrder(placed.getOrderNumber());
 
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("18.00");  // 20.00 x 0.9
         assertThat(order.getTaxAmount()).isEqualByComparingTo("1.80");       // 18.00 x 0.10
@@ -58,14 +60,15 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
     void appliesCouponDiscount() {
         couponRepository.save(new Coupon("SAVE20", new BigDecimal("0.20"), null, null, 100, 0));
 
-        clockStub.returnsTime("2026-03-10T12:00:00Z");
+        clockStub.returnsTime("2026-03-10T12:00:00Z").execute();
         erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
         erpStub.returnsPromotion().withActive(false).withDiscount("1.0").execute();
         taxStub.returnsRate().withCountry("US").withRate("0.10").execute();
 
-        var order = backend.placeOrder()
+        var placed = backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US").withCoupon("SAVE20")
             .placeExpectingSuccess();
+        var order = backend.viewOrder(placed.getOrderNumber());
 
         assertThat(order.getDiscountAmount()).isEqualByComparingTo("4.00");  // 20.00 x 0.20
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("16.00");
@@ -76,7 +79,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
 
     @Test
     void rejectsOrderDuringNewYearBlackout() {
-        clockStub.returnsTime("2026-12-31T23:59:00Z");
+        clockStub.returnsTime("2026-12-31T23:59:00Z").execute();
 
         backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US")
@@ -85,7 +88,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
 
     @Test
     void rejectsUnknownProduct() {
-        clockStub.returnsTime("2026-03-10T12:00:00Z");
+        clockStub.returnsTime("2026-03-10T12:00:00Z").execute();
         erpStub.returnsNoProduct().withSku("MISSING-1").execute();
 
         backend.placeOrder()

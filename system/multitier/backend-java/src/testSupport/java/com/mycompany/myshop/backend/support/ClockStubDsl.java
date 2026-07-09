@@ -4,7 +4,7 @@ package com.mycompany.myshop.backend.support;
  * Fluent facade over {@link ClockStubDriver} for stubbing the Clock external system:
  *
  * <pre>{@code
- * clockStub.returnsTime("2026-03-10T12:00:00Z");
+ * clockStub.returnsTime("2026-03-10T12:00:00Z").execute();
  * }</pre>
  */
 public class ClockStubDsl {
@@ -15,7 +15,19 @@ public class ClockStubDsl {
         this.driver = driver;
     }
 
-    public void returnsTime(String isoInstant) {
-        driver.stubTime(isoInstant);
+    public TimeStub returnsTime(String isoInstant) {
+        return new TimeStub(isoInstant);
+    }
+
+    public final class TimeStub {
+        private final String isoInstant;
+
+        private TimeStub(String isoInstant) {
+            this.isoInstant = isoInstant;
+        }
+
+        public void execute() {
+            driver.stubTime(isoInstant);
+        }
     }
 }

@@ -17,7 +17,7 @@ import org.springframework.http.HttpStatus;
 class OrderHistoryComponentTest extends AbstractComponentTest {
 
     private String placeOrder() {
-        clockStub.returnsTime("2026-03-10T12:00:00Z");
+        clockStub.returnsTime("2026-03-10T12:00:00Z").execute();
         erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
         erpStub.returnsPromotion().withActive(false).withDiscount("1.0").execute();
         taxStub.returnsRate().withCountry("US").withRate("0.10").execute();

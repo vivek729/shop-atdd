@@ -37,7 +37,8 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        var order = placeAndFetch(orderRequest("BOOK-123", 2, "US", null));
+        var placed = place(orderRequest("BOOK-123", 2, "US", null));
+        var order = viewOrder(placed.getOrderNumber());
 
         assertThat(order.getBasePrice()).isEqualByComparingTo("20.00");      // 10.00 x 2
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("20.00");  // no promo, no coupon
@@ -58,7 +59,8 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        var order = placeAndFetch(orderRequest("BOOK-123", 2, "US", null));
+        var placed = place(orderRequest("BOOK-123", 2, "US", null));
+        var order = viewOrder(placed.getOrderNumber());
 
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("18.00");  // 20.00 x 0.9
         assertThat(order.getTaxAmount()).isEqualByComparingTo("1.80");       // 18.00 x 0.10
@@ -78,7 +80,8 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        var order = placeAndFetch(orderRequest("BOOK-123", 2, "US", "SAVE20"));
+        var placed = place(orderRequest("BOOK-123", 2, "US", "SAVE20"));
+        var order = viewOrder(placed.getOrderNumber());
 
         assertThat(order.getDiscountAmount()).isEqualByComparingTo("4.00");  // 20.00 x 0.20
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("16.00");
@@ -111,12 +114,16 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
-    private ViewOrderDetailsResponse placeAndFetch(PlaceOrderRequest request) {
+    private PlaceOrderResponse place(PlaceOrderRequest request) {
         var placed = restTemplate.postForEntity("/api/orders", request, PlaceOrderResponse.class);
         assertThat(placed.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(placed.getBody()).isNotNull();
+        return placed.getBody();
+    }
+
+    private ViewOrderDetailsResponse viewOrder(String orderNumber) {
         var view = restTemplate.getForEntity(
-            "/api/orders/" + placed.getBody().getOrderNumber(), ViewOrderDetailsResponse.class);
+            "/api/orders/" + orderNumber, ViewOrderDetailsResponse.class);
         assertThat(view.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(view.getBody()).isNotNull();
         return view.getBody();
