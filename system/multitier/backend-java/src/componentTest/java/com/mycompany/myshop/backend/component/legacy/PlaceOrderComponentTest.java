@@ -7,6 +7,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.AbstractComponentTest;
+import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
+import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
+import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.core.entities.Coupon;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import java.math.BigDecimal;
@@ -14,15 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 /**
- * "Before" of the external-systems contract-tests refactor: the place-order flow with the ERP / Tax
- * / Clock externals stubbed by raw, inlined WireMock ({@code ERP/TAX/CLOCK.stubFor(...)}). The
- * {@code latest/} twin drives the identical scenarios through the shared stub DSL. Same stubbed
- * responses, same assertions.
- *
- * <p>Note the contrast is external-stub-only: the system under test is driven through the shared
- * {@code backend} DSL ({@link com.mycompany.myshop.backend.support.BackendDsl}) in both twins, so
- * the SUT-side interaction is identical here and in {@code latest/} — only the external stubs differ
- * (raw WireMock here vs the stub DSL there).
+ * "Before" of the component-test refactor: the place-order flow driven entirely by raw plumbing — the
+ * ERP / Tax / Clock externals stubbed with inlined WireMock ({@code ERP/TAX/CLOCK.stubFor(...)}) and
+ * the system under test hit with raw {@code restTemplate} calls ({@code placeAndFetch(orderRequest(
+ * ...))}). The {@code latest/} twin runs the identical scenarios entirely through the DSLs — the stub
+ * DSL for the externals and the {@code backend} DSL for the SUT. Same stubbed responses, same
+ * assertions; for this pair, legacy is all-raw and latest is all-DSL.
  */
 class PlaceOrderComponentTest extends AbstractComponentTest {
 
@@ -37,8 +37,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        var order = backend.placeOrder()
-            .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingSuccess();
+        var order = placeAndFetch(orderRequest("BOOK-123", 2, "US", null));
 
         assertThat(order.getBasePrice()).isEqualByComparingTo("20.00");      // 10.00 x 2
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("20.00");  // no promo, no coupon
@@ -59,8 +58,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        var order = backend.placeOrder()
-            .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingSuccess();
+        var order = placeAndFetch(orderRequest("BOOK-123", 2, "US", null));
 
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("18.00");  // 20.00 x 0.9
         assertThat(order.getTaxAmount()).isEqualByComparingTo("1.80");       // 18.00 x 0.10
@@ -80,9 +78,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        var order = backend.placeOrder()
-            .withSku("BOOK-123").withQuantity(2).withCountry("US").withCoupon("SAVE20")
-            .placeExpectingSuccess();
+        var order = placeAndFetch(orderRequest("BOOK-123", 2, "US", "SAVE20"));
 
         assertThat(order.getDiscountAmount()).isEqualByComparingTo("4.00");  // 20.00 x 0.20
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("16.00");
@@ -96,9 +92,10 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         CLOCK.stubFor(get(urlEqualTo("/api/time"))
             .willReturn(okJson("{\"time\":\"2026-12-31T23:59:00Z\"}")));
 
-        assertThat(backend.placeOrder()
-            .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingRejection())
-            .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        var response = restTemplate.postForEntity(
+            "/api/orders", orderRequest("BOOK-123", 2, "US", null), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @Test
@@ -108,8 +105,30 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         ERP.stubFor(get(urlEqualTo("/api/products/MISSING-1"))
             .willReturn(aResponse().withStatus(404)));
 
-        assertThat(backend.placeOrder()
-            .withSku("MISSING-1").withQuantity(1).withCountry("US").placeExpectingRejection())
-            .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        var response = restTemplate.postForEntity(
+            "/api/orders", orderRequest("MISSING-1", 1, "US", null), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    private ViewOrderDetailsResponse placeAndFetch(PlaceOrderRequest request) {
+        var placed = restTemplate.postForEntity("/api/orders", request, PlaceOrderResponse.class);
+        assertThat(placed.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(placed.getBody()).isNotNull();
+        var view = restTemplate.getForEntity(
+            "/api/orders/" + placed.getBody().getOrderNumber(), ViewOrderDetailsResponse.class);
+        assertThat(view.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(view.getBody()).isNotNull();
+        return view.getBody();
+    }
+
+    private PlaceOrderRequest orderRequest(
+            String sku, int quantity, String country, String couponCode) {
+        var request = new PlaceOrderRequest();
+        request.setSku(sku);
+        request.setQuantity(quantity);
+        request.setCountry(country);
+        request.setCouponCode(couponCode);
+        return request;
     }
 }

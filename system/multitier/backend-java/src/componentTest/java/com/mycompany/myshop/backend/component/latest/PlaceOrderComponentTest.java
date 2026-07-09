@@ -10,14 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 /**
- * "After" of the external-systems contract-tests refactor: identical scenarios to the {@code legacy/}
- * twin, but the ERP / Tax / Clock stubs are declared through the shared fluent DSL under
- * {@code support/} (e.g. {@code erpStub.returnsProduct().withSku(...).withUnitPrice(...).execute()}).
- * Same stubbed responses, same assertions; the WireMock plumbing lives in the drivers.
- *
- * <p>The system under test is driven the same way in both twins — through the shared {@code backend}
- * DSL ({@link com.mycompany.myshop.backend.support.BackendDsl}) — so the {@code latest/} vs
- * {@code legacy/} contrast stays purely about external-stub style (stub DSL vs raw WireMock).
+ * "After" of the component-test refactor: identical scenarios to the {@code legacy/} twin, driven
+ * entirely through the DSLs — the ERP / Tax / Clock externals via the shared stub DSL under
+ * {@code support/} (e.g. {@code erpStub.returnsProduct().withSku(...).withUnitPrice(...).execute()})
+ * and the system under test via the {@code backend} DSL
+ * ({@link com.mycompany.myshop.backend.support.BackendDsl},
+ * {@code backend.placeOrder()...placeExpectingSuccess()}). Same stubbed responses, same assertions;
+ * the raw WireMock and {@code restTemplate} plumbing of the {@code legacy/} twin lives in the drivers
+ * here. For this pair, legacy is all-raw and latest is all-DSL.
  */
 class PlaceOrderComponentTest extends AbstractComponentTest {
 
@@ -78,9 +78,9 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
     void rejectsOrderDuringNewYearBlackout() {
         clockStub.returnsTime("2026-12-31T23:59:00Z");
 
-        assertThat(backend.placeOrder()
-            .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingRejection())
-            .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        backend.placeOrder()
+            .withSku("BOOK-123").withQuantity(2).withCountry("US")
+            .placeExpectingRejection(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @Test
@@ -88,8 +88,8 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         clockStub.returnsTime("2026-03-10T12:00:00Z");
         erpStub.returnsNoProduct().withSku("MISSING-1").execute();
 
-        assertThat(backend.placeOrder()
-            .withSku("MISSING-1").withQuantity(1).withCountry("US").placeExpectingRejection())
-            .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        backend.placeOrder()
+            .withSku("MISSING-1").withQuantity(1).withCountry("US")
+            .placeExpectingRejection(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

@@ -13,8 +13,8 @@ import org.springframework.http.HttpStatus;
  * "Before" of the SUT-side driver refactor: the publish + browse coupon flow driven by raw, inlined
  * {@code restTemplate} calls. The {@code latest/} twin drives the identical scenario through the
  * shared {@code backend} DSL. Coupon touches no external systems, so this pair's only contrast is
- * SUT-side (raw {@code restTemplate} here vs {@code backend} DSL there), unlike the order twins'
- * external-stub axis.
+ * SUT-side (raw {@code restTemplate} here vs {@code backend} DSL there); the order twins, which have
+ * externals, additionally vary the external-stub style.
  *
  * <p>Publish returns 204 No Content with no body — this is the real contract the system tests verify,
  * and the reason the frontend consumer pact's publish-coupon interaction (which expects 201 +

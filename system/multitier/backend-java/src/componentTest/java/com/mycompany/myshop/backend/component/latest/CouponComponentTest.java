@@ -11,9 +11,9 @@ import org.junit.jupiter.api.Test;
  * {@code backend} DSL ({@link com.mycompany.myshop.backend.support.BackendDsl}) instead of raw
  * {@code restTemplate} calls. Identical scenario and assertions to the {@code legacy/} twin.
  *
- * <p>Coupon touches no external systems, so — unlike the order twins, whose {@code latest/} vs
- * {@code legacy/} axis is external-stub style (stub DSL vs raw WireMock) — this pair's only contrast
- * is SUT-side: the {@code backend} DSL here vs raw {@code restTemplate} in {@code legacy/}. Publish
+ * <p>Coupon touches no external systems, so — unlike the order twins, which additionally swap raw
+ * WireMock for the stub DSL (stub DSL vs raw WireMock) — this pair's only axis is SUT-side: the
+ * {@code backend} DSL here vs raw {@code restTemplate} in {@code legacy/}. Publish
  * returns 204 No Content with no body, which {@code publishExpectingSuccess()} asserts.
  */
 class CouponComponentTest extends AbstractComponentTest {

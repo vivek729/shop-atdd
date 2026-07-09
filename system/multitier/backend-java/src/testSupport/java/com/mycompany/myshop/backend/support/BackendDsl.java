@@ -9,7 +9,6 @@ import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
 import java.math.BigDecimal;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 /**
  * Fluent facade over {@link BackendDriver} for driving the system under test (place + view order,
@@ -20,9 +19,9 @@ import org.springframework.http.HttpStatusCode;
  *     .withSku("BOOK-123").withQuantity(2).withCountry("US").withCoupon("SAVE20")
  *     .placeExpectingSuccess();
  *
- * HttpStatusCode status = backend.placeOrder()
+ * backend.placeOrder()
  *     .withSku("MISSING-1").withQuantity(1).withCountry("US")
- *     .placeExpectingRejection();
+ *     .placeExpectingRejection(HttpStatus.UNPROCESSABLE_ENTITY);
  *
  * backend.publishCoupon().withCode("SAVE10").withDiscountRate("0.20").withUsageLimit(100)
  *     .publishExpectingSuccess();
@@ -111,11 +110,13 @@ public class BackendDsl {
         }
 
         /**
-         * Places the order and returns the HTTP status without fetching, for rejection scenarios that
-         * only assert the status (e.g. {@code 422 UNPROCESSABLE_ENTITY}).
+         * Places the order and asserts it was rejected with {@code expectedStatus} (e.g.
+         * {@code 422 UNPROCESSABLE_ENTITY}), without fetching a body it does not need. The system
+         * under test owns its HTTP contract, so the exact rejection status is asserted here in the
+         * DSL — symmetric with {@link #placeExpectingSuccess()} — rather than leaked to the test.
          */
-        public HttpStatusCode placeExpectingRejection() {
-            return driver.placeOrder(buildRequest()).getStatusCode();
+        public void placeExpectingRejection(HttpStatus expectedStatus) {
+            assertThat(driver.placeOrder(buildRequest()).getStatusCode()).isEqualTo(expectedStatus);
         }
 
         private PlaceOrderRequest buildRequest() {
