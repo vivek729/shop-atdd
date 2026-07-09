@@ -9,6 +9,8 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.mycompany.myshop.backend.core.repositories.CouponRepository;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
+import com.mycompany.myshop.backend.support.BackendDriver;
+import com.mycompany.myshop.backend.support.BackendDsl;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -69,8 +71,16 @@ public abstract class AbstractComponentTest {
     @Autowired
     protected CouponRepository couponRepository;
 
+    /**
+     * Fluent DSL for driving the system under test (place + view order), symmetric with the ERP /
+     * Tax / Clock stub DSLs. Wired here — rather than as a field initializer like the stub DSLs —
+     * because {@code restTemplate} is an autowired instance field not yet populated at field-init.
+     */
+    protected BackendDsl backend;
+
     @BeforeEach
     void resetComponentState() {
+        backend = new BackendDsl(new BackendDriver(restTemplate));
         ERP.resetAll();
         TAX.resetAll();
         CLOCK.resetAll();
