@@ -14,9 +14,9 @@ public class PlaceOrderPositiveTest : BaseAcceptanceTest
     public async Task ShouldBeAbleToPlaceOrderForValidInput(Channel channel)
     {
         await Scenario(channel)
-            .Given().Product().WithSku("ABC").WithUnitPrice(20.00m)
+            .Given().Product().WithSku("BOOK-123").WithUnitPrice(20.00m)
             .And().Country().WithCode("US").WithTaxRate(0.10m)
-            .When().PlaceOrder().WithSku("ABC").WithQuantity(5).WithCountry("US")
+            .When().PlaceOrder().WithSku("BOOK-123").WithQuantity(5).WithCountry("US")
             .Then().ShouldSucceed();
     }
 

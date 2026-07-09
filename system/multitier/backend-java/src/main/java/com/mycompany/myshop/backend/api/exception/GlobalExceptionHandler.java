@@ -20,9 +20,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @RestControllerAdvice
@@ -53,7 +51,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ProblemDetail> handleValidationException(ValidationException ex) {
         if (ex.getFieldName() != null) {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+            var problemDetail = ProblemDetail.forStatusAndDetail(
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     VALIDATION_DETAIL
             );
@@ -61,8 +59,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             problemDetail.setTitle(VALIDATION_TITLE);
             problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
-            List<Map<String, Object>> errors = new ArrayList<>();
-            Map<String, Object> errorDetail = new HashMap<>();
+            var errors = new ArrayList<Map<String, Object>>();
+            var errorDetail = new HashMap<String, Object>();
             errorDetail.put(PROP_FIELD, ex.getFieldName());
             errorDetail.put(PROP_MESSAGE, ex.getMessage());
             errors.add(errorDetail);
@@ -70,7 +68,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problemDetail);
         } else {
-            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+            var problemDetail = ProblemDetail.forStatusAndDetail(
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     ex.getMessage()
             );
@@ -84,7 +82,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(NotExistValidationException.class)
     public ResponseEntity<ProblemDetail> handleNotExistValidationException(NotExistValidationException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+        var problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.NOT_FOUND,
                 ex.getMessage()
         );
@@ -100,7 +98,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                    org.springframework.http.HttpHeaders headers,
                                                                    org.springframework.http.HttpStatusCode status,
                                                                    org.springframework.web.context.request.WebRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+        var problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 VALIDATION_DETAIL
         );
@@ -108,9 +106,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problemDetail.setTitle(VALIDATION_TITLE);
         problemDetail.setProperty(PROP_TIMESTAMP, Instant.now());
 
-        List<Map<String, Object>> errors = new ArrayList<>();
+        var errors = new ArrayList<Map<String, Object>>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
-            Map<String, Object> errorDetail = new HashMap<>();
+            var errorDetail = new HashMap<String, Object>();
             errorDetail.put(PROP_FIELD, ((FieldError) error).getField());
             errorDetail.put(PROP_MESSAGE, error.getDefaultMessage());
             errorDetail.put("code", error.getCode());
@@ -129,7 +127,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                    org.springframework.web.context.request.WebRequest request) {
         log.error("HttpMessageNotReadableException: {}", ex.getMessage(), ex);
 
-        ProblemDetail problemDetail = tryParseFieldError(ex.getMessage());
+        var problemDetail = tryParseFieldError(ex.getMessage());
         if (problemDetail != null) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body((Object) problemDetail);
         }
@@ -157,22 +155,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return null;
         }
 
-        Class<?> dtoClass = extractDtoClass(message);
+        var dtoClass = extractDtoClass(message);
         if (dtoClass == null) {
             return null;
         }
 
-        Map<String, String> fieldErrorPatterns = TypeValidationMessageExtractor.extractFieldMessages(dtoClass);
-        String lowerMessage = message.toLowerCase();
+        var fieldErrorPatterns = TypeValidationMessageExtractor.extractFieldMessages(dtoClass);
+        var lowerMessage = message.toLowerCase();
 
         return fieldErrorPatterns.entrySet().stream()
                 .filter(entry -> lowerMessage.contains(entry.getKey()))
                 .findFirst()
                 .map(entry -> {
-                    String fieldName = entry.getKey();
-                    String fieldMessage = entry.getValue();
+                    var fieldName = entry.getKey();
+                    var fieldMessage = entry.getValue();
 
-                    ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                    var pd = ProblemDetail.forStatusAndDetail(
                             HttpStatus.UNPROCESSABLE_ENTITY,
                             VALIDATION_DETAIL
                     );
@@ -180,8 +178,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                     pd.setTitle(VALIDATION_TITLE);
                     pd.setProperty(PROP_TIMESTAMP, Instant.now());
 
-                    List<Map<String, Object>> errors = new ArrayList<>();
-                    Map<String, Object> errorDetail = new HashMap<>();
+                    var errors = new ArrayList<Map<String, Object>>();
+                    var errorDetail = new HashMap<String, Object>();
                     errorDetail.put(PROP_FIELD, fieldName);
                     errorDetail.put(PROP_MESSAGE, fieldMessage);
                     errorDetail.put("code", "TYPE_MISMATCH");
@@ -194,9 +192,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private Class<?> extractDtoClass(String message) {
-        Matcher matcher = CLASS_NAME_PATTERN.matcher(message);
+        var matcher = CLASS_NAME_PATTERN.matcher(message);
         if (matcher.find()) {
-            String className = matcher.group(1);
+            var className = matcher.group(1);
             try {
                 return Class.forName(className);
             } catch (ClassNotFoundException e) {
@@ -210,13 +208,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ProblemDetail> handleGeneralException(Exception ex) {
         log.error("Unexpected error occurred", ex);
 
-        String rootCauseMessage = getRootCauseMessage(ex);
-        String fullMessage = "Internal server error: " + ex.getMessage();
+        var rootCauseMessage = getRootCauseMessage(ex);
+        var fullMessage = "Internal server error: " + ex.getMessage();
         if (rootCauseMessage != null && !rootCauseMessage.equals(ex.getMessage())) {
             fullMessage += " | Root cause: " + rootCauseMessage;
         }
 
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+        var problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 fullMessage
         );
@@ -228,7 +226,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private String getRootCauseMessage(Throwable ex) {
-        Throwable cause = ex;
+        var cause = ex;
         while (cause.getCause() != null) {
             cause = cause.getCause();
         }

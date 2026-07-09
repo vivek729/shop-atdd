@@ -8,9 +8,9 @@ public abstract class BaseErpContractTest : BaseExternalSystemContractTest
     public async Task ShouldBeAbleToGetProduct()
     {
         (await Scenario()
-            .Given().Product().WithSku("SKU-123").WithUnitPrice(12.0m)
-            .Then().Product("SKU-123"))
-            .HasSku("SKU-123")
+            .Given().Product().WithSku("BOOK-123").WithUnitPrice(12.0m)
+            .Then().Product("BOOK-123"))
+            .HasSku("BOOK-123")
             .HasPrice(12.0m);
     }
 }

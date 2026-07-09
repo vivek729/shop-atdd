@@ -6,7 +6,6 @@ import com.mycompany.myshop.backend.AbstractComponentTest;
 import com.mycompany.myshop.backend.core.dtos.BrowseCouponsResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 /**
  * Step 5 smoke test: proves the in-process harness boots (random port, real socket), the
@@ -16,8 +15,7 @@ class ComponentHarnessSmokeTest extends AbstractComponentTest {
 
     @Test
     void bootsInProcessAndServesHttp() {
-        ResponseEntity<BrowseCouponsResponse> response =
-            restTemplate.getForEntity("/api/coupons", BrowseCouponsResponse.class);
+        var response = restTemplate.getForEntity("/api/coupons", BrowseCouponsResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();

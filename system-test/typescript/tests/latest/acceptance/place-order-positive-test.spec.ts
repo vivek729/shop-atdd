@@ -6,7 +6,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
         await scenario
             .given()
             .product()
-            .withSku('ABC')
+            .withSku('BOOK-123')
             .withUnitPrice(20)
             .and()
             .country()
@@ -14,7 +14,7 @@ forChannels(ChannelType.UI, ChannelType.API)(() => {
             .withTaxRate(0.1)
             .when()
             .placeOrder()
-            .withSku('ABC')
+            .withSku('BOOK-123')
             .withQuantity(5)
             .withCountry('US')
             .then()

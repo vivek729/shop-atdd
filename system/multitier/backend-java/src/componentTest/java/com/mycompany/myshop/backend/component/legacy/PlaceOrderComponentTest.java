@@ -7,7 +7,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mycompany.myshop.backend.AbstractComponentTest;
-import com.mycompany.myshop.backend.core.dtos.ViewOrderDetailsResponse;
 import com.mycompany.myshop.backend.core.entities.Coupon;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import java.math.BigDecimal;
@@ -38,7 +37,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        ViewOrderDetailsResponse order = backend.placeOrder()
+        var order = backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingSuccess();
 
         assertThat(order.getBasePrice()).isEqualByComparingTo("20.00");      // 10.00 x 2
@@ -60,7 +59,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        ViewOrderDetailsResponse order = backend.placeOrder()
+        var order = backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingSuccess();
 
         assertThat(order.getSubtotalPrice()).isEqualByComparingTo("18.00");  // 20.00 x 0.9
@@ -81,7 +80,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         TAX.stubFor(get(urlEqualTo("/api/countries/US"))
             .willReturn(okJson("{\"id\":\"US\",\"countryName\":\"US\",\"taxRate\":0.10}")));
 
-        ViewOrderDetailsResponse order = backend.placeOrder()
+        var order = backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US").withCoupon("SAVE20")
             .placeExpectingSuccess();
 

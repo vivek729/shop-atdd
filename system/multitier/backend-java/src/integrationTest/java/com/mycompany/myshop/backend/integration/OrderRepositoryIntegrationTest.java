@@ -8,7 +8,6 @@ import com.mycompany.myshop.backend.core.entities.OrderStatus;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,7 @@ class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void savesAndReadsBackOrder() {
-        Order order = new Order(
+        var order = new Order(
             "ORD-001",
             Instant.parse("2026-01-01T00:00:00Z"),
             "US",
@@ -49,7 +48,7 @@ class OrderRepositoryIntegrationTest extends AbstractIntegrationTest {
 
         orderRepository.save(order);
 
-        Optional<Order> found = orderRepository.findByOrderNumber("ORD-001");
+        var found = orderRepository.findByOrderNumber("ORD-001");
         assertThat(found).isPresent();
         assertThat(found.get().getSku()).isEqualTo("BOOK-123");
         assertThat(found.get().getTotalPrice()).isEqualByComparingTo(new BigDecimal("22.00"));

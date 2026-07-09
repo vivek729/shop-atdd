@@ -11,7 +11,6 @@ import com.mycompany.myshop.backend.core.dtos.PlaceOrderRequest;
 import com.mycompany.myshop.backend.core.dtos.PlaceOrderResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 /**
  * "Before" of the external-systems contract-tests refactor: browse order history and view-details
@@ -35,18 +34,16 @@ class OrderHistoryComponentTest extends AbstractComponentTest {
         request.setQuantity(2);
         request.setCountry("US");
 
-        ResponseEntity<PlaceOrderResponse> placed =
-            restTemplate.postForEntity("/api/orders", request, PlaceOrderResponse.class);
+        var placed = restTemplate.postForEntity("/api/orders", request, PlaceOrderResponse.class);
         assertThat(placed.getBody()).isNotNull();
         return placed.getBody().getOrderNumber();
     }
 
     @Test
     void browseReturnsPlacedOrders() {
-        String orderNumber = placeOrder();
+        var orderNumber = placeOrder();
 
-        ResponseEntity<BrowseOrderHistoryResponse> response =
-            restTemplate.getForEntity("/api/orders", BrowseOrderHistoryResponse.class);
+        var response = restTemplate.getForEntity("/api/orders", BrowseOrderHistoryResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -57,8 +54,7 @@ class OrderHistoryComponentTest extends AbstractComponentTest {
 
     @Test
     void viewMissingOrderReturnsNotFound() {
-        ResponseEntity<String> response =
-            restTemplate.getForEntity("/api/orders/UNKNOWN", String.class);
+        var response = restTemplate.getForEntity("/api/orders/UNKNOWN", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }

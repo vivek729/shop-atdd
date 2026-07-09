@@ -1,16 +1,19 @@
 package com.mycompany.myshop.backend;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.repositories.CouponRepository;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
 import com.mycompany.myshop.backend.support.BackendDriver;
 import com.mycompany.myshop.backend.support.BackendDsl;
+import com.mycompany.myshop.backend.support.ClockStubDriver;
+import com.mycompany.myshop.backend.support.ClockStubDsl;
+import com.mycompany.myshop.backend.support.ErpStubDriver;
+import com.mycompany.myshop.backend.support.ErpStubDsl;
+import com.mycompany.myshop.backend.support.TaxStubDriver;
+import com.mycompany.myshop.backend.support.TaxStubDsl;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -78,6 +81,20 @@ public abstract class AbstractComponentTest {
      */
     protected BackendDsl backend;
 
+    /**
+     * Fluent DSLs for driving the ERP / Tax / Clock external-system stubs, symmetric with the
+     * {@code backend} DSL. Field-initialized (unlike {@code backend}) because the {@code ERP/TAX/
+     * CLOCK} WireMock servers are static and started in the class's static initializer, so their
+     * ports are available at instance-field-init time. Registered mappings are cleared per test by
+     * {@code resetComponentState()}'s {@code resetAll()}; the client instances survive the reset.
+     */
+    protected final ErpStubDsl erpStub =
+        new ErpStubDsl(new ErpStubDriver(new WireMock("localhost", ERP.port())));
+    protected final TaxStubDsl taxStub =
+        new TaxStubDsl(new TaxStubDriver(new WireMock("localhost", TAX.port())));
+    protected final ClockStubDsl clockStub =
+        new ClockStubDsl(new ClockStubDriver(new WireMock("localhost", CLOCK.port())));
+
     @BeforeEach
     void resetComponentState() {
         backend = new BackendDsl(new BackendDriver(restTemplate));
@@ -86,33 +103,5 @@ public abstract class AbstractComponentTest {
         CLOCK.resetAll();
         orderRepository.deleteAll();
         couponRepository.deleteAll();
-    }
-
-    // --- External-system stub helpers (shared by component tests and provider states) ---
-
-    protected static void stubClock(String isoInstant) {
-        CLOCK.stubFor(get(urlEqualTo("/api/time"))
-            .willReturn(okJson("{\"time\":\"" + isoInstant + "\"}")));
-    }
-
-    protected static void stubProduct(String sku, String price) {
-        ERP.stubFor(get(urlEqualTo("/api/products/" + sku))
-            .willReturn(okJson("{\"id\":\"" + sku + "\",\"price\":" + price + "}")));
-    }
-
-    protected static void stubProductMissing(String sku) {
-        ERP.stubFor(get(urlEqualTo("/api/products/" + sku))
-            .willReturn(aResponse().withStatus(404)));
-    }
-
-    protected static void stubPromotion(boolean active, String discount) {
-        ERP.stubFor(get(urlEqualTo("/api/promotion"))
-            .willReturn(okJson("{\"promotionActive\":" + active + ",\"discount\":" + discount + "}")));
-    }
-
-    protected static void stubTax(String country, String rate) {
-        TAX.stubFor(get(urlEqualTo("/api/countries/" + country))
-            .willReturn(okJson("{\"id\":\"" + country + "\",\"countryName\":\"" + country
-                + "\",\"taxRate\":" + rate + "}")));
     }
 }

@@ -8,12 +8,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.mycompany.myshop.backend.core.dtos.external.GetPromotionResponse;
-import com.mycompany.myshop.backend.core.dtos.external.ProductDetailsResponse;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.support.ErpStubDriver;
 import com.mycompany.myshop.backend.support.ErpStubDsl;
-import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +55,7 @@ class ErpGatewayIntegrationTest {
     void getProductDetailsReturnsDetailsWhenFound() {
         erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
 
-        Optional<ProductDetailsResponse> result = erpGateway.getProductDetails("BOOK-123");
+        var result = erpGateway.getProductDetails("BOOK-123");
 
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo("BOOK-123");
@@ -86,7 +83,7 @@ class ErpGatewayIntegrationTest {
     void getPromotionDetailsReturnsPromotion() {
         erpStub.returnsPromotion().withActive(true).withDiscount("0.15").execute();
 
-        GetPromotionResponse result = erpGateway.getPromotionDetails();
+        var result = erpGateway.getPromotionDetails();
 
         assertThat(result.isPromotionActive()).isTrue();
         assertThat(result.getDiscount()).isEqualByComparingTo("0.15");

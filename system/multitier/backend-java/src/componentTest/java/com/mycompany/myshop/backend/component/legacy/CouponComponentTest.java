@@ -1,4 +1,4 @@
-package com.mycompany.myshop.backend.component;
+package com.mycompany.myshop.backend.component.legacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,13 +8,17 @@ import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 /**
- * Publish + browse coupon flows. Note publish returns 204 No Content with no body — this is the
- * real contract the system tests verify, and the reason the frontend consumer pact's publish-coupon
- * interaction (which expects 201 + {code}) is excluded from provider verification pending a
- * frontend fix.
+ * "Before" of the SUT-side driver refactor: the publish + browse coupon flow driven by raw, inlined
+ * {@code restTemplate} calls. The {@code latest/} twin drives the identical scenario through the
+ * shared {@code backend} DSL. Coupon touches no external systems, so this pair's only contrast is
+ * SUT-side (raw {@code restTemplate} here vs {@code backend} DSL there), unlike the order twins'
+ * external-stub axis.
+ *
+ * <p>Publish returns 204 No Content with no body — this is the real contract the system tests verify,
+ * and the reason the frontend consumer pact's publish-coupon interaction (which expects 201 +
+ * {code}) is excluded from provider verification pending a frontend fix.
  */
 class CouponComponentTest extends AbstractComponentTest {
 
@@ -25,12 +29,10 @@ class CouponComponentTest extends AbstractComponentTest {
         request.setDiscountRate(new BigDecimal("0.20"));
         request.setUsageLimit(100);
 
-        ResponseEntity<Void> publish =
-            restTemplate.postForEntity("/api/coupons", request, Void.class);
+        var publish = restTemplate.postForEntity("/api/coupons", request, Void.class);
         assertThat(publish.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<BrowseCouponsResponse> browse =
-            restTemplate.getForEntity("/api/coupons", BrowseCouponsResponse.class);
+        var browse = restTemplate.getForEntity("/api/coupons", BrowseCouponsResponse.class);
         assertThat(browse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(browse.getBody()).isNotNull();
         assertThat(browse.getBody().getCoupons())

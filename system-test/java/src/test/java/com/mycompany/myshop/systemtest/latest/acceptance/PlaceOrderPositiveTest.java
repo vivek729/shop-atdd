@@ -13,13 +13,13 @@ class PlaceOrderPositiveTest extends BaseAcceptanceTest {
     void shouldBeAbleToPlaceOrderForValidInput() {
         scenario
                 .given().product()
-                    .withSku("ABC")
+                    .withSku("BOOK-123")
                     .withUnitPrice(20.00)
                 .and().country()
                     .withCode("US")
                     .withTaxRate(0.10)
                 .when().placeOrder()
-                    .withSku("ABC")
+                    .withSku("BOOK-123")
                     .withQuantity(5)
                     .withCountry("US")
                 .then().shouldSucceed();

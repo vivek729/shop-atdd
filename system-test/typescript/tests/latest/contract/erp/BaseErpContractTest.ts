@@ -5,11 +5,11 @@ export function registerErpContractTests(test: ContractTest): void {
     await scenario
       .given()
       .product()
-      .withSku('SKU-123')
+      .withSku('BOOK-123')
       .withUnitPrice(12)
       .then()
-      .product('SKU-123')
-      .hasSku('SKU-123')
+      .product('BOOK-123')
+      .hasSku('BOOK-123')
       .hasPrice(12);
   });
 }

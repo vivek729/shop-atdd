@@ -2,16 +2,9 @@ package com.mycompany.myshop.backend.component.latest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.AbstractComponentTest;
 import com.mycompany.myshop.backend.core.entities.Coupon;
 import com.mycompany.myshop.backend.core.entities.OrderStatus;
-import com.mycompany.myshop.backend.support.ClockStubDriver;
-import com.mycompany.myshop.backend.support.ClockStubDsl;
-import com.mycompany.myshop.backend.support.ErpStubDriver;
-import com.mycompany.myshop.backend.support.ErpStubDsl;
-import com.mycompany.myshop.backend.support.TaxStubDriver;
-import com.mycompany.myshop.backend.support.TaxStubDsl;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -27,13 +20,6 @@ import org.springframework.http.HttpStatus;
  * {@code legacy/} contrast stays purely about external-stub style (stub DSL vs raw WireMock).
  */
 class PlaceOrderComponentTest extends AbstractComponentTest {
-
-    private final ErpStubDsl erpStub =
-        new ErpStubDsl(new ErpStubDriver(new WireMock("localhost", ERP.port())));
-    private final TaxStubDsl taxStub =
-        new TaxStubDsl(new TaxStubDriver(new WireMock("localhost", TAX.port())));
-    private final ClockStubDsl clockStub =
-        new ClockStubDsl(new ClockStubDriver(new WireMock("localhost", CLOCK.port())));
 
     @Test
     void computesTotalsFromPricePromotionAndTax() {
