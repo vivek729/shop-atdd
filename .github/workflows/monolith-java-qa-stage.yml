@@ -127,7 +127,7 @@ jobs:
       uses: optivem/actions/render-system-stage-summary@v1
       with:
         stage-name: 'QA Stage'
-        stage-result: ${{ (needs.check.result == 'failure' || needs.run.result == 'failure') && 'failure' || needs.run.result }}
+        stage-result: ${{ (needs.check.result == 'failure' || needs.run.result == 'failure') && 'failure' || (needs.check.result == 'cancelled' || needs.run.result == 'cancelled') && 'cancelled' || needs.run.result }}
         environment: qa
         success-version: ${{ needs.run.outputs.version }}
         success-artifact-ids: ${{ needs.run.outputs.image-urls }}

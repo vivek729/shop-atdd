@@ -382,7 +382,10 @@ jobs:
       uses: optivem/actions/render-system-stage-summary@v1
       with:
         stage-name: 'Acceptance Stage'
-        stage-result: ${{ needs.publish-tag.result == 'failure' && 'failure' || needs.run.result }}
+        stage-result: >-
+          ${{ (needs.preflight.result == 'failure' || needs.check.result == 'failure' || needs.run.result == 'failure' || needs.publish-tag.result == 'failure') && 'failure'
+              || (needs.preflight.result == 'cancelled' || needs.check.result == 'cancelled' || needs.run.result == 'cancelled' || needs.publish-tag.result == 'cancelled') && 'cancelled'
+              || needs.run.result }}
         environment: acceptance
         success-version: ${{ needs.check.outputs.on-main == 'true' && needs.run.outputs.version || 'not computed — non-main run' }}
         success-artifact-ids: ${{ needs.run.outputs.image-urls }}
