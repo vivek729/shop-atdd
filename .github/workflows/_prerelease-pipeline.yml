@@ -203,7 +203,7 @@ jobs:
 
       - name: Run Linter (monolith, java)
         if: inputs.architecture == 'monolith' && inputs.language == 'java'
-        run: ./gradlew checkstyleMain checkstyleTest
+        run: ./gradlew checkstyleAll
         working-directory: system/monolith/java
 
       - name: Run Linter (monolith, dotnet)
@@ -218,7 +218,7 @@ jobs:
 
       - name: Run Linter (multitier backend, java)
         if: inputs.architecture == 'multitier' && inputs.language == 'java'
-        run: ./gradlew checkstyleMain checkstyleTest
+        run: ./gradlew checkstyleAll
         working-directory: system/multitier/backend-java
 
       - name: Run Linter (multitier backend, dotnet)

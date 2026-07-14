@@ -143,6 +143,15 @@ tasks.register('integrationTest', Test) {
 	shouldRunAfter tasks.named('test')
 }
 
+// Lints every source set, including the opt-in ones kept off `build`. CI calls this instead of
+// naming individual checkstyle tasks, so a new source set is linted the moment it is added —
+// scaffolded projects run the full `check`, and anything shop skips here fails downstream instead.
+tasks.register('checkstyleAll') {
+	description = 'Runs checkstyle on all source sets (main, test, and the opt-in test layers).'
+	group = 'verification'
+	dependsOn tasks.withType(Checkstyle)
+}
+
 jacocoTestReport {
 	dependsOn test
 	reports {
