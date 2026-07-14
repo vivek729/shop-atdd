@@ -26,10 +26,10 @@ export interface PlaceOrderGesture {
 // The seam both drivers implement. Gestures drive; the matching query methods
 // assert the outcome. useBackend points the driver at the stubbed backend — the
 // harness calls it, never a spec (routeApiTo for the UI, base URL for the gateway).
-// Some interactions only exist at one level — order details and its status-gated
-// actions are UI-only; publishing a coupon is gateway-only — so the driver that
-// can't realize a verb throws a clearly-labelled error. The latest specs never call
-// an unsupported verb, so those throws stay dormant and simply document the level
+// Some interactions only exist at one level — order details, its status-gated
+// actions, and cancelling from that screen are UI-only — so the driver that can't
+// realize a verb throws a clearly-labelled error. The latest specs never call an
+// unsupported verb, so those throws stay dormant and simply document the level
 // boundary.
 export interface FrontendDriver {
   useBackend(baseUrl: string): void;
@@ -55,7 +55,12 @@ export interface FrontendDriver {
   hidesCancelAndDeliverActions(): Promise<void>;
   showsNotFound(): Promise<void>;
 
-  // publish coupon (gateway only)
+  // cancel order — reached from the order-details screen, so UI only
+  cancelOrder(orderNumber: string): Promise<void>;
+  wasCancelled(): Promise<void>;
+  cancelWasRejected(message: string): Promise<void>;
+
+  // publish coupon (both levels)
   publishCoupon(code: string, discountRate: number): Promise<void>;
   succeeded(): Promise<void>;
 }
@@ -91,6 +96,10 @@ export class FrontendDsl {
 
   viewOrderDetails(orderNumber: string): ViewOrderDetailsCommand {
     return new ViewOrderDetailsCommand(this.handle(), orderNumber);
+  }
+
+  cancelOrder(orderNumber: string): CancelOrderCommand {
+    return new CancelOrderCommand(this.handle(), orderNumber);
   }
 
   publishCoupon(): PublishCouponCommand {
@@ -263,6 +272,39 @@ class ViewOrderDetailsOutcome {
   async showsNotFound(): Promise<void> {
     await this.gesture;
     await (await this.driver()).showsNotFound();
+  }
+}
+
+// Cancelling starts on the order-details screen: the gesture opens the order and presses the
+// action, so the DSL says "cancel order X" and the driver owns the two steps that takes.
+class CancelOrderCommand {
+  constructor(
+    private readonly driver: DriverHandle,
+    private readonly orderNumber: string,
+  ) {}
+
+  execute(): CancelOrderOutcome {
+    return new CancelOrderOutcome(
+      this.driver,
+      this.driver().then((driver) => driver.cancelOrder(this.orderNumber)),
+    );
+  }
+}
+
+class CancelOrderOutcome {
+  constructor(
+    private readonly driver: DriverHandle,
+    private readonly gesture: Promise<void>,
+  ) {}
+
+  async wasCancelled(): Promise<void> {
+    await this.gesture;
+    await (await this.driver()).wasCancelled();
+  }
+
+  async wasRejected(message: string): Promise<void> {
+    await this.gesture;
+    await (await this.driver()).cancelWasRejected(message);
   }
 }
 

@@ -1,7 +1,7 @@
 // UI Frontend Driver — realizes the Frontend DSL by driving the rendered UI:
 // it renders the page, fires the user's gestures through userEvent, and asserts
 // against the rendered screen. Used by the component/latest specs.
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect } from 'vitest';
 import { NewOrder } from '../../pages/NewOrder';
@@ -13,6 +13,7 @@ import type { FrontendDriver, PlaceOrderGesture } from './frontend-dsl';
 
 export class UiFrontendDriver implements FrontendDriver {
   private readonly user = userEvent.setup();
+  private publishedCode = '';
 
   useBackend(baseUrl: string): void {
     // Rendered components call relative /api/*; point them at the Pact mock server.
@@ -99,15 +100,42 @@ export class UiFrontendDriver implements FrontendDriver {
     expect(await screen.findByText('Order not found')).toBeInTheDocument();
   }
 
-  publishCoupon(): Promise<void> {
-    return this.notAtUiLevel('publishCoupon');
+  // Cancelling is not a screen of its own: the user opens the order and presses the action there,
+  // so the gesture is both steps. Wait for the details to land first — the button does not exist
+  // until they do.
+  async cancelOrder(orderNumber: string): Promise<void> {
+    await this.viewOrderDetails(orderNumber);
+    await screen.findByLabelText('Display Order Number');
+    await this.user.click(screen.getByRole('button', { name: 'Cancel Order' }));
   }
 
-  succeeded(): Promise<void> {
-    return this.notAtUiLevel('succeeded');
+  async wasCancelled(): Promise<void> {
+    expect(await screen.findByText('Order has been cancelled successfully')).toBeInTheDocument();
   }
 
-  private notAtUiLevel(op: string): never {
-    throw new Error(`FrontendDsl.${op} is not exercised at the component (UI) level`);
+  async cancelWasRejected(message: string): Promise<void> {
+    expect(await screen.findByText(message)).toBeInTheDocument();
+  }
+
+  // The coupon admin screen loads the coupon table AND hosts the create form, so publishing a
+  // coupon from the UI necessarily reads the coupons too — a spec here stages both interactions.
+  // The code field arrives pre-filled with a generated code, so it is cleared before typing.
+  async publishCoupon(code: string, discountRate: number): Promise<void> {
+    this.publishedCode = code;
+    renderWithProviders(<AdminCoupons />);
+    await this.fill('Coupon Code', code);
+    // A number input, and a decimal is typed one keystroke at a time: "0." is not a number, so
+    // userEvent.type would drive the field through a NaN state. One change event carries the value
+    // the user ends up with.
+    fireEvent.change(screen.getByLabelText('Discount Rate'), {
+      target: { value: String(discountRate) },
+    });
+    await this.user.click(screen.getByRole('button', { name: 'Create Coupon' }));
+  }
+
+  async succeeded(): Promise<void> {
+    expect(
+      await screen.findByText(`Coupon '${this.publishedCode}' created successfully!`),
+    ).toBeInTheDocument();
   }
 }

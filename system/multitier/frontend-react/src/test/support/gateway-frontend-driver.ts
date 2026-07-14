@@ -114,6 +114,19 @@ export class GatewayFrontendDriver implements FrontendDriver {
     return this.notAtGatewayLevel('showsNotFound');
   }
 
+  // Cancelling is reached from the order-details screen, which this level does not render.
+  cancelOrder(): Promise<void> {
+    return this.notAtGatewayLevel('cancelOrder');
+  }
+
+  wasCancelled(): Promise<void> {
+    return this.notAtGatewayLevel('wasCancelled');
+  }
+
+  cancelWasRejected(): Promise<void> {
+    return this.notAtGatewayLevel('cancelWasRejected');
+  }
+
   private notAtGatewayLevel(op: string): never {
     throw new Error(`FrontendDsl.${op} is not exercised at the narrow-integration (gateway) level`);
   }

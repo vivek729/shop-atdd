@@ -208,4 +208,8 @@ export class ComponentHarness {
       taxRate: rate,
     });
   }
+
+  stubTaxMissing(country: string): void {
+    this.tax.stub('GET', `/api/countries/${country}`, 404);
+  }
 }

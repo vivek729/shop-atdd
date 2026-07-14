@@ -65,13 +65,48 @@ class BackendPactVerificationTest extends AbstractComponentTest {
         app.tax().returnsTaxRate().country("US").taxRate("0.10").execute();
     }
 
+    /**
+     * ERP is the one that says a SKU is not a product, so the ERP stub is what makes this state — the
+     * clock still has to answer, because it is consulted before the product is looked up.
+     */
+    @State("product NON-EXISTENT-SKU-12345 does not exist")
+    void productDoesNotExist() {
+        app.clock().returnsTime().time("2026-03-10T12:00:00Z").execute();
+        app.erp().returnsNoProduct().sku("NON-EXISTENT-SKU-12345").execute();
+    }
+
+    /**
+     * The product must resolve for the country to be the thing that fails — Tax is consulted only
+     * after ERP has answered.
+     */
+    @State("product BOOK-123 exists and XX is not taxable")
+    void countryXxNotTaxable() {
+        app.clock().returnsTime().time("2026-03-10T12:00:00Z").execute();
+        app.erp().returnsProduct().sku("BOOK-123").unitPrice("10.00").execute();
+        app.erp().returnsPromotion().active(false).discount("1.0").execute();
+        app.tax().returnsNoTaxRate().country("XX").execute();
+    }
+
+    /** 22:15 on December 31st — inside the cancellation blackout, with a cancellable order to aim at. */
+    @State("order cancellation is blocked by the New Year blackout")
+    void orderCancellationBlackout() {
+        app.clock().returnsTime().time("2026-12-31T22:15:00Z").execute();
+        orderRepository.save(sampleOrder("ORD-1"));
+    }
+
     @State("at least one order exists")
     void atLeastOneOrderExists() {
         orderRepository.save(sampleOrder("ORD-HIST-1"));
     }
 
+    /**
+     * Shared by viewing ORD-1 and by cancelling it. Cancelling asks the clock before it touches the
+     * order (the blackout is decided first), so the clock is stubbed here too — at a date well clear
+     * of the blackout, which is what makes the cancellation succeed.
+     */
     @State("order ORD-1 is placed")
     void orderOrd1Placed() {
+        app.clock().returnsTime().time("2026-03-10T12:00:00Z").execute();
         orderRepository.save(sampleOrder("ORD-1"));
     }
 

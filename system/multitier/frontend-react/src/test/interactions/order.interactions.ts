@@ -103,6 +103,36 @@ export function viewOrderDetailsInteraction(
   };
 }
 
+// Cancelling answers with 204 and no body, so what the frontend depends on is the STATUS CODE and
+// nothing else: it turns a 2xx into "Order has been cancelled successfully" and re-reads the order.
+export function cancelOrderInteraction(orderNumber: string): V3Interaction {
+  return {
+    states: [{ description: `order ${orderNumber} is placed` }],
+    uponReceiving: `a cancel-order request for ${orderNumber}`,
+    withRequest: { method: 'POST', path: `/api/orders/${orderNumber}/cancel` },
+    willRespondWith: { status: 204 },
+  };
+}
+
+// The rejection a user CAN provoke from the screen. Cancelling an already-cancelled order can't be
+// reached this way — the button is hidden for CANCELLED orders, which is what the status-gating
+// spec asserts — so the blackout is the one cancel rejection the UI has to render.
+export function cancelOrderBlackoutInteraction(orderNumber: string): V3Interaction {
+  return {
+    states: [{ description: 'order cancellation is blocked by the New Year blackout' }],
+    uponReceiving: `a cancel-order request for ${orderNumber} during the blackout`,
+    withRequest: { method: 'POST', path: `/api/orders/${orderNumber}/cancel` },
+    willRespondWith: {
+      status: 422,
+      headers: { 'Content-Type': 'application/problem+json' },
+      body: {
+        status: 422,
+        detail: 'Order cancellation is not allowed on December 31st between 22:00 and 23:00',
+      },
+    },
+  };
+}
+
 export function viewMissingOrderInteraction(orderNumber: string): V3Interaction {
   return {
     states: [{ description: `no order ${orderNumber} exists` }],
@@ -137,6 +167,55 @@ export function placeOrderUnknownCouponInteraction(couponCode: string): V3Intera
         status: 422,
         detail: 'The request contains one or more validation errors',
         errors: [{ field: 'couponCode', message: `Coupon code ${couponCode} does not exist` }],
+      },
+    },
+  };
+}
+
+// Two more rejections the frontend cannot reach on its own: whether the SKU is a real product
+// and whether the country is taxable are the backend's to know (ERP and Tax answer them). Each
+// carries its own errors[] field name, and the frontend renders "<field>: <message>" against
+// that name — so a backend that renamed the field would silently mis-render, and each field the
+// UI renders is pinned by its own interaction.
+export function placeOrderUnknownSkuInteraction(sku: string): V3Interaction {
+  return {
+    states: [{ description: `product ${sku} does not exist` }],
+    uponReceiving: `a place-order request for the unknown SKU ${sku}`,
+    withRequest: {
+      method: 'POST',
+      path: '/api/orders',
+      headers: { 'Content-Type': 'application/json' },
+      body: { sku, quantity: 2, country: 'US' },
+    },
+    willRespondWith: {
+      status: 422,
+      headers: { 'Content-Type': 'application/problem+json' },
+      body: {
+        status: 422,
+        detail: 'The request contains one or more validation errors',
+        errors: [{ field: 'sku', message: `Product does not exist for SKU: ${sku}` }],
+      },
+    },
+  };
+}
+
+export function placeOrderUntaxedCountryInteraction(country: string): V3Interaction {
+  return {
+    states: [{ description: `product BOOK-123 exists and ${country} is not taxable` }],
+    uponReceiving: `a place-order request from the untaxed country ${country}`,
+    withRequest: {
+      method: 'POST',
+      path: '/api/orders',
+      headers: { 'Content-Type': 'application/json' },
+      body: { sku: 'BOOK-123', quantity: 2, country },
+    },
+    willRespondWith: {
+      status: 422,
+      headers: { 'Content-Type': 'application/problem+json' },
+      body: {
+        status: 422,
+        detail: 'The request contains one or more validation errors',
+        errors: [{ field: 'country', message: `Country does not exist: ${country}` }],
       },
     },
   };

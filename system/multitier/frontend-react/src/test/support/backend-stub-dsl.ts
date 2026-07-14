@@ -9,9 +9,13 @@ import {
   placeOrderInteraction,
   placeOrderBlackoutInteraction,
   placeOrderUnknownCouponInteraction,
+  placeOrderUnknownSkuInteraction,
+  placeOrderUntaxedCountryInteraction,
   browseOrderHistoryInteraction,
   viewOrderDetailsInteraction,
   viewMissingOrderInteraction,
+  cancelOrderInteraction,
+  cancelOrderBlackoutInteraction,
 } from '../interactions/order.interactions';
 import {
   browseCouponsInteraction,
@@ -34,6 +38,24 @@ export class BackendStubDsl {
   // trip and get rendered.
   rejectsPlaceOrderWithUnknownCoupon(couponCode: string): void {
     this.driver.stub(placeOrderUnknownCouponInteraction(couponCode));
+  }
+
+  // The other two existence rules the frontend cannot decide for itself — ERP owns "is this a real
+  // product", Tax owns "is this country taxable" — each rejected against its own form field.
+  rejectsPlaceOrderWithUnknownSku(sku: string): void {
+    this.driver.stub(placeOrderUnknownSkuInteraction(sku));
+  }
+
+  rejectsPlaceOrderWithUntaxedCountry(country: string): void {
+    this.driver.stub(placeOrderUntaxedCountryInteraction(country));
+  }
+
+  acceptsCancelOrder(orderNumber: string): void {
+    this.driver.stub(cancelOrderInteraction(orderNumber));
+  }
+
+  rejectsCancelOrderDuringBlackout(orderNumber: string): void {
+    this.driver.stub(cancelOrderBlackoutInteraction(orderNumber));
   }
 
   returnsOrderHistory(): void {

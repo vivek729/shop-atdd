@@ -316,6 +316,78 @@
       }
     },
     {
+      "description": "a place-order request for the unknown SKU NON-EXISTENT-SKU-12345",
+      "providerStates": [
+        {
+          "name": "product NON-EXISTENT-SKU-12345 does not exist"
+        }
+      ],
+      "request": {
+        "body": {
+          "country": "US",
+          "quantity": 2,
+          "sku": "NON-EXISTENT-SKU-12345"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "detail": "The request contains one or more validation errors",
+          "errors": [
+            {
+              "field": "sku",
+              "message": "Product does not exist for SKU: NON-EXISTENT-SKU-12345"
+            }
+          ],
+          "status": 422
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        },
+        "status": 422
+      }
+    },
+    {
+      "description": "a place-order request from the untaxed country XX",
+      "providerStates": [
+        {
+          "name": "product BOOK-123 exists and XX is not taxable"
+        }
+      ],
+      "request": {
+        "body": {
+          "country": "XX",
+          "quantity": 2,
+          "sku": "BOOK-123"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "detail": "The request contains one or more validation errors",
+          "errors": [
+            {
+              "field": "country",
+              "message": "Country does not exist: XX"
+            }
+          ],
+          "status": 422
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        },
+        "status": 422
+      }
+    },
+    {
       "description": "a place-order request with the unknown coupon INVALIDCOUPON",
       "providerStates": [
         {
@@ -783,6 +855,43 @@
           "status": {}
         },
         "status": 200
+      }
+    },
+    {
+      "description": "a cancel-order request for ORD-1",
+      "providerStates": [
+        {
+          "name": "order ORD-1 is placed"
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "path": "/api/orders/ORD-1/cancel"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "description": "a cancel-order request for ORD-1 during the blackout",
+      "providerStates": [
+        {
+          "name": "order cancellation is blocked by the New Year blackout"
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "path": "/api/orders/ORD-1/cancel"
+      },
+      "response": {
+        "body": {
+          "detail": "Order cancellation is not allowed on December 31st between 22:00 and 23:00",
+          "status": 422
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        },
+        "status": 422
       }
     },
     {

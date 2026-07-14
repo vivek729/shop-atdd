@@ -202,12 +202,50 @@ public class BackendPactVerificationTest : IAsyncLifetime
                 StubClock("2026-12-31T23:59:00Z");
                 break;
 
+            // Everything the order needs is in place — the coupon is the one thing missing, so the
+            // rejection the frontend renders is the coupon's and not something else failing first.
+            // ResetState empties the coupon table, so nothing has to be un-seeded.
+            case "coupon INVALIDCOUPON does not exist":
+                StubClock("2026-03-10T12:00:00Z");
+                StubProduct("BOOK-123", "10.00");
+                StubPromotion(false, "1.0");
+                StubTax("US", "0.10");
+                break;
+
+            // ERP is the one that says a SKU is not a product. The clock still has to answer: it is
+            // consulted before the product is looked up.
+            case "product NON-EXISTENT-SKU-12345 does not exist":
+                StubClock("2026-03-10T12:00:00Z");
+                StubNoProduct("NON-EXISTENT-SKU-12345");
+                break;
+
+            // The product must resolve for the country to be the thing that fails — Tax is consulted
+            // only after ERP has answered.
+            case "product BOOK-123 exists and XX is not taxable":
+                StubClock("2026-03-10T12:00:00Z");
+                StubProduct("BOOK-123", "10.00");
+                StubPromotion(false, "1.0");
+                StubNoTax("XX");
+                break;
+
+            // 22:15 on December 31st — inside the cancellation blackout, with a cancellable order to
+            // aim at.
+            case "order cancellation is blocked by the New Year blackout":
+                StubClock("2026-12-31T22:15:00Z");
+                _db.Orders.Add(SampleOrder("ORD-1"));
+                _db.SaveChanges();
+                break;
+
             case "at least one order exists":
                 _db.Orders.Add(SampleOrder("ORD-HIST-1"));
                 _db.SaveChanges();
                 break;
 
+            // Shared by viewing ORD-1 and by cancelling it. Cancelling asks the clock before it
+            // touches the order (the blackout is decided first), so the clock is stubbed here too —
+            // at a date well clear of the blackout, which is what makes the cancellation succeed.
             case "order ORD-1 is placed":
+                StubClock("2026-03-10T12:00:00Z");
                 _db.Orders.Add(SampleOrder("ORD-1"));
                 _db.SaveChanges();
                 break;
@@ -273,6 +311,16 @@ public class BackendPactVerificationTest : IAsyncLifetime
             .RespondWith(Response.Create().WithStatusCode(200)
                 .WithBody($"{{\"promotionActive\":{active.ToString().ToLower()},\"discount\":{discount}}}")
                 .WithHeader("Content-Type", "application/json"));
+
+    // An unknown product / an untaxed country, programmed as deliberately as a known one: both
+    // external systems answer 404, which is what the gateways turn into the rejection.
+    private void StubNoProduct(string sku) =>
+        _erp.Given(Request.Create().WithPath($"/api/products/{sku}").UsingGet())
+            .RespondWith(Response.Create().WithStatusCode(404));
+
+    private void StubNoTax(string country) =>
+        _tax.Given(Request.Create().WithPath($"/api/countries/{country}").UsingGet())
+            .RespondWith(Response.Create().WithStatusCode(404));
 
     private void StubTax(string country, string rate) =>
         _tax.Given(Request.Create().WithPath($"/api/countries/{country}").UsingGet())
