@@ -6,32 +6,116 @@
 // dir, resolved from the package root via process.cwd() — so a spec's folder depth
 // (component/latest, integration/legacy, …) is irrelevant; every consumer spec
 // merges idempotently into the one frontend-backend.json.
+//
+// PactV3 is callback-shaped: executeTest(cb) boots the mock server, runs cb, then
+// verifies that every staged interaction was actually exercised. Left as-is, that
+// callback has to wrap the spec body — which is exactly the plumbing a spec should
+// never see. This driver inverts it: backendUrl() starts executeTest lazily and
+// parks inside the callback on a deferred, handing the spec just a URL; finish()
+// releases the deferred at teardown and awaits the run, so Pact's verification
+// failure still fails the owning test.
 import path from 'node:path';
 import { PactV3 } from '@pact-foundation/pact';
 import type { V3Interaction } from '@pact-foundation/pact/src/v3/types';
 
-// The seam the Backend Stub DSL depends on: stage an interaction, then run the
-// test body against the stubbed backend. A Component Test's in-process stub could
-// implement the same surface without Pact — here it's Pact-backed.
+// The seam the test-kit depends on: the Backend Stub DSL stages interactions with
+// stub(); the harness owns the lifecycle (reset/backendUrl/finish). A Component
+// Test's in-process stub could implement the same surface without Pact — here it's
+// Pact-backed.
 export interface BackendStubDriver {
   stub(interaction: V3Interaction): void;
-  runContract(testBody: (baseUrl: string) => Promise<void>): Promise<void>;
+  backendUrl(): Promise<string>;
+  finish(): Promise<void>;
+  reset(): void;
 }
 
 export class PactBackendStubDriver implements BackendStubDriver {
-  private readonly provider = new PactV3({
+  private provider = newProvider();
+  private staged = 0;
+  private url?: Promise<string>;
+  private run?: Promise<void>;
+  private release?: () => void;
+  private failure?: unknown;
+
+  stub(interaction: V3Interaction): void {
+    if (this.url) {
+      // Pact stages every interaction before its mock server boots, so a stub()
+      // after the first frontend gesture would silently never be served. Fail loudly.
+      throw new Error(
+        `Backend interactions must be staged before the first frontend gesture — ` +
+          `"${interaction.uponReceiving}" was staged after the backend had already started. ` +
+          `Move the backend.* arrange lines above the frontend.* act lines.`,
+      );
+    }
+    this.provider.addInteraction(interaction);
+    this.staged += 1;
+  }
+
+  // Boot the stubbed backend on first use and hand back its URL. The executeTest
+  // callback is held open on a deferred until finish() releases it.
+  backendUrl(): Promise<string> {
+    if (!this.url) {
+      this.url = new Promise<string>((resolveUrl, rejectUrl) => {
+        this.run = this.provider
+          .executeTest(async (mockServer) => {
+            resolveUrl(mockServer.url);
+            await new Promise<void>((release) => {
+              this.release = release;
+            });
+          })
+          .then(
+            () => undefined,
+            (error: unknown) => {
+              // Verification failure (or a mock-server boot failure, in which case
+              // the URL was never resolved). finish() rethrows it on the owning test.
+              this.failure = error;
+              rejectUrl(error);
+            },
+          );
+      });
+    }
+    return this.url;
+  }
+
+  // Teardown: release the executeTest callback, await Pact's verification of every
+  // staged interaction, and rethrow whatever it found. Then clear state for the
+  // next test.
+  async finish(): Promise<void> {
+    const stagedButNeverExercised = this.staged > 0 && !this.url;
+
+    this.release?.();
+    await this.run;
+
+    const failure = this.failure;
+    this.reset();
+
+    if (failure) {
+      throw failure;
+    }
+    if (stagedButNeverExercised) {
+      throw new Error(
+        'The backend was stubbed but never called — the test staged interactions and made no frontend gesture.',
+      );
+    }
+  }
+
+  // A fresh provider per test: PactV3 keeps its staged interactions internally and
+  // exposes no way to drop them, so a test that stubs without acting cannot leak
+  // into the next one.
+  reset(): void {
+    this.provider = newProvider();
+    this.staged = 0;
+    this.url = undefined;
+    this.run = undefined;
+    this.release = undefined;
+    this.failure = undefined;
+  }
+}
+
+function newProvider(): PactV3 {
+  return new PactV3({
     consumer: 'frontend',
     provider: 'backend',
     dir: path.resolve(process.cwd(), '../../../contracts'),
   });
-
-  stub(interaction: V3Interaction): void {
-    this.provider.addInteraction(interaction);
-  }
-
-  async runContract(testBody: (baseUrl: string) => Promise<void>): Promise<void> {
-    await this.provider.executeTest(async (mockserver) => {
-      await testBody(mockserver.url);
-    });
-  }
 }

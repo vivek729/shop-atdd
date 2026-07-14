@@ -1,7 +1,10 @@
-// Shared contract-test kit: the reusable Backend Stub DSL + Pact driver and the
-// Frontend DSL + swappable UI/gateway drivers. Every "latest" contract spec —
-// component and integration, order and coupon — builds on these, so the Pact
-// scaffolding and the driving mechanics live in exactly one place.
+// Shared contract-test kit. Specs import ONE thing from here — the harness for
+// their level — and get ready-wired `backend` / `frontend` DSL handles; the Pact
+// scaffolding, the driver wiring and the mock-server lifecycle live behind it.
+// The pieces below the harness are exported too, for the kit's own tests and for
+// anyone assembling a non-standard level.
+export { componentHarness, integrationHarness } from './component-harness';
+export type { Harness } from './component-harness';
 export { PactBackendStubDriver } from './pact-backend-stub-driver';
 export type { BackendStubDriver } from './pact-backend-stub-driver';
 export { BackendStubDsl } from './backend-stub-dsl';

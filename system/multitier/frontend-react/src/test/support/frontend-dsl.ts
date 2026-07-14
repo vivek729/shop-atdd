@@ -1,11 +1,18 @@
 // Frontend DSL — the semantic "what the frontend does and sees" surface for the
 // "latest" contract specs. It reads the same whether it drives the rendered UI
 // (component spec) or the gateway directly (integration spec): the difference is
-// absorbed by the swappable FrontendDriver handed in at construction.
+// absorbed by the swappable FrontendDriver the harness hands in.
 //
 // hasConfirmation/showsOrder/… are SEMANTIC — "a confirmation carrying order
 // number X", not a literal UI string. Each driver realizes them its own way
 // (screen text vs. a gateway result), so the DSL never hard-codes UI formatting.
+//
+// The DSL also owns the act-time binding: it takes a driver FACTORY and a backend-URL
+// supplier, and on the first gesture it boots the stubbed backend, builds a fresh
+// driver, and points it at that backend. That's what lets a spec go straight from
+// backend.* (arrange) to frontend.* (act) with no mock-server URL in sight — the
+// backend can't boot until the arrange phase is done staging, so first-gesture is
+// exactly the right moment.
 
 export interface PlaceOrderGesture {
   sku: string;
@@ -14,11 +21,13 @@ export interface PlaceOrderGesture {
 }
 
 // The seam both drivers implement. Gestures drive; the matching query methods
-// assert the outcome. Some interactions only exist at one level — order details
-// and its status-gated actions are UI-only; publishing a coupon is gateway-only —
-// so the driver that can't realize a verb throws a clearly-labelled error. The
-// latest specs never call an unsupported verb, so those throws stay dormant and
-// simply document the level boundary.
+// assert the outcome. useBackend points the driver at the stubbed backend — the
+// harness calls it, never a spec (routeApiTo for the UI, base URL for the gateway).
+// Some interactions only exist at one level — order details and its status-gated
+// actions are UI-only; publishing a coupon is gateway-only — so the driver that
+// can't realize a verb throws a clearly-labelled error. The latest specs never call
+// an unsupported verb, so those throws stay dormant and simply document the level
+// boundary.
 export interface FrontendDriver {
   useBackend(baseUrl: string): void;
 
@@ -47,35 +56,57 @@ export interface FrontendDriver {
   succeeded(): Promise<void>;
 }
 
-export class FrontendDsl {
-  constructor(private readonly driver: FrontendDriver) {}
+// Resolved on the first gesture, memoized for the rest of the test, dropped by reset().
+type DriverHandle = () => Promise<FrontendDriver>;
 
-  // Point the frontend at the Pact mock server. This is the one plumbing leak the
-  // driver can't fully hide — Pact stands up a real HTTP server on a random port —
-  // so it's an explicit line, realized per driver (routeApiTo for UI, base URL for
-  // the gateway).
-  useBackend(baseUrl: string): void {
-    this.driver.useBackend(baseUrl);
+export class FrontendDsl {
+  private driver?: Promise<FrontendDriver>;
+
+  constructor(
+    private readonly newDriver: () => FrontendDriver,
+    private readonly backendUrl: () => Promise<string>,
+  ) {}
+
+  // Called by the harness between tests: the next gesture builds a fresh driver
+  // against a freshly booted backend.
+  reset(): void {
+    this.driver = undefined;
   }
 
   placeOrder(): PlaceOrderCommand {
-    return new PlaceOrderCommand(this.driver);
+    return new PlaceOrderCommand(this.handle());
   }
 
   browseOrderHistory(): BrowseOrderHistoryCommand {
-    return new BrowseOrderHistoryCommand(this.driver);
+    return new BrowseOrderHistoryCommand(this.handle());
   }
 
   browseCoupons(): BrowseCouponsCommand {
-    return new BrowseCouponsCommand(this.driver);
+    return new BrowseCouponsCommand(this.handle());
   }
 
   viewOrderDetails(orderNumber: string): ViewOrderDetailsCommand {
-    return new ViewOrderDetailsCommand(this.driver, orderNumber);
+    return new ViewOrderDetailsCommand(this.handle(), orderNumber);
   }
 
   publishCoupon(): PublishCouponCommand {
-    return new PublishCouponCommand(this.driver);
+    return new PublishCouponCommand(this.handle());
+  }
+
+  private handle(): DriverHandle {
+    return () => this.ready();
+  }
+
+  private ready(): Promise<FrontendDriver> {
+    if (!this.driver) {
+      this.driver = (async () => {
+        const baseUrl = await this.backendUrl();
+        const driver = this.newDriver();
+        driver.useBackend(baseUrl);
+        return driver;
+      })();
+    }
+    return this.driver;
   }
 }
 
@@ -84,7 +115,7 @@ class PlaceOrderCommand {
   private quantity = 2;
   private couponCode?: string;
 
-  constructor(private readonly driver: FrontendDriver) {}
+  constructor(private readonly driver: DriverHandle) {}
 
   withSku(sku: string): this {
     this.sku = sku;
@@ -102,107 +133,118 @@ class PlaceOrderCommand {
   }
 
   execute(): PlaceOrderOutcome {
-    const gesture = this.driver.placeOrder({
-      sku: this.sku,
-      quantity: this.quantity,
-      couponCode: this.couponCode,
-    });
+    const gesture = this.driver().then((driver) =>
+      driver.placeOrder({
+        sku: this.sku,
+        quantity: this.quantity,
+        couponCode: this.couponCode,
+      }),
+    );
     return new PlaceOrderOutcome(this.driver, gesture);
   }
 }
 
 class PlaceOrderOutcome {
   constructor(
-    private readonly driver: FrontendDriver,
+    private readonly driver: DriverHandle,
     private readonly gesture: Promise<void>,
   ) {}
 
   async hasConfirmation(orderNumber: string): Promise<void> {
     await this.gesture;
-    await this.driver.hasConfirmation(orderNumber);
+    await (await this.driver()).hasConfirmation(orderNumber);
   }
 
   async hasError(message: string): Promise<void> {
     await this.gesture;
-    await this.driver.hasError(message);
+    await (await this.driver()).hasError(message);
   }
 }
 
 class BrowseOrderHistoryCommand {
-  constructor(private readonly driver: FrontendDriver) {}
+  constructor(private readonly driver: DriverHandle) {}
 
   execute(): BrowseOrderHistoryOutcome {
-    return new BrowseOrderHistoryOutcome(this.driver, this.driver.browseOrderHistory());
+    return new BrowseOrderHistoryOutcome(
+      this.driver,
+      this.driver().then((driver) => driver.browseOrderHistory()),
+    );
   }
 }
 
 class BrowseOrderHistoryOutcome {
   constructor(
-    private readonly driver: FrontendDriver,
+    private readonly driver: DriverHandle,
     private readonly gesture: Promise<void>,
   ) {}
 
   async showsOrder(orderNumber: string): Promise<void> {
     await this.gesture;
-    await this.driver.showsOrder(orderNumber);
+    await (await this.driver()).showsOrder(orderNumber);
   }
 }
 
 class BrowseCouponsCommand {
-  constructor(private readonly driver: FrontendDriver) {}
+  constructor(private readonly driver: DriverHandle) {}
 
   execute(): BrowseCouponsOutcome {
-    return new BrowseCouponsOutcome(this.driver, this.driver.browseCoupons());
+    return new BrowseCouponsOutcome(
+      this.driver,
+      this.driver().then((driver) => driver.browseCoupons()),
+    );
   }
 }
 
 class BrowseCouponsOutcome {
   constructor(
-    private readonly driver: FrontendDriver,
+    private readonly driver: DriverHandle,
     private readonly gesture: Promise<void>,
   ) {}
 
   async showsCoupon(code: string): Promise<void> {
     await this.gesture;
-    await this.driver.showsCoupon(code);
+    await (await this.driver()).showsCoupon(code);
   }
 }
 
 class ViewOrderDetailsCommand {
   constructor(
-    private readonly driver: FrontendDriver,
+    private readonly driver: DriverHandle,
     private readonly orderNumber: string,
   ) {}
 
   execute(): ViewOrderDetailsOutcome {
-    return new ViewOrderDetailsOutcome(this.driver, this.driver.viewOrderDetails(this.orderNumber));
+    return new ViewOrderDetailsOutcome(
+      this.driver,
+      this.driver().then((driver) => driver.viewOrderDetails(this.orderNumber)),
+    );
   }
 }
 
 class ViewOrderDetailsOutcome {
   constructor(
-    private readonly driver: FrontendDriver,
+    private readonly driver: DriverHandle,
     private readonly gesture: Promise<void>,
   ) {}
 
   async showsOrderDetails(orderNumber: string, totalPrice: string): Promise<void> {
     await this.gesture;
-    await this.driver.showsOrderDetails(orderNumber, totalPrice);
+    await (await this.driver()).showsOrderDetails(orderNumber, totalPrice);
   }
 
   async showsCancelAndDeliverActions(): Promise<void> {
     await this.gesture;
-    await this.driver.showsCancelAndDeliverActions();
+    await (await this.driver()).showsCancelAndDeliverActions();
   }
 
   async hidesCancelAndDeliverActions(): Promise<void> {
     await this.gesture;
-    await this.driver.hidesCancelAndDeliverActions();
+    await (await this.driver()).hidesCancelAndDeliverActions();
   }
 
   async showsNotFound(): Promise<void> {
     await this.gesture;
-    await this.driver.showsNotFound();
+    await (await this.driver()).showsNotFound();
   }
 }
 
@@ -210,7 +252,7 @@ class PublishCouponCommand {
   private code = 'SAVE10';
   private discountRate = 0.2;
 
-  constructor(private readonly driver: FrontendDriver) {}
+  constructor(private readonly driver: DriverHandle) {}
 
   withCode(code: string): this {
     this.code = code;
@@ -223,18 +265,21 @@ class PublishCouponCommand {
   }
 
   execute(): PublishCouponOutcome {
-    return new PublishCouponOutcome(this.driver, this.driver.publishCoupon(this.code, this.discountRate));
+    return new PublishCouponOutcome(
+      this.driver,
+      this.driver().then((driver) => driver.publishCoupon(this.code, this.discountRate)),
+    );
   }
 }
 
 class PublishCouponOutcome {
   constructor(
-    private readonly driver: FrontendDriver,
+    private readonly driver: DriverHandle,
     private readonly gesture: Promise<void>,
   ) {}
 
   async succeeded(): Promise<void> {
     await this.gesture;
-    await this.driver.succeeded();
+    await (await this.driver()).succeeded();
   }
 }
