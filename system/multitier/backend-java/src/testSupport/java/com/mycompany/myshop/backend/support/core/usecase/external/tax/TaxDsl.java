@@ -1,6 +1,7 @@
 package com.mycompany.myshop.backend.support.core.usecase.external.tax;
 
 import com.mycompany.myshop.backend.support.TaxStubDriver;
+import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.ReturnsNoTaxRate;
 import com.mycompany.myshop.backend.support.core.usecase.external.tax.usecases.ReturnsTaxRate;
 
 /**
@@ -23,5 +24,9 @@ public class TaxDsl {
 
     public ReturnsTaxRate returnsTaxRate() {
         return new ReturnsTaxRate(driver);
+    }
+
+    public ReturnsNoTaxRate returnsNoTaxRate() {
+        return new ReturnsNoTaxRate(driver);
     }
 }

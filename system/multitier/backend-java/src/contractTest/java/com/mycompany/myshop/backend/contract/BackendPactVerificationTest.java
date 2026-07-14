@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /**
  * Replays the frontend consumer contract against the in-process provider, with external
  * systems WireMock-stubbed and provider states seeded into the Testcontainers Postgres. Fails the
- * build if the backend drifts from the contract. All 7 interactions are verified.
+ * build if the backend drifts from the contract. Every interaction in the pact is verified.
  *
  * <p>The contract is read from the repo-owned {@code shop/contracts/} folder (the consumer writes
  * the pact there; this provider reads it from the same neutral location).
@@ -50,6 +50,19 @@ class BackendPactVerificationTest extends AbstractComponentTest {
     @State("order placement is blocked by the New Year blackout")
     void orderPlacementBlackout() {
         app.clock().returnsTime().time("2026-12-31T23:59:00Z").execute();
+    }
+
+    /**
+     * Everything the order needs is in place — the coupon is the one thing missing, so the rejection
+     * the frontend renders is the coupon's and not something else failing first. The base
+     * {@code @BeforeEach} empties the coupon table, so nothing has to be un-seeded.
+     */
+    @State("coupon INVALIDCOUPON does not exist")
+    void couponInvalidCouponDoesNotExist() {
+        app.clock().returnsTime().time("2026-03-10T12:00:00Z").execute();
+        app.erp().returnsProduct().sku("BOOK-123").unitPrice("10.00").execute();
+        app.erp().returnsPromotion().active(false).discount("1.0").execute();
+        app.tax().returnsTaxRate().country("US").taxRate("0.10").execute();
     }
 
     @State("at least one order exists")

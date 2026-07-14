@@ -16,6 +16,8 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     private int quantity = ScenarioDefaults.DEFAULT_QUANTITY;
     private String country = ScenarioDefaults.DEFAULT_COUNTRY;
     private String couponCode = ScenarioDefaults.EMPTY;
+    private String rawQuantity;
+    private boolean quantityIsRaw;
 
     public WhenPlaceOrderImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         super(app, scenario);
@@ -30,6 +32,14 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
     @Override
     public WhenPlaceOrderImpl withQuantity(int quantity) {
         this.quantity = quantity;
+        this.quantityIsRaw = false;
+        return this;
+    }
+
+    @Override
+    public WhenPlaceOrderImpl withQuantity(String quantity) {
+        this.rawQuantity = quantity;
+        this.quantityIsRaw = true;
         return this;
     }
 
@@ -52,11 +62,12 @@ public class WhenPlaceOrderImpl extends BaseWhenStep<PlaceOrderResponse, PlaceOr
 
     @Override
     protected ExecutionResult<PlaceOrderResponse, PlaceOrderVerification> execute(UseCaseDsl app) {
-        var result = app.myShop().placeOrder()
+        var placeOrder = app.myShop().placeOrder()
             .sku(sku)
-            .quantity(quantity)
             .country(country)
-            .couponCode(couponCode)
+            .couponCode(couponCode);
+
+        var result = (quantityIsRaw ? placeOrder.rawQuantity(rawQuantity) : placeOrder.quantity(quantity))
             .execute();
 
         // The SUT generates the order number, so it can only be read back off an accepted response.

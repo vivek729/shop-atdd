@@ -316,6 +316,43 @@
       }
     },
     {
+      "description": "a place-order request with the unknown coupon INVALIDCOUPON",
+      "providerStates": [
+        {
+          "name": "coupon INVALIDCOUPON does not exist"
+        }
+      ],
+      "request": {
+        "body": {
+          "country": "US",
+          "couponCode": "INVALIDCOUPON",
+          "quantity": 2,
+          "sku": "BOOK-123"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "detail": "The request contains one or more validation errors",
+          "errors": [
+            {
+              "field": "couponCode",
+              "message": "Coupon code INVALIDCOUPON does not exist"
+            }
+          ],
+          "status": 422
+        },
+        "headers": {
+          "Content-Type": "application/problem+json"
+        },
+        "status": 422
+      }
+    },
+    {
       "description": "a publish-coupon request for SAVE10",
       "providerStates": [
         {

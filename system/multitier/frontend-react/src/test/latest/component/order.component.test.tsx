@@ -23,6 +23,25 @@ describe('NewOrder — places an order', () => {
     await frontend.placeOrder().withSku('BOOK-123').withQuantity(2).execute().hasConfirmation('ORD-1');
   });
 
+  it('sends the coupon the user typed', async () => {
+    backend
+      .returnsPlacedOrder()
+      .withSku('BOOK-123')
+      .withQuantity(2)
+      .withCountry('US')
+      .withCoupon('SAVE10')
+      .withOrderNumber('ORD-1')
+      .execute();
+
+    await frontend
+      .placeOrder()
+      .withSku('BOOK-123')
+      .withQuantity(2)
+      .withCoupon('SAVE10')
+      .execute()
+      .hasConfirmation('ORD-1');
+  });
+
   it('shows error message when order is rejected by the backend', async () => {
     backend.rejectsPlaceOrderDuringBlackout();
 
@@ -32,6 +51,64 @@ describe('NewOrder — places an order', () => {
       .withQuantity(2)
       .execute()
       .hasError('Orders cannot be placed on December 31');
+  });
+});
+
+// The frontend keeps its OWN copy of these rules (order-validation.ts) and rejects without
+// ever calling the backend — which is why no interaction is staged here, and why the harness
+// points the app at a dead address: if it did call out, the test would fail.
+//
+// order-validation.unit.test.ts already covers the rule table. What can only be seen here is
+// the wiring: that the form runs the validator at all, and that what it produces reaches the
+// screen against the right field.
+describe('NewOrder — rejects bad input without asking the backend', () => {
+  it('reports an empty SKU', async () => {
+    await frontend
+      .placeOrder()
+      .withSku('')
+      .execute()
+      .hasFieldError('sku', 'SKU must not be empty');
+  });
+
+  it('reports a non-integer quantity', async () => {
+    await frontend
+      .placeOrder()
+      .withQuantity('3.5')
+      .execute()
+      .hasFieldError('quantity', 'Quantity must be an integer');
+  });
+
+  it('reports a zero quantity', async () => {
+    await frontend
+      .placeOrder()
+      .withQuantity(0)
+      .execute()
+      .hasFieldError('quantity', 'Quantity must be positive');
+  });
+
+  it('reports an empty country', async () => {
+    await frontend
+      .placeOrder()
+      .withCountry('')
+      .execute()
+      .hasFieldError('country', 'Country must not be empty');
+  });
+});
+
+// Whether a coupon exists is the backend's to know. This is the only path in the suite where a
+// per-field message is produced by the backend, crosses the wire as ProblemDetail.errors[], and
+// has to be rendered — so it is the one that pins that shape into the contract.
+describe('NewOrder — renders a field error the backend sent', () => {
+  it('shows the rejection for a coupon the backend does not know', async () => {
+    backend.rejectsPlaceOrderWithUnknownCoupon('INVALIDCOUPON');
+
+    await frontend
+      .placeOrder()
+      .withSku('BOOK-123')
+      .withQuantity(2)
+      .withCoupon('INVALIDCOUPON')
+      .execute()
+      .hasFieldError('couponCode', 'Coupon code INVALIDCOUPON does not exist');
   });
 });
 

@@ -37,6 +37,23 @@ public class ViewOrderVerification extends ResponseVerification<ViewOrderDetails
         return this;
     }
 
+    public ViewOrderVerification discountRate(String expectedDiscountRate) {
+        assertThat(getResponse().getDiscountRate())
+            .as("discount rate")
+            .isEqualByComparingTo(expectedDiscountRate);
+        return this;
+    }
+
+    public ViewOrderVerification taxRate(String expectedTaxRate) {
+        assertThat(getResponse().getTaxRate()).as("tax rate").isEqualByComparingTo(expectedTaxRate);
+        return this;
+    }
+
+    public ViewOrderVerification orderNumberPrefix(String expectedPrefix) {
+        assertThat(getResponse().getOrderNumber()).as("order number").startsWith(expectedPrefix);
+        return this;
+    }
+
     public ViewOrderVerification discountAmount(String expectedDiscountAmount) {
         assertThat(getResponse().getDiscountAmount())
             .as("discount amount")

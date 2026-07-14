@@ -10,6 +10,7 @@ public class GivenCountryImpl extends BaseGivenStep implements GivenCountry {
 
     private String country;
     private String taxRate;
+    private boolean exists = true;
 
     public GivenCountryImpl(GivenImpl given) {
         super(given);
@@ -35,7 +36,17 @@ public class GivenCountryImpl extends BaseGivenStep implements GivenCountry {
     }
 
     @Override
+    public GivenCountryImpl doesNotExist() {
+        this.exists = false;
+        return this;
+    }
+
+    @Override
     public void execute(UseCaseDsl app) {
-        app.tax().returnsTaxRate().country(country).taxRate(taxRate).execute();
+        if (exists) {
+            app.tax().returnsTaxRate().country(country).taxRate(taxRate).execute();
+        } else {
+            app.tax().returnsNoTaxRate().country(country).execute();
+        }
     }
 }

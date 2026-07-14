@@ -7,6 +7,13 @@ public interface WhenPlaceOrder extends WhenStep {
 
     WhenPlaceOrder withQuantity(int quantity);
 
+    /**
+     * A quantity that is not an integer — {@code "3.5"}, {@code "lala"}, {@code ""}, or {@code null}.
+     * {@code withQuantity(null)} binds here (the {@code int} overload cannot take null), which is what
+     * lets a rejection scenario read the same as it does in the system test.
+     */
+    WhenPlaceOrder withQuantity(String quantity);
+
     WhenPlaceOrder withCountry(String country);
 
     WhenPlaceOrder withCouponCode(String couponCode);

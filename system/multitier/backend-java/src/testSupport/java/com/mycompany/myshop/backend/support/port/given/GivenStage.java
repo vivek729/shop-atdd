@@ -3,6 +3,7 @@ package com.mycompany.myshop.backend.support.port.given;
 import com.mycompany.myshop.backend.support.port.given.steps.GivenClock;
 import com.mycompany.myshop.backend.support.port.given.steps.GivenCoupon;
 import com.mycompany.myshop.backend.support.port.given.steps.GivenCountry;
+import com.mycompany.myshop.backend.support.port.given.steps.GivenOrder;
 import com.mycompany.myshop.backend.support.port.given.steps.GivenProduct;
 import com.mycompany.myshop.backend.support.port.given.steps.GivenPromotion;
 import com.mycompany.myshop.backend.support.port.then.ThenStage;
@@ -25,6 +26,8 @@ public interface GivenStage {
     GivenCountry country();
 
     GivenCoupon coupon();
+
+    GivenOrder order();
 
     WhenStage when();
 

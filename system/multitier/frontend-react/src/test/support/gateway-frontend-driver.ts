@@ -34,8 +34,8 @@ export class GatewayFrontendDriver implements FrontendDriver {
   async placeOrder(gesture: PlaceOrderGesture): Promise<void> {
     this.lastPlaceOrder = await this.orders().placeOrder(
       gesture.sku,
-      gesture.quantity,
-      'US',
+      Number(gesture.quantity),
+      gesture.country,
       gesture.couponCode,
     );
   }
@@ -50,6 +50,16 @@ export class GatewayFrontendDriver implements FrontendDriver {
 
   async hasError(_message: string): Promise<void> {
     expect(this.lastPlaceOrder?.success).toBe(false);
+  }
+
+  // The gateway's job is to turn the 422's ProblemDetail into ApiError.fieldErrors. The UI
+  // driver checks it reaches the screen; here we check it survives the parse.
+  async hasFieldError(field: string, message: string): Promise<void> {
+    const result = this.lastPlaceOrder;
+    expect(result?.success).toBe(false);
+    if (result && !result.success) {
+      expect(result.error.fieldErrors).toContain(`${field}: ${message}`);
+    }
   }
 
   async browseOrderHistory(): Promise<void> {

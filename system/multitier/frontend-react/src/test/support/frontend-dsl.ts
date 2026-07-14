@@ -14,9 +14,12 @@
 // backend can't boot until the arrange phase is done staging, so first-gesture is
 // exactly the right moment.
 
+// quantity is `number | string` because the user types free text: "3.5" and "lala" are
+// gestures a real person can make, and the frontend has its own rules about them.
 export interface PlaceOrderGesture {
   sku: string;
-  quantity: number;
+  quantity: number | string;
+  country: string;
   couponCode?: string;
 }
 
@@ -35,6 +38,7 @@ export interface FrontendDriver {
   placeOrder(gesture: PlaceOrderGesture): Promise<void>;
   hasConfirmation(orderNumber: string): Promise<void>;
   hasError(message: string): Promise<void>;
+  hasFieldError(field: string, message: string): Promise<void>;
 
   // browse order history (both levels)
   browseOrderHistory(): Promise<void>;
@@ -112,7 +116,8 @@ export class FrontendDsl {
 
 class PlaceOrderCommand {
   private sku = 'BOOK-123';
-  private quantity = 2;
+  private quantity: number | string = 2;
+  private country = 'US';
   private couponCode?: string;
 
   constructor(private readonly driver: DriverHandle) {}
@@ -122,8 +127,13 @@ class PlaceOrderCommand {
     return this;
   }
 
-  withQuantity(quantity: number): this {
+  withQuantity(quantity: number | string): this {
     this.quantity = quantity;
+    return this;
+  }
+
+  withCountry(country: string): this {
+    this.country = country;
     return this;
   }
 
@@ -137,6 +147,7 @@ class PlaceOrderCommand {
       driver.placeOrder({
         sku: this.sku,
         quantity: this.quantity,
+        country: this.country,
         couponCode: this.couponCode,
       }),
     );
@@ -158,6 +169,13 @@ class PlaceOrderOutcome {
   async hasError(message: string): Promise<void> {
     await this.gesture;
     await (await this.driver()).hasError(message);
+  }
+
+  // "the message for THIS field", not "this string is somewhere on the page" — a field
+  // error that renders against the wrong field is a real defect, and this is what catches it.
+  async hasFieldError(field: string, message: string): Promise<void> {
+    await this.gesture;
+    await (await this.driver()).hasFieldError(field, message);
   }
 }
 

@@ -21,9 +21,22 @@ export class UiFrontendDriver implements FrontendDriver {
 
   async placeOrder(gesture: PlaceOrderGesture): Promise<void> {
     renderWithProviders(<NewOrder />);
-    await this.user.type(screen.getByLabelText('SKU'), gesture.sku);
-    await this.user.type(screen.getByLabelText('Quantity'), String(gesture.quantity));
+    await this.fill('SKU', gesture.sku);
+    await this.fill('Quantity', String(gesture.quantity));
+    // Country is pre-filled with 'US' by the form, so it must be cleared before it can be
+    // set — including to empty, which is the whole point of the empty-country scenario.
+    await this.fill('Country', gesture.country);
+    await this.fill('Coupon Code', gesture.couponCode ?? '');
     await this.user.click(screen.getByRole('button', { name: 'Place Order' }));
+  }
+
+  // clear-then-type, so '' means "leave this field empty" rather than "leave it alone".
+  private async fill(label: string, value: string): Promise<void> {
+    const field = screen.getByLabelText(label);
+    await this.user.clear(field);
+    if (value !== '') {
+      await this.user.type(field, value);
+    }
   }
 
   async hasConfirmation(orderNumber: string): Promise<void> {
@@ -32,6 +45,12 @@ export class UiFrontendDriver implements FrontendDriver {
 
   async hasError(message: string): Promise<void> {
     expect(await screen.findByText(message)).toBeInTheDocument();
+  }
+
+  // The banner renders each field error as "field: message" (see Notification.tsx), so the
+  // field name is part of what the user reads — assert the whole rendered line.
+  async hasFieldError(field: string, message: string): Promise<void> {
+    expect(await screen.findByText(`${field}: ${message}`)).toBeInTheDocument();
   }
 
   async browseOrderHistory(): Promise<void> {

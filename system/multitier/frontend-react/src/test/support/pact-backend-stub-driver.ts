@@ -53,7 +53,15 @@ export class PactBackendStubDriver implements BackendStubDriver {
 
   // Boot the stubbed backend on first use and hand back its URL. The executeTest
   // callback is held open on a deferred until finish() releases it.
+  //
+  // Staging nothing is a claim, not an oversight: the frontend rejects this input on
+  // its own and never reaches the network. Booting Pact anyway would add an
+  // interaction-less run to the shared pact file, so instead we hand back a dead
+  // address — if the frontend does call out, the connection fails and the test says so.
   backendUrl(): Promise<string> {
+    if (this.staged === 0) {
+      return Promise.resolve(UNREACHABLE_BACKEND);
+    }
     if (!this.url) {
       this.url = new Promise<string>((resolveUrl, rejectUrl) => {
         this.run = this.provider
@@ -111,6 +119,9 @@ export class PactBackendStubDriver implements BackendStubDriver {
     this.failure = undefined;
   }
 }
+
+// Port 1 is privileged and never bound — any request here fails to connect immediately.
+const UNREACHABLE_BACKEND = 'http://127.0.0.1:1';
 
 function newProvider(): PactV3 {
   return new PactV3({

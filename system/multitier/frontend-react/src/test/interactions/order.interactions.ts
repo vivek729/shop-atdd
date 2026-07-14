@@ -116,6 +116,32 @@ export function viewMissingOrderInteraction(orderNumber: string): V3Interaction 
   };
 }
 
+// A rejection that carries errors[] — the shape the frontend turns into the per-field
+// messages under the notification banner. detail and errors[] are matched EXACTLY, not
+// like(): the frontend renders both verbatim ("couponCode: Coupon code X does not exist"),
+// so if the backend reworded either, the contract must break rather than shrug.
+export function placeOrderUnknownCouponInteraction(couponCode: string): V3Interaction {
+  return {
+    states: [{ description: `coupon ${couponCode} does not exist` }],
+    uponReceiving: `a place-order request with the unknown coupon ${couponCode}`,
+    withRequest: {
+      method: 'POST',
+      path: '/api/orders',
+      headers: { 'Content-Type': 'application/json' },
+      body: { sku: 'BOOK-123', quantity: 2, country: 'US', couponCode },
+    },
+    willRespondWith: {
+      status: 422,
+      headers: { 'Content-Type': 'application/problem+json' },
+      body: {
+        status: 422,
+        detail: 'The request contains one or more validation errors',
+        errors: [{ field: 'couponCode', message: `Coupon code ${couponCode} does not exist` }],
+      },
+    },
+  };
+}
+
 export function placeOrderBlackoutInteraction(): V3Interaction {
   return {
     states: [{ description: 'order placement is blocked by the New Year blackout' }],

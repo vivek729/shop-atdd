@@ -1,9 +1,11 @@
 package com.mycompany.myshop.backend.support.core.scenario.given;
 
 import com.mycompany.myshop.backend.support.core.ScenarioDslImpl;
+import com.mycompany.myshop.backend.support.core.scenario.ScenarioDefaults;
 import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenClockImpl;
 import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenCouponImpl;
 import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenCountryImpl;
+import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenOrderImpl;
 import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenProductImpl;
 import com.mycompany.myshop.backend.support.core.scenario.given.steps.GivenPromotionImpl;
 import com.mycompany.myshop.backend.support.core.scenario.then.ThenImpl;
@@ -35,6 +37,7 @@ public class GivenImpl implements GivenStage {
     private final List<GivenProductImpl> products = new ArrayList<>();
     private final List<GivenCountryImpl> countries = new ArrayList<>();
     private final List<GivenCouponImpl> coupons = new ArrayList<>();
+    private final List<GivenOrderImpl> orders = new ArrayList<>();
 
     public GivenImpl(UseCaseDsl app, ScenarioDslImpl scenario) {
         this.app = app;
@@ -76,6 +79,13 @@ public class GivenImpl implements GivenStage {
     }
 
     @Override
+    public GivenOrderImpl order() {
+        var order = new GivenOrderImpl(this);
+        orders.add(order);
+        return order;
+    }
+
+    @Override
     public WhenImpl when() {
         setup();
         return new WhenImpl(
@@ -96,5 +106,31 @@ public class GivenImpl implements GivenStage {
         countries.forEach(country -> country.execute(app));
         promotion.execute(app);
         coupons.forEach(coupon -> coupon.execute(app));
+
+        if (!orders.isEmpty()) {
+            // A given() order is a real POST /api/orders, so the externals it passes through have to
+            // be stubbed by now — even in a scenario that named only the coupon it means to exhaust.
+            // Re-stubbing what when() would have stubbed anyway is harmless: same mapping, same body.
+            stubUnnamedExternals();
+            orders.forEach(order -> order.execute(app));
+        }
+    }
+
+    private void stubUnnamedExternals() {
+        if (clock == null) {
+            app.clock().returnsTime().time(ScenarioDefaults.DEFAULT_TIME).execute();
+        }
+        if (products.isEmpty()) {
+            app.erp().returnsProduct()
+                .sku(ScenarioDefaults.DEFAULT_SKU)
+                .unitPrice(ScenarioDefaults.DEFAULT_UNIT_PRICE)
+                .execute();
+        }
+        if (countries.isEmpty()) {
+            app.tax().returnsTaxRate()
+                .country(ScenarioDefaults.DEFAULT_COUNTRY)
+                .taxRate(ScenarioDefaults.DEFAULT_TAX_RATE)
+                .execute();
+        }
     }
 }

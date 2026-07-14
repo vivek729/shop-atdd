@@ -6,6 +6,7 @@ import com.mycompany.myshop.backend.support.core.shared.ResponseVerification;
 import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
 import com.mycompany.myshop.backend.support.core.usecase.usecases.ViewOrderVerification;
 import com.mycompany.myshop.backend.support.port.then.steps.ThenOrder;
+import java.math.BigDecimal;
 
 /**
  * The persisted order. When the action <em>was</em> a view-order, its response is asserted directly;
@@ -56,6 +57,34 @@ public class ThenOrderImpl<R, V extends ResponseVerification<R>> extends BaseThe
     @Override
     public ThenOrderImpl<R, V> hasBasePrice(String expectedBasePrice) {
         orderVerification.basePrice(expectedBasePrice);
+        return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> hasDiscountRate(String expectedDiscountRate) {
+        orderVerification.discountRate(expectedDiscountRate);
+        return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> hasDiscountRate(double expectedDiscountRate) {
+        return hasDiscountRate(BigDecimal.valueOf(expectedDiscountRate).toPlainString());
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> hasTaxRate(String expectedTaxRate) {
+        orderVerification.taxRate(expectedTaxRate);
+        return this;
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> hasTaxRate(double expectedTaxRate) {
+        return hasTaxRate(BigDecimal.valueOf(expectedTaxRate).toPlainString());
+    }
+
+    @Override
+    public ThenOrderImpl<R, V> hasOrderNumberPrefix(String expectedPrefix) {
+        orderVerification.orderNumberPrefix(expectedPrefix);
         return this;
     }
 

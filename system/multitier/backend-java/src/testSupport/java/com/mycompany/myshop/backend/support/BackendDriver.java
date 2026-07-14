@@ -7,7 +7,10 @@ import com.mycompany.myshop.backend.core.dtos.PublishCouponRequest;
 import java.util.Map;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 /**
@@ -37,6 +40,18 @@ public class BackendDriver {
 
     public ResponseEntity<String> placeOrder(PlaceOrderRequest request) {
         return restTemplate.postForEntity("/api/orders", request, String.class);
+    }
+
+    /**
+     * Posts a body the typed {@link PlaceOrderRequest} cannot express. {@code quantity} is an {@code
+     * Integer} on the DTO, so a non-integer ({@code "3.5"}, {@code "lala"}) or a blank quantity can
+     * only reach the controller as raw JSON — which is exactly what the API channel sends, and the
+     * only way to exercise Jackson's type-level rejection ({@code @TypeValidationMessage}).
+     */
+    public ResponseEntity<String> placeOrderRaw(String json) {
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return restTemplate.postForEntity("/api/orders", new HttpEntity<>(json, headers), String.class);
     }
 
     public ResponseEntity<String> viewOrder(String orderNumber) {

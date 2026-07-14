@@ -8,6 +8,7 @@ import { OrderStatus } from '../../types/api.types';
 import {
   placeOrderInteraction,
   placeOrderBlackoutInteraction,
+  placeOrderUnknownCouponInteraction,
   browseOrderHistoryInteraction,
   viewOrderDetailsInteraction,
   viewMissingOrderInteraction,
@@ -26,6 +27,13 @@ export class BackendStubDsl {
 
   rejectsPlaceOrderDuringBlackout(): void {
     this.driver.stub(placeOrderBlackoutInteraction());
+  }
+
+  // A rejection the frontend cannot reach on its own: whether a coupon exists is the
+  // backend's to know, so this is the path where a per-field message must survive the
+  // trip and get rendered.
+  rejectsPlaceOrderWithUnknownCoupon(couponCode: string): void {
+    this.driver.stub(placeOrderUnknownCouponInteraction(couponCode));
   }
 
   returnsOrderHistory(): void {

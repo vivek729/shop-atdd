@@ -18,9 +18,11 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
 
     private final ObjectMapper objectMapper;
     private String sku;
-    private int quantity;
+    private Integer quantity;
     private String country;
     private String couponCode;
+    private String rawQuantity;
+    private boolean quantityIsRaw;
 
     public PlaceOrder(BackendDriver driver, ObjectMapper objectMapper) {
         super(driver);
@@ -32,8 +34,19 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
         return this;
     }
 
-    public PlaceOrder quantity(int quantity) {
+    public PlaceOrder quantity(Integer quantity) {
         this.quantity = quantity;
+        this.quantityIsRaw = false;
+        return this;
+    }
+
+    /**
+     * A quantity the DTO's {@code Integer} cannot hold — {@code "3.5"}, {@code "lala"}, {@code "  "},
+     * or {@code null}. Forces the raw-JSON body, so the controller sees what the API channel sends.
+     */
+    public PlaceOrder rawQuantity(String rawQuantity) {
+        this.rawQuantity = rawQuantity;
+        this.quantityIsRaw = true;
         return this;
     }
 
@@ -49,13 +62,7 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
 
     @Override
     public UseCaseResult<PlaceOrderResponse, PlaceOrderVerification> execute() {
-        var request = new PlaceOrderRequest();
-        request.setSku(sku);
-        request.setQuantity(quantity);
-        request.setCountry(country);
-        request.setCouponCode(couponCode);
-
-        var response = driver.placeOrder(request);
+        var response = quantityIsRaw ? driver.placeOrderRaw(rawBody()) : driver.placeOrder(typedBody());
 
         return new UseCaseResult<>(
             response.getStatusCode(),
@@ -64,5 +71,29 @@ public class PlaceOrder extends BaseMyShopUseCase<PlaceOrderResponse, PlaceOrder
             () -> ResponseParser.parseSuccess(response, PlaceOrderResponse.class, objectMapper),
             () -> ResponseParser.parseRejection(response, objectMapper),
             PlaceOrderVerification::new);
+    }
+
+    private PlaceOrderRequest typedBody() {
+        var request = new PlaceOrderRequest();
+        request.setSku(sku);
+        request.setQuantity(quantity);
+        request.setCountry(country);
+        request.setCouponCode(couponCode);
+        return request;
+    }
+
+    // quantity goes in as a JSON *string* (or null) — the shape a form-backed client actually posts,
+    // and the one Jackson rejects with the @TypeValidationMessage.
+    private String rawBody() {
+        var body = objectMapper.createObjectNode();
+        body.put("sku", sku);
+        if (rawQuantity == null) {
+            body.putNull("quantity");
+        } else {
+            body.put("quantity", rawQuantity);
+        }
+        body.put("country", country);
+        body.put("couponCode", couponCode);
+        return body.toString();
     }
 }
