@@ -1,5 +1,17 @@
 # 2026-07-09 16:17:00 UTC — External use-case `execute()` auto-asserts success (drop boilerplate `shouldSucceed()`)
 
+## Status: REJECTED (2026-07-14)
+
+**Decision:** Rejected before execution. Do not revive without new evidence.
+
+**Why rejected:**
+
+1. **The payoff is tiny.** The dangling `.execute().shouldSucceed();` shape is only *written by a test author* in a handful of legacy test lines (`legacy/mod07/e2e/PlaceOrderPositiveTest`, `legacy/mod0{5,6,7}/smoke/external/{Erp,Tax}SmokeTest`, `legacy/mod07/smoke/system/MyShopSmokeTest`) and their TypeScript/.NET equivalents. Everything else the plan would touch is scenario-DSL *library* code (`AssumeImpl`, `ThenImpl`, `BaseThenStep`, `Given*Impl`), where no test author ever reads the boilerplate.
+2. **It trades a uniform law for a memorized taxonomy.** Today every use case obeys one rule: `execute()` → `UseCaseResult` → pick `shouldSucceed()` / `shouldFail()`. No exceptions. Option (A) splits that into arrange vs query families, so you must first *know which family a use case is in* before you can tell what `execute()` returns. For a teaching codebase this is a net loss — and the explicit `.shouldSucceed()` on a stub setup is arguably pedagogically useful, since it shows students that arranging a stub is a call that can fail.
+3. **It doubles the divergence surface.** The use-case DSL now exists in two parallel trees — the system-test testkit (`system-test/<lang>/**`) and the component-test support tree (`system/multitier/backend-<lang>/src/testSupport/**`, added after this plan was written). The arrange/query membership list would have to be kept in agreement across 3 languages × 2 trees forever, and every `test-comparator` run would police it.
+
+Net: low value, negative teaching value, high consistency cost.
+
 ## TL;DR
 
 **Why:** In the low-level use-case DSL, external *arrange* steps read `app.erp().returnsProduct()...execute().shouldSucceed();`. The `.shouldSucceed()` there is pure boilerplate — an arrange step that failed should just blow up the test anyway, and nothing consumes the returned verification. State-checking steps are different: their `.shouldSucceed()`/`.shouldFail()` is meaningful because it selects the outcome branch and yields the verification object.
