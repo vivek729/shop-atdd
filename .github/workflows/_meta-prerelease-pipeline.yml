@@ -38,6 +38,11 @@ on:
         required: false
         type: string
         default: '14400'
+      stage-timeout-seconds:
+        description: 'Hard timeout (seconds) for each Phase 0/1 local and commit stage run before this workflow gives up waiting. Sized per-stage, not per-pipeline: under runner contention a local stage has been observed at ~37m, so 5400 (90m) leaves headroom while still failing a genuinely hung stage promptly. Default 5400 (90m).'
+        required: false
+        type: string
+        default: '5400'
     outputs:
       commit_sha:
         description: 'SHA the verification ran against. Equals the trigger SHA unless the check job auto-bumped via meta-bump-all, in which case it is the post-bump main HEAD. Callers that tag artifacts (e.g. meta-prerelease-stage tagging meta-rc) should use this rather than github.sha so the tag lands on the SHA that was actually verified.'
@@ -97,6 +102,7 @@ jobs:
           echo "Skip acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}"
           echo "Fail-fast: ${{ inputs.fail-fast }}"
           echo "Pipeline timeout (seconds): ${{ inputs.pipeline-timeout-seconds }}"
+          echo "Stage timeout (seconds): ${{ inputs.stage-timeout-seconds }}"
           echo "Triggered by: ${{ github.event_name }} ${{ github.event.schedule }}"
       - uses: actions/checkout@v6
         with:
@@ -480,6 +486,7 @@ jobs:
         uses: optivem/actions/trigger-and-wait-for-workflow@v1
         with:
           workflow: prerelease-pipeline-${{ matrix.variant }}.yml
+          timeout-seconds: ${{ inputs.stage-timeout-seconds }}
           workflow-inputs: '{"level": "local", "skip-commit-stage": "true", "skip-acceptance-legacy": "${{ inputs.skip-acceptance-legacy }}", "commit-sha": "${{ needs.check.outputs.commit_sha }}"}'
 
   # Phase 1b: Run all commit stages in parallel (deduplicated — frontend-react is shared
@@ -524,6 +531,7 @@ jobs:
         with:
           workflow: ${{ matrix.workflow }}
           poll-interval: '60'
+          timeout-seconds: ${{ inputs.stage-timeout-seconds }}
           workflow-inputs: '{"commit-sha": "${{ needs.check.outputs.commit_sha }}"}'
 
   # Phase 2: Run all pipelines in parallel. Each pipeline produces RC tags namespaced

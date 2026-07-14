@@ -59,6 +59,11 @@ on:
         required: false
         type: string
         default: '14400'
+      stage-timeout-seconds:
+        description: 'Hard timeout (seconds) for each Phase 0/1 local and commit stage run before giving up. Default 5400 (90m). Lower this when iterating on the dry-run to fail faster.'
+        required: false
+        type: string
+        default: '5400'
 
 # Shared concurrency group with meta-prerelease-stage so dry-runs and whole runs
 # serialize rather than stepping on each other.
@@ -84,6 +89,7 @@ jobs:
       skip-acceptance-legacy: ${{ inputs.skip-acceptance-legacy }}
       fail-fast: ${{ inputs.fail-fast }}
       pipeline-timeout-seconds: ${{ inputs.pipeline-timeout-seconds }}
+      stage-timeout-seconds: ${{ inputs.stage-timeout-seconds }}
 
   # Exercise the manifest-builder code path WITHOUT tagging — catches bugs in
   # the new manifest logic (Phase 1 of plans/20260514-0652-shop-meta-release-

@@ -22,9 +22,13 @@ on:
 
 permissions: {}
 
+# Dispatched runs (from the meta prerelease pipeline) build a specific, SHA-pinned
+# commit and must never be evicted by an unrelated push to the same ref — that is
+# what broke run 29336276564. Keying the group on event_name (plus the dispatched
+# SHA) gives pushes and dispatches separate lanes; pushes still supersede each other.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}-${{ github.event_name }}-${{ inputs.commit-sha || '' }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
   COMMIT_SHA: ${{ inputs.commit-sha || github.sha }}

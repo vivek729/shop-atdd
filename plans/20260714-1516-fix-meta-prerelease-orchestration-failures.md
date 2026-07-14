@@ -1,5 +1,7 @@
 # 2026-07-14 15:16:27 UTC — Fix meta-prerelease-stage orchestration failures (false wait timeouts + commit-stage concurrency evictions)
 
+🤖 **Picked up by agent** — `Valentina_Desk` at `2026-07-14T15:37:04Z`
+
 ## TL;DR
 
 **Why:** The scheduled `meta-prerelease-stage` run [29336276564](https://github.com/optivem/shop/actions/runs/29336276564) failed with 5 `local` jobs at exit 124 and a cancelled `multitier-backend-java` commit stage. Neither is a product bug — every downstream run that was allowed to finish succeeded. Both defects are in the GitHub Actions orchestration: one job inherits a 30-minute wait default that is far shorter than the runs it waits on, and the commit-stage workflows let an unrelated push to `main` cancel the pipeline's SHA-pinned dispatched run.
@@ -21,22 +23,11 @@
 
 ## ▶ Next executable step (resume here)
 
-Apply Step 1: in `.github/workflows/_meta-prerelease-pipeline.yml`, declare a new `stage-timeout-seconds` input (default `'5400'`, alongside the existing `pipeline-timeout-seconds` at line 36) and pass `timeout-seconds: ${{ inputs.stage-timeout-seconds }}` to the `trigger-and-wait-for-workflow` step in the `local` job (~line 480) and in the `commit` job (~line 523). One file. Unblocks Step 2 (the concurrency fix across the seven commit-stage workflows).
+The code changes are done and `actionlint` passes clean. The only remaining unit is Step 4 — the live verification, which needs the fix pushed first: `gh workflow run meta-prerelease-stage.yml --repo optivem/shop`, then confirm no `local` job exits 124 and no commit-stage run is cancelled with "higher priority waiting request". This burns real CI minutes and is the user's call, so ask before dispatching.
 
 ## Steps
 
-- [ ] Step 1: `.github/workflows/_meta-prerelease-pipeline.yml` — add a `stage-timeout-seconds` input (type `string`, default `'5400'`, described as the per-stage wait budget for the Phase 0/1 `local` and `commit` jobs), and pass `timeout-seconds: ${{ inputs.stage-timeout-seconds }}` to the trigger-and-wait step in the `local` job (~line 480) and the `commit` job (~line 523). Echo it in the `check` job's settings summary next to the existing `pipeline-timeout-seconds` line (~line 99).
-
-      **Why a separate input rather than reusing `pipeline-timeout-seconds`:** the 14400s (4h) budget was sized for a full Phase 2 pipeline (local → commit → acceptance → QA), not for a single stage. Reusing it would mean a genuinely hung `local` stage stalls the meta run for four hours — longer than the ~3h gap between scheduled runs. 5400s is ~2.5× the worst case we actually measured (37m under runner contention), so contention never trips it while a real hang still fails loudly and promptly.
-- [ ] Step 2: Replace the `concurrency` block in all seven commit-stage workflows (`monolith-java`, `monolith-dotnet`, `monolith-typescript`, `multitier-backend-java`, `multitier-backend-dotnet`, `multitier-backend-typescript`, `multitier-frontend-react`) with:
-      ```yaml
-      concurrency:
-        group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}-${{ github.event_name }}-${{ inputs.commit-sha || '' }}
-        cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
-      ```
-      Push runs keep superseding each other; dispatched, SHA-pinned runs get their own lane and are never cancelled.
-- [ ] Step 3: Lint the workflows (`actionlint` / the `lint-workflows.yml` checks) and confirm the `${{ inputs.commit-sha || '' }}` expression resolves cleanly in the `push` event context (where `inputs` is unset) as well as `workflow_dispatch`.
-- [ ] Step 4: Commit, then `workflow_dispatch` one `meta-prerelease-stage` run and confirm it goes green — ideally while pushing something to `main` during the window, to exercise the exact collision that broke run 29336276564.
+- [ ] Step 4: After the fix is committed and pushed, `workflow_dispatch` one `meta-prerelease-stage` run and confirm it goes green — ideally while pushing something to `main` during the window, to exercise the exact collision that broke run 29336276564. Watch for: no `local` job exiting 124, and no commit-stage run cancelled with "higher priority waiting request".
 
 ## Non-goals
 
