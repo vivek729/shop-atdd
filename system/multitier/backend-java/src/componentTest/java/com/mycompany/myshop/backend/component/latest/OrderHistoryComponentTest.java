@@ -16,12 +16,7 @@ class OrderHistoryComponentTest extends AbstractComponentTest {
 
     @Test
     void browseReturnsPlacedOrders() {
-        scenario.given()
-                .clock().withTime("2026-03-10T12:00:00Z")
-            .and().product().withSku("BOOK-123").withUnitPrice("10.00")
-            .and().promotion().withActive(false).withDiscount("1.0")
-            .and().country().withCode("US").withTaxRate("0.10")
-            .when().placeOrder().withSku("BOOK-123").withQuantity(2).withCountry("US")
+        scenario.when().placeOrder()
             .then().shouldSucceed()
             .and().orderHistory().containsOrder();
     }

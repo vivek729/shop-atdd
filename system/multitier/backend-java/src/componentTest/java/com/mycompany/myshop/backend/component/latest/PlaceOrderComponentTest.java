@@ -19,11 +19,10 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
     @Test
     void computesTotalsFromPricePromotionAndTax() {
         scenario.given()
-                .clock().withTime("2026-03-10T12:00:00Z")
-            .and().product().withSku("BOOK-123").withUnitPrice("10.00")
-            .and().promotion().withActive(false).withDiscount("1.0")
-            .and().country().withCode("US").withTaxRate("0.10")
-            .when().placeOrder().withSku("BOOK-123").withQuantity(2).withCountry("US")
+                .product().withUnitPrice("10.00")
+            .and().promotion().withActive(false)
+            .and().country().withTaxRate("0.10")
+            .when().placeOrder().withQuantity(2)
             .then().shouldSucceed()
             .and().order()
                 .hasBasePrice("20.00")       // 10.00 x 2
@@ -37,11 +36,10 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
     @Test
     void appliesActivePromotionDiscount() {
         scenario.given()
-                .clock().withTime("2026-03-10T12:00:00Z")
-            .and().product().withSku("BOOK-123").withUnitPrice("10.00")
+                .product().withUnitPrice("10.00")
             .and().promotion().withActive(true).withDiscount("0.9")
-            .and().country().withCode("US").withTaxRate("0.10")
-            .when().placeOrder().withSku("BOOK-123").withQuantity(2).withCountry("US")
+            .and().country().withTaxRate("0.10")
+            .when().placeOrder().withQuantity(2)
             .then().shouldSucceed()
             .and().order()
                 .hasSubtotalPrice("18.00")   // 20.00 x 0.9
@@ -52,13 +50,11 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
     @Test
     void appliesCouponDiscount() {
         scenario.given()
-                .clock().withTime("2026-03-10T12:00:00Z")
-            .and().product().withSku("BOOK-123").withUnitPrice("10.00")
-            .and().promotion().withActive(false).withDiscount("1.0")
-            .and().country().withCode("US").withTaxRate("0.10")
-            .and().coupon().withCouponCode("SAVE20").withDiscountRate("0.20").withUsageLimit(100)
-            .when().placeOrder()
-                .withSku("BOOK-123").withQuantity(2).withCountry("US").withCouponCode("SAVE20")
+                .product().withUnitPrice("10.00")
+            .and().promotion().withActive(false)
+            .and().country().withTaxRate("0.10")
+            .and().coupon().withCouponCode("SAVE20").withDiscountRate("0.20")
+            .when().placeOrder().withQuantity(2).withCouponCode("SAVE20")
             .then().shouldSucceed()
             .and().order()
                 .hasDiscountAmount("4.00")   // 20.00 x 0.20
@@ -80,9 +76,8 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
     @Test
     void rejectsUnknownProduct() {
         scenario.given()
-                .clock().withTime("2026-03-10T12:00:00Z")
-            .and().product().withSku("MISSING-1").doesNotExist()
-            .when().placeOrder().withSku("MISSING-1").withQuantity(1).withCountry("US")
+                .product().withSku("MISSING-1").doesNotExist()
+            .when().placeOrder().withSku("MISSING-1")
             .then().shouldFail()
                 .fieldErrorMessage("sku", "Product does not exist for SKU: MISSING-1");
     }
