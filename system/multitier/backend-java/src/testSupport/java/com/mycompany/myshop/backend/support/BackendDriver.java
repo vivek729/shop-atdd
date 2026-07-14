@@ -17,13 +17,13 @@ import org.springframework.http.ResponseEntity;
  * coupon endpoints — {@code POST /api/coupons} and {@code GET /api/coupons} — mirroring how {@link
  * ErpStubDriver} / {@link TaxStubDriver} / {@link ClockStubDriver} own the WireMock mechanics of the
  * external systems. Also owns {@code GET /health} — the dedicated liveness probe used by the harness
- * smoke test, mirroring how the system-test estate resolves "is it running?" to the same endpoint.
+ * smoke test.
  *
  * <p>The two endpoints that can answer with either a success payload or an RFC 7807 error — place
  * order and view order — are fetched as raw {@code String} rather than deserialized straight into
  * their success DTO. Binding them to the success type would discard the {@code ProblemDetail} body on
  * a 4xx (Jackson would quietly map it onto a null-filled success DTO), leaving the DSL nothing to
- * assert a rejection message against. The driver hands the body up untouched; {@link BackendDsl} owns
+ * assert a rejection message against. The driver hands the body up untouched; the use case layer owns
  * the parse, picking the success DTO or the {@code ProblemDetail} once the test has said which
  * outcome it expects.
  */

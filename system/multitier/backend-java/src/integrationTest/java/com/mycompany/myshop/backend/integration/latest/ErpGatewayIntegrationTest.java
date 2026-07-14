@@ -10,7 +10,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.services.external.ErpGateway;
 import com.mycompany.myshop.backend.support.ErpStubDriver;
-import com.mycompany.myshop.backend.support.ErpStubDsl;
+import com.mycompany.myshop.backend.support.core.usecase.external.erp.ErpDsl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,15 +20,17 @@ import org.springframework.test.util.ReflectionTestUtils;
 /**
  * "After" of the external-systems contract-tests refactor at the narrow-integration layer: identical
  * scenarios to the {@code legacy/} twin, but the ERP happy/404 stubs are declared through the shared
- * fluent DSL under {@code support/} — the same {@link ErpStubDsl} the component {@code latest/} tests
- * reuse. Uses the same in-process {@link WireMockServer} mechanism (no Docker). The 500/503
- * error-injection cases have no DSL vocabulary and stay raw, matching the {@code legacy/} twin.
+ * use case DSL under {@code support/} — the same {@link ErpDsl} the component {@code latest/} tests
+ * reach as {@code app.erp()}. A narrow-integration test drives one gateway, not a scenario, so it
+ * uses the use case layer directly and never sees the scenario DSL above it. Uses the same in-process
+ * {@link WireMockServer} mechanism (no Docker). The 500/503 error-injection cases have no DSL
+ * vocabulary and stay raw, matching the {@code legacy/} twin.
  */
 class ErpGatewayIntegrationTest {
 
     static final WireMockServer WIRE_MOCK = new WireMockServer(options().dynamicPort());
 
-    private ErpStubDsl erpStub;
+    private ErpDsl erp;
     private ErpGateway erpGateway;
 
     @BeforeAll
@@ -45,7 +47,7 @@ class ErpGatewayIntegrationTest {
     void setUp() {
         WIRE_MOCK.resetAll();
 
-        erpStub = new ErpStubDsl(new ErpStubDriver(new WireMock("localhost", WIRE_MOCK.port())));
+        erp = new ErpDsl(new ErpStubDriver(new WireMock("localhost", WIRE_MOCK.port())));
 
         erpGateway = new ErpGateway();
         ReflectionTestUtils.setField(erpGateway, "erpUrl", WIRE_MOCK.baseUrl());
@@ -53,7 +55,7 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getProductDetailsReturnsDetailsWhenFound() {
-        erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
+        erp.returnsProduct().sku("BOOK-123").unitPrice("10.00").execute();
 
         var result = erpGateway.getProductDetails("BOOK-123");
 
@@ -64,7 +66,7 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getProductDetailsReturnsEmptyWhenNotFound() {
-        erpStub.returnsNoProduct().withSku("UNKNOWN").execute();
+        erp.returnsNoProduct().sku("UNKNOWN").execute();
 
         assertThat(erpGateway.getProductDetails("UNKNOWN")).isEmpty();
     }
@@ -81,7 +83,7 @@ class ErpGatewayIntegrationTest {
 
     @Test
     void getPromotionDetailsReturnsPromotion() {
-        erpStub.returnsPromotion().withActive(true).withDiscount("0.15").execute();
+        erp.returnsPromotion().active(true).discount("0.15").execute();
 
         var result = erpGateway.getPromotionDetails();
 

@@ -41,15 +41,15 @@ class BackendPactVerificationTest extends AbstractComponentTest {
 
     @State("product BOOK-123 exists and US is taxable")
     void productExistsAndUsTaxable() {
-        clockStub.returnsTime("2026-03-10T12:00:00Z").execute();
-        erpStub.returnsProduct().withSku("BOOK-123").withUnitPrice("10.00").execute();
-        erpStub.returnsPromotion().withActive(false).withDiscount("1.0").execute();
-        taxStub.returnsRate().withCountry("US").withRate("0.10").execute();
+        app.clock().returnsTime().time("2026-03-10T12:00:00Z").execute();
+        app.erp().returnsProduct().sku("BOOK-123").unitPrice("10.00").execute();
+        app.erp().returnsPromotion().active(false).discount("1.0").execute();
+        app.tax().returnsTaxRate().country("US").taxRate("0.10").execute();
     }
 
     @State("order placement is blocked by the New Year blackout")
     void orderPlacementBlackout() {
-        clockStub.returnsTime("2026-12-31T23:59:00Z").execute();
+        app.clock().returnsTime().time("2026-12-31T23:59:00Z").execute();
     }
 
     @State("at least one order exists")

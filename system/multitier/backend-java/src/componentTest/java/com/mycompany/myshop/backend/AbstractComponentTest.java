@@ -8,13 +8,11 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.repositories.CouponRepository;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
 import com.mycompany.myshop.backend.support.BackendDriver;
-import com.mycompany.myshop.backend.support.BackendDsl;
 import com.mycompany.myshop.backend.support.ClockStubDriver;
-import com.mycompany.myshop.backend.support.ClockStubDsl;
 import com.mycompany.myshop.backend.support.ErpStubDriver;
-import com.mycompany.myshop.backend.support.ErpStubDsl;
 import com.mycompany.myshop.backend.support.TaxStubDriver;
-import com.mycompany.myshop.backend.support.TaxStubDsl;
+import com.mycompany.myshop.backend.support.core.ScenarioDslImpl;
+import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,6 +36,10 @@ import org.springframework.test.context.DynamicPropertySource;
  * (started once in a static initializer, never stopped by JUnit) rather than {@code @Container}/
  * {@code @Testcontainers}: it is not a Spring bean, so a per-class server that JUnit stopped after
  * the first class would leave the reused, cached context pointing at a dead port.
+ *
+ * <p>Tests reach the harness through two layers: {@link #scenario} — {@code given() / when() /
+ * then()}, what {@code latest/} tests are written on — and {@link #app}, the use case layer
+ * underneath it, for a test that needs surgical control.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -70,7 +72,7 @@ public abstract class AbstractComponentTest {
     protected TestRestTemplate restTemplate;
 
     /**
-     * The application's own Jackson mapper, handed to the {@code backend} DSL so it parses responses
+     * The application's own Jackson mapper, handed to the use case layer so it parses responses
      * exactly the way the app serializes them — including the {@code ProblemDetail} support Spring
      * Boot registers, which the DSL needs to read a rejection's {@code detail} / {@code errors[]}.
      */
@@ -84,33 +86,35 @@ public abstract class AbstractComponentTest {
     protected CouponRepository couponRepository;
 
     /**
-     * Fluent DSL for driving the system under test (place + view order), symmetric with the ERP /
-     * Tax / Clock stub DSLs. Wired here — rather than as a field initializer like the stub DSLs —
-     * because {@code restTemplate} is an autowired instance field not yet populated at field-init.
+     * The use case layer: one entry per actor — {@code app.myShop()} for the system under test,
+     * {@code app.erp()} / {@code app.tax()} / {@code app.clock()} for the external stubs. The
+     * {@link #scenario} DSL is built on it, and it stays exposed for tests that need to drive an
+     * actor directly rather than through a scenario.
      */
-    protected BackendDsl backend;
+    protected UseCaseDsl app;
 
     /**
-     * Fluent DSLs for driving the ERP / Tax / Clock external-system stubs, symmetric with the
-     * {@code backend} DSL. Field-initialized (unlike {@code backend}) because the {@code ERP/TAX/
-     * CLOCK} WireMock servers are static and started in the class's static initializer, so their
-     * ports are available at instance-field-init time. Registered mappings are cleared per test by
-     * {@code resetComponentState()}'s {@code resetAll()}; the client instances survive the reset.
+     * The scenario layer: {@code scenario.given()…when()…then()}. Fresh per test — the
+     * one-scenario-per-test guard lives on the instance, so a new test starts with a clean slate.
      */
-    protected final ErpStubDsl erpStub =
-        new ErpStubDsl(new ErpStubDriver(new WireMock("localhost", ERP.port())));
-    protected final TaxStubDsl taxStub =
-        new TaxStubDsl(new TaxStubDriver(new WireMock("localhost", TAX.port())));
-    protected final ClockStubDsl clockStub =
-        new ClockStubDsl(new ClockStubDriver(new WireMock("localhost", CLOCK.port())));
+    protected ScenarioDslImpl scenario;
 
     @BeforeEach
     void resetComponentState() {
-        backend = new BackendDsl(new BackendDriver(restTemplate), objectMapper);
         ERP.resetAll();
         TAX.resetAll();
         CLOCK.resetAll();
         orderRepository.deleteAll();
         couponRepository.deleteAll();
+
+        // Wired here rather than as field initializers: restTemplate/objectMapper are autowired
+        // instance fields, not yet populated at field-init time.
+        app = new UseCaseDsl(
+            new BackendDriver(restTemplate),
+            objectMapper,
+            new ErpStubDriver(new WireMock("localhost", ERP.port())),
+            new TaxStubDriver(new WireMock("localhost", TAX.port())),
+            new ClockStubDriver(new WireMock("localhost", CLOCK.port())));
+        scenario = new ScenarioDslImpl(app);
     }
 }
