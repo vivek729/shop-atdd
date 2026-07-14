@@ -99,6 +99,9 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
             "/api/orders", orderRequest("BOOK-123", 2, "US", null), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        // Whole-request failure: the message lands in ProblemDetail.detail.
+        assertThat(response.getBody())
+            .contains("Orders cannot be placed between 23:59 and 00:00 on December 31st");
     }
 
     @Test
@@ -112,6 +115,11 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
             "/api/orders", orderRequest("MISSING-1", 1, "US", null), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        // Field-scoped failure: ProblemDetail.detail is only the generic validation string, so the
+        // real message has to be read out of errors[].
+        assertThat(response.getBody())
+            .contains("\"field\":\"sku\"")
+            .contains("Product does not exist for SKU: MISSING-1");
     }
 
     private PlaceOrderResponse place(PlaceOrderRequest request) {

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
  * <p>Coupon touches no external systems, so — unlike the order twins, which additionally swap raw
  * WireMock for the stub DSL (stub DSL vs raw WireMock) — this pair's only axis is SUT-side: the
  * {@code backend} DSL here vs raw {@code restTemplate} in {@code legacy/}. Publish
- * returns 204 No Content with no body, which {@code publishExpectingSuccess()} asserts.
+ * returns 204 No Content with no body, which {@code execute().expectSuccess()} asserts.
  */
 class CouponComponentTest extends AbstractComponentTest {
 
@@ -22,11 +22,11 @@ class CouponComponentTest extends AbstractComponentTest {
     void publishReturnsNoContentThenBrowseListsCoupon() {
         backend.publishCoupon()
             .withCode("SAVE10").withDiscountRate("0.20").withUsageLimit(100)
-            .publishExpectingSuccess();
+            .execute().expectSuccess();
 
-        var coupons = backend.browseCoupons();
+        var browseCouponsResponse = backend.browseCoupons();
 
-        assertThat(coupons.getCoupons())
+        assertThat(browseCouponsResponse.getCoupons())
             .extracting(BrowseCouponsResponse.BrowseCouponsItemResponse::getCode)
             .contains("SAVE10");
     }

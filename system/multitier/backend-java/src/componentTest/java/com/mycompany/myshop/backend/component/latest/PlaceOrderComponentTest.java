@@ -15,7 +15,7 @@ import org.springframework.http.HttpStatus;
  * {@code support/} (e.g. {@code erpStub.returnsProduct().withSku(...).withUnitPrice(...).execute()})
  * and the system under test via the {@code backend} DSL
  * ({@link com.mycompany.myshop.backend.support.BackendDsl},
- * {@code backend.placeOrder()...placeExpectingSuccess()}). Same stubbed responses, same assertions;
+ * {@code backend.placeOrder()...execute().expectSuccess()}). Same stubbed responses, same assertions;
  * the raw WireMock and {@code restTemplate} plumbing of the {@code legacy/} twin lives in the drivers
  * here. For this pair, legacy is all-raw and latest is all-DSL.
  */
@@ -28,16 +28,17 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         erpStub.returnsPromotion().withActive(false).withDiscount("1.0").execute();
         taxStub.returnsRate().withCountry("US").withRate("0.10").execute();
 
-        var placed = backend.placeOrder()
-            .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingSuccess();
-        var order = backend.viewOrder(placed.getOrderNumber());
+        var placeOrderResponse = backend.placeOrder()
+            .withSku("BOOK-123").withQuantity(2).withCountry("US").execute().expectSuccess();
+        var viewOrderResponse =
+            backend.viewOrder(placeOrderResponse.getOrderNumber()).expectSuccess();
 
-        assertThat(order.getBasePrice()).isEqualByComparingTo("20.00");      // 10.00 x 2
-        assertThat(order.getSubtotalPrice()).isEqualByComparingTo("20.00");  // no promo, no coupon
-        assertThat(order.getTaxAmount()).isEqualByComparingTo("2.00");       // 20.00 x 0.10
-        assertThat(order.getTotalPrice()).isEqualByComparingTo("22.00");     // 20.00 + 2.00
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
-        assertThat(order.getAppliedCouponCode()).isNull();
+        assertThat(viewOrderResponse.getBasePrice()).isEqualByComparingTo("20.00");      // 10.00 x 2
+        assertThat(viewOrderResponse.getSubtotalPrice()).isEqualByComparingTo("20.00");  // no promo, no coupon
+        assertThat(viewOrderResponse.getTaxAmount()).isEqualByComparingTo("2.00");       // 20.00 x 0.10
+        assertThat(viewOrderResponse.getTotalPrice()).isEqualByComparingTo("22.00");     // 20.00 + 2.00
+        assertThat(viewOrderResponse.getStatus()).isEqualTo(OrderStatus.PLACED);
+        assertThat(viewOrderResponse.getAppliedCouponCode()).isNull();
     }
 
     @Test
@@ -47,13 +48,14 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         erpStub.returnsPromotion().withActive(true).withDiscount("0.9").execute();
         taxStub.returnsRate().withCountry("US").withRate("0.10").execute();
 
-        var placed = backend.placeOrder()
-            .withSku("BOOK-123").withQuantity(2).withCountry("US").placeExpectingSuccess();
-        var order = backend.viewOrder(placed.getOrderNumber());
+        var placeOrderResponse = backend.placeOrder()
+            .withSku("BOOK-123").withQuantity(2).withCountry("US").execute().expectSuccess();
+        var viewOrderResponse =
+            backend.viewOrder(placeOrderResponse.getOrderNumber()).expectSuccess();
 
-        assertThat(order.getSubtotalPrice()).isEqualByComparingTo("18.00");  // 20.00 x 0.9
-        assertThat(order.getTaxAmount()).isEqualByComparingTo("1.80");       // 18.00 x 0.10
-        assertThat(order.getTotalPrice()).isEqualByComparingTo("19.80");
+        assertThat(viewOrderResponse.getSubtotalPrice()).isEqualByComparingTo("18.00");  // 20.00 x 0.9
+        assertThat(viewOrderResponse.getTaxAmount()).isEqualByComparingTo("1.80");       // 18.00 x 0.10
+        assertThat(viewOrderResponse.getTotalPrice()).isEqualByComparingTo("19.80");
     }
 
     @Test
@@ -65,16 +67,17 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
         erpStub.returnsPromotion().withActive(false).withDiscount("1.0").execute();
         taxStub.returnsRate().withCountry("US").withRate("0.10").execute();
 
-        var placed = backend.placeOrder()
+        var placeOrderResponse = backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US").withCoupon("SAVE20")
-            .placeExpectingSuccess();
-        var order = backend.viewOrder(placed.getOrderNumber());
+            .execute().expectSuccess();
+        var viewOrderResponse =
+            backend.viewOrder(placeOrderResponse.getOrderNumber()).expectSuccess();
 
-        assertThat(order.getDiscountAmount()).isEqualByComparingTo("4.00");  // 20.00 x 0.20
-        assertThat(order.getSubtotalPrice()).isEqualByComparingTo("16.00");
-        assertThat(order.getTaxAmount()).isEqualByComparingTo("1.60");       // 16.00 x 0.10
-        assertThat(order.getTotalPrice()).isEqualByComparingTo("17.60");
-        assertThat(order.getAppliedCouponCode()).isEqualTo("SAVE20");
+        assertThat(viewOrderResponse.getDiscountAmount()).isEqualByComparingTo("4.00");  // 20.00 x 0.20
+        assertThat(viewOrderResponse.getSubtotalPrice()).isEqualByComparingTo("16.00");
+        assertThat(viewOrderResponse.getTaxAmount()).isEqualByComparingTo("1.60");       // 16.00 x 0.10
+        assertThat(viewOrderResponse.getTotalPrice()).isEqualByComparingTo("17.60");
+        assertThat(viewOrderResponse.getAppliedCouponCode()).isEqualTo("SAVE20");
     }
 
     @Test
@@ -83,7 +86,8 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
 
         backend.placeOrder()
             .withSku("BOOK-123").withQuantity(2).withCountry("US")
-            .placeExpectingRejection(HttpStatus.UNPROCESSABLE_ENTITY);
+            .execute().expectRejection(HttpStatus.UNPROCESSABLE_ENTITY)
+            .withMessage("Orders cannot be placed between 23:59 and 00:00 on December 31st");
     }
 
     @Test
@@ -93,6 +97,7 @@ class PlaceOrderComponentTest extends AbstractComponentTest {
 
         backend.placeOrder()
             .withSku("MISSING-1").withQuantity(1).withCountry("US")
-            .placeExpectingRejection(HttpStatus.UNPROCESSABLE_ENTITY);
+            .execute().expectRejection(HttpStatus.UNPROCESSABLE_ENTITY)
+            .withFieldError("sku", "Product does not exist for SKU: MISSING-1");
     }
 }

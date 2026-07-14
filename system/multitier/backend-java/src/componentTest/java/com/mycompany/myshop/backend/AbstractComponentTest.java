@@ -2,6 +2,7 @@ package com.mycompany.myshop.backend;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.repositories.CouponRepository;
@@ -68,6 +69,14 @@ public abstract class AbstractComponentTest {
     @Autowired
     protected TestRestTemplate restTemplate;
 
+    /**
+     * The application's own Jackson mapper, handed to the {@code backend} DSL so it parses responses
+     * exactly the way the app serializes them — including the {@code ProblemDetail} support Spring
+     * Boot registers, which the DSL needs to read a rejection's {@code detail} / {@code errors[]}.
+     */
+    @Autowired
+    protected ObjectMapper objectMapper;
+
     @Autowired
     protected OrderRepository orderRepository;
 
@@ -97,7 +106,7 @@ public abstract class AbstractComponentTest {
 
     @BeforeEach
     void resetComponentState() {
-        backend = new BackendDsl(new BackendDriver(restTemplate));
+        backend = new BackendDsl(new BackendDriver(restTemplate), objectMapper);
         ERP.resetAll();
         TAX.resetAll();
         CLOCK.resetAll();
