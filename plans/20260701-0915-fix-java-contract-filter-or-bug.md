@@ -15,15 +15,29 @@
 
 ## ▶ Next executable step (resume here)
 
-Step 1 below: edit `system-test/java/build.gradle`'s `filter { }` block (lines 86-102) to replace the two separate `includeTestsMatching` calls with a single combined pattern per suite invocation so a test must match all active criteria (version/type AND stub-or-real marker) rather than any one of them.
+Step 6 below: the fix is committed and pushed. What remains is to watch the next `monolith-java-acceptance-stage.yml` / `multitier-java-acceptance-stage.yml` CI run and confirm the "0 tests executed" symptom is gone — the only conclusive check, since it never reproduced locally. If it recurs, pivot to the Open question below (Gradle parallel-fork / report-write timing on the CI runner).
+
+## Verified so far (Steps 1-4, done)
+
+`system-test/java/build.gradle`'s `filter { }` block now folds every active criterion into a single `includeTestsMatching` pattern (`'*' + [version, type, Stub|Real].join('*') + '*'`), so the criteria AND instead of OR. Verified by listing the classes each suite selects (via the `Running:` lines, with no SUT deployed — selection is what was under test):
+
+- `contract-stub` → `latest…{Clock,Erp,Tax}StubContractTest` (3 classes; was 11 tests incl. legacy.mod11 and `*RealContractTest`)
+- `contract-stub-isolated` → `latest…ClockStubContractIsolatedTest`
+- `contract-real` → `latest…{Clock,Erp,Tax}RealContractTest`
+- Non-contract suites unaffected: `smoke-stub` still selects `MyShopSmokeTest` (no "Stub" in its name), proving the mode segment is appended only when `type == 'contract'`. For any `type != 'contract'` the generated pattern is character-for-character identical to the old one.
+- `./gradlew build -x test` passes — Groovy DSL valid.
+
+End-to-end against a deployed monolith-java system (Step 4, done — all green, `gh optivem system` started, `system-test setup`, then per-suite runs, then teardown):
+
+- `contract-stub` → Total: 4, Passed: 4 (`{Clock,Erp,Tax}StubContractTest`; Tax contributes 2 methods) — was 11 cross-contaminated tests.
+- `contract-stub-isolated` → Total: 1, Passed: 1 (`ClockStubContractIsolatedTest`).
+- `contract-real` → Total: 3, Passed: 3 (`{Clock,Erp,Tax}RealContractTest`).
+- `gh optivem system-test run --sample` → all 11 suites PASSED (smoke stub/real, acceptance parallel/isolated × API/UI, all 3 contract suites, e2e API/UI). No regression in the suites sharing the filter block; `--sample`'s CLI `--tests` pattern still ANDs correctly with the new single build-script pattern.
+
+Cross-language check (Step 2, done — no change needed): .NET partitions contract suites with a single `dotnet test --filter` expression AND-ing fragments with `&` (`FullyQualifiedName~.Latest.ExternalSystemContractTests&FullyQualifiedName~Stub&Category!=isolated`). TypeScript uses a single positional path regex (`tests/latest/contract/.*-stub-.*\.spec\.ts`) AND-ed with a separate `--grep`/`--grep-invert` on the `@isolated` tag. Neither registers multiple same-set patterns, so neither is exposed to the OR-semantics defect — Java's repeated `includeTestsMatching` was the only instance.
 
 ## Steps
 
-- [ ] Step 1: In `system-test/java/build.gradle` (`tasks.named('test') { filter { ... } }`, lines 86-102), replace the OR-prone multiple `includeTestsMatching` calls with a single combined pattern. Build one pattern string incorporating every active criterion in the order it appears in the fully-qualified test name (`com.mycompany.myshop.systemtest.<version>.contract.<domain>.<Domain><Mode>ContractTest`) — e.g. for `type=contract` and `externalSystemMode=stub`, the single pattern should require `*<version>*<type>*Stub*` as ONE `includeTestsMatching` call, not two. Preserve the existing `else if` fallback structure for suites that don't set `externalSystemMode` (smoke, acceptance, e2e) — those must remain unaffected.
-- [ ] Step 2: Re-read `system-test/dotnet/tests.yaml` and the TypeScript system-test filter/grep configuration to confirm neither uses an equivalent multi-call OR-prone filtering mechanism. Document the comparison (what each language does for contract stub/real partitioning) before concluding no change is needed there, per the repo's consistency-check convention — don't assume from memory.
-- [ ] Step 3: Run `./gradlew build` in `system-test/java/` to confirm the edit compiles and the Groovy DSL is valid.
-- [ ] Step 4: Locally verify against a deployed environment: `$env:GH_OPTIVEM_CONFIG = "gh-optivem-monolith-java.yaml"`, `gh optivem system start`, `gh optivem system-test setup`, then run `gh optivem system-test run --suite contract-stub`, `--suite contract-stub-isolated`, and `--suite contract-real` individually. For each, confirm the printed `Running: ...` lines list ONLY the intended narrow test set (no legacy tests in `contract-stub`/`contract-real`, no cross-mode real/stub tests) and the suite still exits 0 with the correct (smaller) count. Then `gh optivem system-test run --sample` for a full Java suite sweep to catch regressions in the smoke/acceptance/e2e suites that share the same filter block, and `gh optivem system stop` to tear down.
-- [ ] Step 5: Commit and push the fix via the `/commit` skill (per repo convention — never raw `git`).
 - [ ] Step 6: After push, monitor the next `monolith-java-acceptance-stage.yml` / `multitier-java-acceptance-stage.yml` CI run (or trigger the meta-prerelease pipeline) to confirm the "0 tests executed" symptom is gone — this is the only conclusive verification, since it did not reproduce locally.
 
 ## Open questions

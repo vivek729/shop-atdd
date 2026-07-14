@@ -87,18 +87,31 @@ tasks.named('test') {
 		def type               = System.getProperty('type')               // smoke | acceptance | e2e | contract
 		def version            = System.getProperty('version')            // mod02 | mod03 | ... | latest
 		def externalSystemMode = System.getProperty('externalSystemMode') // stub | real (contract tests only)
-		if (type && version) {
-			includeTestsMatching "*${version}*${type}*"
-		} else if (type) {
-			includeTestsMatching "*${type}*"
-		} else if (version) {
-			includeTestsMatching "*${version}*"
+
+		// Every criterion must be folded into ONE pattern: Gradle's TestFilter ORs
+		// the patterns registered by repeated includeTestsMatching calls, so a
+		// second call widens the selection instead of narrowing it. Registering
+		// "*latest*contract*" and "*Stub*" separately selected any latest contract
+		// test (real included) OR any Stub contract test (legacy included) — 11
+		// tests where 4 were intended.
+		//
+		// Segments are appended in the order they appear in the fully-qualified
+		// name: com.mycompany.myshop.systemtest.<version>.<type>.<domain>.<Domain><Mode>ContractTest
+		def segments = []
+		if (version) {
+			segments << version
+		}
+		if (type) {
+			segments << type
 		}
 		if (type == 'contract' && externalSystemMode == 'stub') {
-			includeTestsMatching "*Stub*"
+			segments << 'Stub'
 		}
 		if (type == 'contract' && externalSystemMode == 'real') {
-			includeTestsMatching "*Real*"
+			segments << 'Real'
+		}
+		if (segments) {
+			includeTestsMatching '*' + segments.join('*') + '*'
 		}
 
 		// The acceptance and contract categories run as several
