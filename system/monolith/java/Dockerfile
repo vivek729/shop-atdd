@@ -7,8 +7,16 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY src src
 COPY config config
+# Retry the wrapper's distribution download — a transient 5xx from the Gradle CDN
+# otherwise kills the build (mirrors npm_config_fetch_retries in the TS images).
 RUN --mount=type=cache,target=/root/.gradle \
-    chmod +x gradlew && ./gradlew bootJar --no-daemon
+    chmod +x gradlew && \
+    for i in 1 2 3; do \
+      ./gradlew --version --no-daemon && break; \
+      [ "$i" = 3 ] && { echo "Gradle wrapper download failed after 3 attempts"; exit 1; }; \
+      echo "Gradle wrapper download failed (attempt $i/3), retrying in 10s..."; sleep 10; \
+    done && \
+    ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
