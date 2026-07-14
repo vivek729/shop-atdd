@@ -12,45 +12,21 @@ const { backend, frontend } = componentHarness();
 
 describe('NewOrder — places an order', () => {
   it('shows success message when order is accepted', async () => {
-    backend
-      .returnsPlacedOrder()
-      .withSku('BOOK-123')
-      .withQuantity(2)
-      .withCountry('US')
-      .withOrderNumber('ORD-1')
-      .execute();
+    backend.returnsPlacedOrder().execute();
 
-    await frontend.placeOrder().withSku('BOOK-123').withQuantity(2).execute().hasConfirmation('ORD-1');
+    await frontend.placeOrder().execute().hasConfirmation('ORD-1');
   });
 
   it('sends the coupon the user typed', async () => {
-    backend
-      .returnsPlacedOrder()
-      .withSku('BOOK-123')
-      .withQuantity(2)
-      .withCountry('US')
-      .withCoupon('SAVE10')
-      .withOrderNumber('ORD-1')
-      .execute();
+    backend.returnsPlacedOrder().withCoupon('SAVE10').execute();
 
-    await frontend
-      .placeOrder()
-      .withSku('BOOK-123')
-      .withQuantity(2)
-      .withCoupon('SAVE10')
-      .execute()
-      .hasConfirmation('ORD-1');
+    await frontend.placeOrder().withCoupon('SAVE10').execute().hasConfirmation('ORD-1');
   });
 
   it('shows error message when order is rejected by the backend', async () => {
     backend.rejectsPlaceOrderDuringBlackout();
 
-    await frontend
-      .placeOrder()
-      .withSku('BOOK-123')
-      .withQuantity(2)
-      .execute()
-      .hasError('Orders cannot be placed on December 31');
+    await frontend.placeOrder().execute().hasError('Orders cannot be placed on December 31');
   });
 });
 
@@ -104,8 +80,6 @@ describe('NewOrder — renders a field error the backend sent', () => {
 
     await frontend
       .placeOrder()
-      .withSku('BOOK-123')
-      .withQuantity(2)
       .withCoupon('INVALIDCOUPON')
       .execute()
       .hasFieldError('couponCode', 'Coupon code INVALIDCOUPON does not exist');
