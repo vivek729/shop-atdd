@@ -6,7 +6,7 @@ import { ComponentHarness } from '../support/component-harness';
  * ErpGateway (price + promotion) -> CouponService (DB) -> TaxGateway, all behind POST /api/orders
  * and read back via GET /api/orders/{n}. Externals are stubbed by in-process HTTP servers; DB is
  * Testcontainers Postgres.
- * Mirrors the Java PlaceOrderComponentTest.
+ * Mirrors the Java PlaceOrderPositiveComponentTest / PlaceOrderNegativeComponentTest.
  */
 describe('Place Order (component)', () => {
   const harness = new ComponentHarness();

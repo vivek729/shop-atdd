@@ -34,13 +34,14 @@ What exists today, for `PlaceOrder`:
   `fieldErrorMessage("quantity", …)` across `@Channel({UI, API})`), plus
   `PlaceOrderNegativeIsolatedTest.java` (`@Isolated`, controllable clock —
   year-end blackout, expired coupon).
-- **Component** — exists in **exactly one place**:
-  `system/multitier/backend-java/src/componentTest/.../PlaceOrderComponentTest.java`
-  (in-process API, WireMock externals, Testcontainers DB —
-  `computesTotalsFromPricePromotionAndTax`, `appliesActivePromotionDiscount`,
-  `appliesCouponDiscount`, `rejectsOrderDuringNewYearBlackout`,
-  `rejectsUnknownProduct`). This is the deliberately opt-in layer, demonstrated
-  only in multitier Java. **Not** in monolith, backend-.NET, or backend-TS.
+- **Component** — exists **only in multitier Java**, split across
+  `system/multitier/backend-java/src/componentTest/.../PlaceOrderPositiveComponentTest.java`
+  (the pricing matrix — base price, promotion, coupon, tax, totals) and
+  `.../PlaceOrderNegativeComponentTest.java` (validation + existence rules + the
+  year-end blackout), in-process API, WireMock externals, Testcontainers DB. This
+  is the deliberately opt-in layer. **Not** in monolith, backend-.NET, or
+  backend-TS. (The former combined `PlaceOrderComponentTest` was removed
+  2026-07-17; its unique scenarios were folded into the two files above.)
 - **Unit** — **missing for pricing/validation.** `system/multitier/backend-java/src/test`
   holds only `BackendApplicationTests` (smoke) and `AbstractIntegrationTest`.
   There is **no quotable unit test** exhausting the pricing arithmetic or the
@@ -83,8 +84,8 @@ tests there.
   "exhaust the matrix here" tier the article points to — and the place where the
   combinatorial rows live cheapest.
 - **A built-out component layer for order pricing logic** — extend
-  `PlaceOrderComponentTest` (in-process API, WireMock externals, Testcontainers
-  DB) so the pricing matrix has a deliberate *component* home: the
+  `PlaceOrderPositiveComponentTest` (in-process API, WireMock externals,
+  Testcontainers DB) so the pricing matrix has a deliberate *component* home: the
   price × promotion × coupon × tax combinations that prove the backend
   *computes and persists* the totals correctly when wired to its real DB and
   stubbed neighbours, every commit, without a deployed UI. Today it has a few
@@ -138,7 +139,7 @@ build to and the article quotes. No test code yet.
   half-up boundary cases. No Spring, no DB. These are the "matrix lives here"
   samples the article quotes for the bottom of the pyramid.
 - [ ] **Step 3 — Build out the component layer for order pricing logic.** Extend
-  `system/multitier/backend-java/src/componentTest/.../PlaceOrderComponentTest.java`
+  `system/multitier/backend-java/src/componentTest/.../PlaceOrderPositiveComponentTest.java`
   so the price × promotion × coupon × tax matrix has a deliberate component home
   (in-process API, WireMock externals, Testcontainers DB) — the cheaper twin of
   the system pricing matrix, proving compute-and-persist correctness every
