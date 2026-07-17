@@ -202,4 +202,18 @@ class PlaceOrderPositiveComponentTest extends AbstractComponentTest {
                 .hasAppliedCoupon("COMBO10")
                 .hasTotalPrice("21.60");      // 18.00 x 1.20
     }
+
+    @Test
+    void appliesActivePromotionDiscount() {
+        scenario.given()
+                .product().withUnitPrice("10.00")
+            .and().promotion().withActive(true).withDiscount("0.9")
+            .and().country().withTaxRate("0.10")
+            .when().placeOrder().withQuantity(2)
+            .then().shouldSucceed()
+            .and().order()
+                .hasSubtotalPrice("18.00")   // 20.00 x 0.9
+                .hasTaxAmount("1.80")        // 18.00 x 0.10
+                .hasTotalPrice("19.80");
+    }
 }

@@ -158,4 +158,13 @@ class PlaceOrderNegativeComponentTest extends AbstractComponentTest {
                 .errorMessage(VALIDATION_FAILED)
                 .fieldErrorMessage("couponCode", "Coupon code LIMITED2024 has exceeded its usage limit");
     }
+
+    @Test
+    void rejectsOrderDuringNewYearBlackout() {
+        scenario.given()
+                .clock().withTime("2026-12-31T23:59:00Z")
+            .when().placeOrder()
+            .then().shouldFail()
+                .errorMessage("Orders cannot be placed between 23:59 and 00:00 on December 31st");
+    }
 }
