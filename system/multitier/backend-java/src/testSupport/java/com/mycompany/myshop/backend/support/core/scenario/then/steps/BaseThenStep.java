@@ -51,4 +51,16 @@ public abstract class BaseThenStep<R, V extends ResponseVerification<R>> {
     public ThenOrderHistoryImpl<R, V> orderHistory() {
         return new ThenOrderHistoryImpl<>(app, executionResult, successVerification);
     }
+
+    public ThenProductImpl<R, V> product(String sku) {
+        return new ThenProductImpl<>(app, executionResult, sku, successVerification);
+    }
+
+    public ThenClockImpl<R, V> clock() {
+        return new ThenClockImpl<>(app, executionResult, successVerification);
+    }
+
+    public ThenCountryImpl<R, V> country(String code) {
+        return new ThenCountryImpl<>(app, executionResult, code, successVerification);
+    }
 }

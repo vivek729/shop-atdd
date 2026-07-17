@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.myshop.backend.support.BackendDriver;
 import com.mycompany.myshop.backend.support.ClockStubDriver;
 import com.mycompany.myshop.backend.support.ErpStubDriver;
+import com.mycompany.myshop.backend.support.SutClockReader;
+import com.mycompany.myshop.backend.support.SutErpReader;
+import com.mycompany.myshop.backend.support.SutTaxReader;
 import com.mycompany.myshop.backend.support.TaxStubDriver;
 import com.mycompany.myshop.backend.support.core.usecase.external.clock.ClockDsl;
 import com.mycompany.myshop.backend.support.core.usecase.external.erp.ErpDsl;
@@ -23,17 +26,26 @@ public class UseCaseDsl {
     private final ErpDsl erp;
     private final TaxDsl tax;
     private final ClockDsl clock;
+    private final SutErpReader sutErp;
+    private final SutTaxReader sutTax;
+    private final SutClockReader sutClock;
 
     public UseCaseDsl(
             BackendDriver backendDriver,
             ObjectMapper objectMapper,
             ErpStubDriver erpStubDriver,
             TaxStubDriver taxStubDriver,
-            ClockStubDriver clockStubDriver) {
+            ClockStubDriver clockStubDriver,
+            SutErpReader sutErp,
+            SutTaxReader sutTax,
+            SutClockReader sutClock) {
         this.myShop = new MyShopDsl(backendDriver, objectMapper);
         this.erp = new ErpDsl(erpStubDriver);
         this.tax = new TaxDsl(taxStubDriver);
         this.clock = new ClockDsl(clockStubDriver);
+        this.sutErp = sutErp;
+        this.sutTax = sutTax;
+        this.sutClock = sutClock;
     }
 
     public MyShopDsl myShop() {
@@ -50,5 +62,24 @@ public class UseCaseDsl {
 
     public ClockDsl clock() {
         return clock;
+    }
+
+    /**
+     * Reads a product through the SUT's production {@code ErpGateway} — the SUT's own view of the ERP
+     * stub. Backs {@code then().product(...)} in the stub-contract tests, deliberately not the stub
+     * client (a test-side read of the stub would be a tautology).
+     */
+    public SutErpReader sutErp() {
+        return sutErp;
+    }
+
+    /** Reads a country through the SUT's production {@code TaxGateway}. See {@link #sutErp()}. */
+    public SutTaxReader sutTax() {
+        return sutTax;
+    }
+
+    /** Reads the current time through the SUT's production {@code ClockGateway}. See {@link #sutErp()}. */
+    public SutClockReader sutClock() {
+        return sutClock;
     }
 }

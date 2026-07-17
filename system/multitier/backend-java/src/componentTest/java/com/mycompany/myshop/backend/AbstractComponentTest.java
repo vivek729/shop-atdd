@@ -7,9 +7,15 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mycompany.myshop.backend.core.repositories.CouponRepository;
 import com.mycompany.myshop.backend.core.repositories.OrderRepository;
+import com.mycompany.myshop.backend.core.services.external.ClockGateway;
+import com.mycompany.myshop.backend.core.services.external.ErpGateway;
+import com.mycompany.myshop.backend.core.services.external.TaxGateway;
 import com.mycompany.myshop.backend.support.BackendDriver;
 import com.mycompany.myshop.backend.support.ClockStubDriver;
 import com.mycompany.myshop.backend.support.ErpStubDriver;
+import com.mycompany.myshop.backend.support.SutClockReader;
+import com.mycompany.myshop.backend.support.SutErpReader;
+import com.mycompany.myshop.backend.support.SutTaxReader;
 import com.mycompany.myshop.backend.support.TaxStubDriver;
 import com.mycompany.myshop.backend.support.core.ScenarioDslImpl;
 import com.mycompany.myshop.backend.support.core.usecase.UseCaseDsl;
@@ -86,6 +92,20 @@ public abstract class AbstractComponentTest {
     protected CouponRepository couponRepository;
 
     /**
+     * The SUT's production gateways to the external systems. The stub-contract tests read them back
+     * through {@link SutErpReader} / {@link SutTaxReader} / {@link SutClockReader} so the WireMock
+     * stub's bytes travel through the SUT's real HTTP call + real parse, not a test-side client.
+     */
+    @Autowired
+    protected ErpGateway erpGateway;
+
+    @Autowired
+    protected TaxGateway taxGateway;
+
+    @Autowired
+    protected ClockGateway clockGateway;
+
+    /**
      * The use case layer: one entry per actor — {@code app.myShop()} for the system under test,
      * {@code app.erp()} / {@code app.tax()} / {@code app.clock()} for the external stubs. The
      * {@link #scenario} DSL is built on it, and it stays exposed for tests that need to drive an
@@ -114,7 +134,10 @@ public abstract class AbstractComponentTest {
             objectMapper,
             new ErpStubDriver(new WireMock("localhost", ERP.port())),
             new TaxStubDriver(new WireMock("localhost", TAX.port())),
-            new ClockStubDriver(new WireMock("localhost", CLOCK.port())));
+            new ClockStubDriver(new WireMock("localhost", CLOCK.port())),
+            new SutErpReader(erpGateway),
+            new SutTaxReader(taxGateway),
+            new SutClockReader(clockGateway));
         scenario = new ScenarioDslImpl(app);
     }
 }
