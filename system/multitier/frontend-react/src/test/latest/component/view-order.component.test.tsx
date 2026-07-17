@@ -10,7 +10,24 @@ describe('ViewOrder', () => {
   it('shows order details for an existing order', async () => {
     backend.returnsOrderDetails('ORD-1');
 
-    await frontend.viewOrderDetails('ORD-1').execute().showsOrderDetails('ORD-1', '$22.00');
+    // Assert the WHOLE breakdown the screen renders, not just the total — the frontend twin of
+    // system-test's ThenOrder price/tax/discount/status assertions, but as a rendering check (the
+    // values are the backend's; here we pin that each one reaches the screen against its own field).
+    await frontend.viewOrderDetails('ORD-1').execute().showsOrderDetails('ORD-1', {
+      status: 'PLACED',
+      sku: 'BOOK-123',
+      country: 'US',
+      quantity: '2',
+      unitPrice: '$10.00',
+      basePrice: '$20.00',
+      discountRate: '0.00%',
+      discountAmount: '$0.00',
+      subtotalPrice: '$20.00',
+      taxRate: '10.00%',
+      taxAmount: '$2.00',
+      totalPrice: '$22.00',
+      appliedCoupon: 'None',
+    });
   });
 
   it('shows not-found error for a missing order', async () => {

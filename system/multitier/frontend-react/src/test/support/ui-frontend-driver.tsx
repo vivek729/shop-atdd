@@ -1,7 +1,7 @@
 // UI Frontend Driver — realizes the Frontend DSL by driving the rendered UI:
 // it renders the page, fires the user's gestures through userEvent, and asserts
 // against the rendered screen. Used by the component/latest specs.
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect } from 'vitest';
 import { NewOrder } from '../../pages/NewOrder';
@@ -9,7 +9,12 @@ import { OrderHistory } from '../../pages/OrderHistory';
 import { OrderDetails } from '../../pages/OrderDetails';
 import { AdminCoupons } from '../../pages/AdminCoupons';
 import { renderWithProviders, routeApiTo } from '../test-utils';
-import type { FrontendDriver, PlaceOrderGesture } from './frontend-dsl';
+import type {
+  FrontendDriver,
+  OrderDetailExpectation,
+  OrderHistoryRowExpectation,
+  PlaceOrderGesture,
+} from './frontend-dsl';
 
 export class UiFrontendDriver implements FrontendDriver {
   private readonly user = userEvent.setup();
@@ -58,8 +63,22 @@ export class UiFrontendDriver implements FrontendDriver {
     renderWithProviders(<OrderHistory />);
   }
 
-  async showsOrder(orderNumber: string): Promise<void> {
-    expect(await screen.findByText(orderNumber)).toBeInTheDocument();
+  async showsOrder(orderNumber: string, expected?: OrderHistoryRowExpectation): Promise<void> {
+    const cell = await screen.findByText(orderNumber);
+    if (!expected) {
+      return;
+    }
+    // Assert total and status render on the SAME row as the order number — a value on the wrong
+    // row would be a real defect this scoping catches.
+    const row = cell.closest('tr');
+    expect(row).not.toBeNull();
+    const rowScope = within(row as HTMLElement);
+    if (expected.totalPrice !== undefined) {
+      expect(rowScope.getByText(`$${expected.totalPrice.toFixed(2)}`)).toBeInTheDocument();
+    }
+    if (expected.status !== undefined) {
+      expect(rowScope.getByText(expected.status)).toBeInTheDocument();
+    }
   }
 
   async browseCoupons(): Promise<void> {
@@ -77,9 +96,28 @@ export class UiFrontendDriver implements FrontendDriver {
     });
   }
 
-  async showsOrderDetails(orderNumber: string, totalPrice: string): Promise<void> {
+  async showsOrderDetails(orderNumber: string, expected: OrderDetailExpectation): Promise<void> {
     expect(await screen.findByLabelText('Display Order Number')).toHaveTextContent(orderNumber);
-    expect(screen.getByLabelText('Display Total Price')).toHaveTextContent(totalPrice);
+    // Each field the details screen renders is asserted against its own aria-label, so a value that
+    // renders against the wrong field (or stops rendering) fails here.
+    const shows = (label: string, value?: string) => {
+      if (value !== undefined) {
+        expect(screen.getByLabelText(label)).toHaveTextContent(value);
+      }
+    };
+    shows('Display Status', expected.status);
+    shows('Display SKU', expected.sku);
+    shows('Display Country', expected.country);
+    shows('Display Quantity', expected.quantity);
+    shows('Display Unit Price', expected.unitPrice);
+    shows('Display Base Price', expected.basePrice);
+    shows('Display Discount Rate', expected.discountRate);
+    shows('Display Discount Amount', expected.discountAmount);
+    shows('Display Subtotal Price', expected.subtotalPrice);
+    shows('Display Tax Rate', expected.taxRate);
+    shows('Display Tax Amount', expected.taxAmount);
+    shows('Display Total Price', expected.totalPrice);
+    shows('Display Applied Coupon', expected.appliedCoupon);
   }
 
   async showsCancelAndDeliverActions(): Promise<void> {

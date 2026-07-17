@@ -8,6 +8,12 @@ describe('BrowseOrderHistory', () => {
   it('shows order history when orders are returned', async () => {
     backend.returnsOrderHistory();
 
-    await frontend.browseOrderHistory().execute().showsOrder('ORD-1');
+    // Assert the row renders its total and status too, not just the order number — the history table
+    // shows Total Price and Status columns. Semantic expectation (total as a number): the UI driver
+    // formats it to '$22.00', the gateway driver compares it numerically.
+    await frontend
+      .browseOrderHistory()
+      .execute()
+      .showsOrder('ORD-1', { totalPrice: 22, status: 'PLACED' });
   });
 });

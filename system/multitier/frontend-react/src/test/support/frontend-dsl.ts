@@ -23,6 +23,33 @@ export interface PlaceOrderGesture {
   couponCode?: string;
 }
 
+// Expected fields on the order-details screen. showsOrderDetails is a UI-only assertion (the gateway
+// level does not render a screen), so these are the UI-formatted strings the screen shows — '$22.00',
+// '10.00%' — mirroring the existing total-price style. Only the fields a spec names are asserted.
+export interface OrderDetailExpectation {
+  status?: string;
+  sku?: string;
+  country?: string;
+  quantity?: string;
+  unitPrice?: string;
+  basePrice?: string;
+  discountRate?: string;
+  discountAmount?: string;
+  subtotalPrice?: string;
+  taxRate?: string;
+  taxAmount?: string;
+  totalPrice?: string;
+  appliedCoupon?: string;
+}
+
+// Expected fields on an order-history row. showsOrder runs at BOTH the UI and gateway levels, so this
+// is SEMANTIC: totalPrice is the number the backend returns — the UI driver formats it to '$22.00',
+// the gateway compares it numerically. Only the fields a spec names are asserted.
+export interface OrderHistoryRowExpectation {
+  totalPrice?: number;
+  status?: string;
+}
+
 // The seam both drivers implement. Gestures drive; the matching query methods
 // assert the outcome. useBackend points the driver at the stubbed backend — the
 // harness calls it, never a spec (routeApiTo for the UI, base URL for the gateway).
@@ -42,7 +69,7 @@ export interface FrontendDriver {
 
   // browse order history (both levels)
   browseOrderHistory(): Promise<void>;
-  showsOrder(orderNumber: string): Promise<void>;
+  showsOrder(orderNumber: string, expected?: OrderHistoryRowExpectation): Promise<void>;
 
   // browse coupons (both levels)
   browseCoupons(): Promise<void>;
@@ -50,7 +77,7 @@ export interface FrontendDriver {
 
   // view order details (UI only — asserts on the rendered screen)
   viewOrderDetails(orderNumber: string): Promise<void>;
-  showsOrderDetails(orderNumber: string, totalPrice: string): Promise<void>;
+  showsOrderDetails(orderNumber: string, expected: OrderDetailExpectation): Promise<void>;
   showsCancelAndDeliverActions(): Promise<void>;
   hidesCancelAndDeliverActions(): Promise<void>;
   showsNotFound(): Promise<void>;
@@ -205,9 +232,9 @@ class BrowseOrderHistoryOutcome {
     private readonly gesture: Promise<void>,
   ) {}
 
-  async showsOrder(orderNumber: string): Promise<void> {
+  async showsOrder(orderNumber: string, expected?: OrderHistoryRowExpectation): Promise<void> {
     await this.gesture;
-    await (await this.driver()).showsOrder(orderNumber);
+    await (await this.driver()).showsOrder(orderNumber, expected);
   }
 }
 
@@ -254,9 +281,9 @@ class ViewOrderDetailsOutcome {
     private readonly gesture: Promise<void>,
   ) {}
 
-  async showsOrderDetails(orderNumber: string, totalPrice: string): Promise<void> {
+  async showsOrderDetails(orderNumber: string, expected: OrderDetailExpectation): Promise<void> {
     await this.gesture;
-    await (await this.driver()).showsOrderDetails(orderNumber, totalPrice);
+    await (await this.driver()).showsOrderDetails(orderNumber, expected);
   }
 
   async showsCancelAndDeliverActions(): Promise<void> {

@@ -12,7 +12,11 @@ import type {
   BrowseOrderHistoryResponse,
   BrowseCouponsResponse,
 } from '../../types/api.types';
-import type { FrontendDriver, PlaceOrderGesture } from './frontend-dsl';
+import type {
+  FrontendDriver,
+  OrderHistoryRowExpectation,
+  PlaceOrderGesture,
+} from './frontend-dsl';
 
 export class GatewayFrontendDriver implements FrontendDriver {
   private baseUrl = '';
@@ -66,11 +70,18 @@ export class GatewayFrontendDriver implements FrontendDriver {
     this.lastHistory = await this.orders().browseOrderHistory();
   }
 
-  async showsOrder(orderNumber: string): Promise<void> {
+  async showsOrder(orderNumber: string, expected?: OrderHistoryRowExpectation): Promise<void> {
     const result = this.lastHistory;
     expect(result?.success).toBe(true);
     if (result?.success) {
-      expect(result.data.orders.some((order) => order.orderNumber === orderNumber)).toBe(true);
+      const order = result.data.orders.find((o) => o.orderNumber === orderNumber);
+      expect(order).toBeDefined();
+      if (expected?.totalPrice !== undefined) {
+        expect(order?.totalPrice).toBe(expected.totalPrice);
+      }
+      if (expected?.status !== undefined) {
+        expect(order?.status).toBe(expected.status);
+      }
     }
   }
 
